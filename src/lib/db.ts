@@ -1,9 +1,9 @@
 import Dexie, {type Table} from 'dexie'
-import type {Category, BudgetSetup, RecurringExpense, Transaction} from '../types'
+import type {Category, BudgetSetting, RecurringExpense, Transaction} from '../types'
 
 export class BudgetDatabase extends Dexie {
     categories! : Table<Category>
-    budgetSetup! : Table<BudgetSetup>
+    budgetSettings! : Table<BudgetSetting>
     recurringExpenses! : Table<RecurringExpense>
     transactions! : Table<Transaction>
 
@@ -11,7 +11,7 @@ export class BudgetDatabase extends Dexie {
         super('budget-db')
         this.version(1).stores({
             categories : 'id, bucket',
-            budgetSetup : '++autoId',
+            budgetSettings : '++autoId',
             recurringExpenses : 'id, categoryId',
             transactions : 'id, date, categoryId, recurringExpenseId'
         })
