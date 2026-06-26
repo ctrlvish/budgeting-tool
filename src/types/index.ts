@@ -8,11 +8,11 @@ export interface Category {
 }
 
 export interface BudgetSetting {
-    monthlyIncome : number | null
-    startingSavingsBalance : number | null
-    needs : number | null //ratios
-    wants : number | null
-    savings : number | null
+    monthlyIncome : number
+    startingSavingsBalance : number
+    needs : number //ratios
+    wants : number
+    savings : number
 }
 
 export interface RecurringExpense {
