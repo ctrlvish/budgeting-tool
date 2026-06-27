@@ -14,6 +14,9 @@ export function useBudgetSettings(){
     const save = async (data : BudgetSetting) => {
         await db.budgetSettings.clear()
         await db.budgetSettings.add(data)
+
+        console.log(await db.budgetSettings.toArray())
+        
         setSettings(data)
     }
 

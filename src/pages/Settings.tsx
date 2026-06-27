@@ -2,36 +2,68 @@ import { useEffect, useState } from "react";
 import type { BudgetSetting } from '../types'
 import { useBudgetSettings } from "../hooks/useBudgetSettings";
 
-const defaultSettings: BudgetSetting = {
-    monthlyIncome: 0,
-    startingSavingsBalance: 0,
-    needs: 50,
-    wants: 30,
-    savings: 20
+
+type BudgetSettingsFormData = {
+    monthlyIncome: string,
+    startingSavingsBalance: string,
+    needs: string,
+    wants: string,
+    savings: string
+}
+
+const defaultSettings: BudgetSettingsFormData = {
+    monthlyIncome: '',
+    startingSavingsBalance: '',
+    needs: '50',
+    wants: '30',
+    savings: '20'
+}
+
+function budgetSettingsToFormData(settings : BudgetSetting) : BudgetSettingsFormData {
+    return {
+        monthlyIncome: String(settings.monthlyIncome),
+        startingSavingsBalance: String(settings.startingSavingsBalance),
+        needs: String(settings.needs),
+        wants: String(settings.wants),
+        savings: String(settings.savings)
+    }
+}
+
+function formDataToBudgetSettings(formData : BudgetSettingsFormData) : BudgetSetting {
+    return {
+        monthlyIncome: Number(formData.monthlyIncome),
+        startingSavingsBalance: Number(formData.startingSavingsBalance),
+        needs: Number(formData.needs),
+        wants: Number(formData.wants),
+        savings: Number(formData.savings)
+    }
 }
 
 export default function Settings(){
     const { settings, save } = useBudgetSettings()
 
-    const [formData, setFormData] = useState<BudgetSetting>(defaultSettings)
+    const [formData, setFormData] = useState<BudgetSettingsFormData>(defaultSettings)
 
     const handleChange = (e : React.ChangeEvent<HTMLInputElement>) => {
         const {name, value} = e.target
 
         setFormData((prevData) => ({
             ...prevData,
-            [name] : Number(value)
+            [name] : value
         }))
 
     }
 
     const handleSubmit = (e : React.SubmitEvent<HTMLFormElement>) => {
         e.preventDefault()
-        save(formData)
+
+        save(formDataToBudgetSettings(formData))
     }
 
     useEffect(() => {
-        settings && setFormData(settings)
+        if (settings) {
+            setFormData(budgetSettingsToFormData(settings))
+        }
     }, [settings])
 
     return (
