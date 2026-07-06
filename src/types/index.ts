@@ -18,7 +18,7 @@ export interface BudgetSetting {
 export interface RecurringExpense {
     id : string
     name : string
-    amount: number
+    amountCents : number
     bucket : Bucket
     categoryId : string
 }
@@ -28,7 +28,7 @@ export interface Transaction {
     date : string //iso string e.g 2026-06-22
     description : string
     categoryId : string
-    amount : number
+    amountCents : number
     recurringExpenseId? : string //to derive if its logged
 
 }
