@@ -1,4 +1,4 @@
-import {BudgetSetup, RecurringExpenses} from '../components'
+import {BudgetSetup, RecurringExpenses, Categories} from '../components'
 
 
 export default function Settings(){
@@ -7,6 +7,7 @@ export default function Settings(){
         <>
         <BudgetSetup />
         <RecurringExpenses />
+        <Categories />
         </>
     )
 }
