@@ -101,6 +101,7 @@ export default function RecurringExpenses(){
     
     return (
         <>
+        <h2>Recurring Expenses</h2>
         <ul>
         {recurringExpenses.map((expense) => (
             <li key={expense.id}>
