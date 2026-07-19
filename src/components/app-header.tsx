@@ -1,4 +1,5 @@
 import { Button } from "./ui/button"
+import {Sun} from 'lucide-react'
 
 export default function AppHeader(){
     return (
@@ -12,7 +13,7 @@ export default function AppHeader(){
                 <Button variant='secondary'>settings</Button>
             </nav>
             <div className="flex gap-2 justify-self-end">
-                <Button type='button' variant='ghost' aria-label="Toggle Theme">🌙</Button>
+                <Button type='button' variant='ghost' aria-label="Toggle Theme"><Sun /></Button>
                 <Button type='button' aria-label="Add Transaction">+</Button>
             </div>
         </header>
