@@ -1,5 +1,5 @@
-import Settings from './pages/Settings'
-import AppHeader from './components/AppHeader'
+import Settings from './pages/settings'
+import AppHeader from './components/app-header'
 
 function App() {
   return (<><AppHeader/><Settings/></>)

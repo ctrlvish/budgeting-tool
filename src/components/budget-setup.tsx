@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { BudgetSetting } from '../types'
-import { useBudgetSettings } from "../hooks/useBudgetSettings";
+import { useBudgetSettings } from "../hooks/use-budget-settings";
 import { 
     Card, 
     CardHeader,
