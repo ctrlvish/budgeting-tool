@@ -1,6 +1,16 @@
 import { useEffect, useState } from "react";
 import type { BudgetSetting } from '../types'
 import { useBudgetSettings } from "../hooks/useBudgetSettings";
+import { 
+    Card, 
+    CardHeader,
+    CardContent,
+    CardDescription,
+    CardTitle
+     } from "./ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button"
 
 type BudgetSettingsFormData = {
     monthlyIncome: string,
@@ -68,55 +78,69 @@ export default function BudgetSetup(){
 
     return(
     <>
-    <h2>Budget Setup</h2>
+    <Card className="w-full">
+    <CardHeader>
+        <CardTitle>Budget Setup</CardTitle>
+        <CardDescription>Set your income and monthly allocation targets.</CardDescription>
+    </CardHeader>
+    <CardContent>
     <form onSubmit={handleSubmit}>
-        <label htmlFor='monthlyIncomeInput'>Monthly Income:</label>
-        <input 
+      <div className="flex flex-col gap-6">
+        <div className="grid gap-2">
+          <Label htmlFor='monthlyIncomeInput'>Monthly Income:</Label>
+          <Input 
             type = 'number' 
             id="monthlyIncomeInput"
             name="monthlyIncome"
             value={formData.monthlyIncome}
             onChange={handleChange}
-        ></input>
-        
-        <label htmlFor='startingSavingsBalanceInput'>Starting savings balance:</label>
-        <input 
+          ></Input>
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor='startingSavingsBalanceInput'>Starting savings balance:</Label>
+          <Input 
             type = 'number' 
             id="startingSavingsBalanceInput"
             name="startingSavingsBalance"
             value={formData.startingSavingsBalance}
             onChange={handleChange}
-        ></input>
-
-        <label htmlFor='needsInput'>Needs:</label>
-        <input 
+          ></Input>
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor='needsInput'>Needs:</Label>
+          <Input 
             type = 'number' 
             id="needsInput"
             name="needs"
             value={formData.needs}
             onChange={handleChange}
-        ></input>
-
-        <label htmlFor='wantsInput'>Wants:</label>
-        <input 
+          ></Input>
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor='wantsInput'>Wants:</Label>
+          <Input 
             type = 'number' 
             id="wantsInput"
             name="wants"
             value={formData.wants}
             onChange={handleChange}
-        ></input>
-
-        <label htmlFor='savingsInput'>Savings:</label>
-        <input 
+          ></Input>
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor='savingsInput'>Savings:</Label>
+          <Input 
             type = 'number' 
             id="savingsInput"
             name="savings"
             value={formData.savings}
             onChange={handleChange}
-        ></input>
-
-        <button type="submit">save</button>
+          ></Input>
+        </div>
+          <Button type="submit">Save</Button>
+      </div>
     </form>
+    </CardContent>
+    </Card>
     </>
     )
 }
