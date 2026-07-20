@@ -111,6 +111,13 @@ export default function BudgetSetup() {
 
     const isDisabled = isLoading || isSaving
 
+    const total =
+        Number(formData.needs) +
+        Number(formData.wants) +
+        Number(formData.savings)
+
+    const isRatioValid = total === 100
+
     return (
         <Card className="w-full">
             <CardHeader>
@@ -142,6 +149,7 @@ export default function BudgetSetup() {
                                 disabled={isDisabled}
                             />
                         </div>
+                        <div className="flex justify-between">
                         <div className="grid gap-2">
                             <Label htmlFor='needsInput'>Needs:</Label>
                             <Input
@@ -175,8 +183,12 @@ export default function BudgetSetup() {
                                 disabled={isDisabled}
                             />
                         </div>
+                        </div>
+                        <p className={isRatioValid ? 'text-green-600' : 'text-red-600'}>
+                        Total: {total}%
+                        </p>
                         {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
-                        <Button type="submit" disabled={isDisabled}>
+                        <Button type="submit" disabled={isDisabled || !isRatioValid}>
                             {isLoading ? 'Loading...' : isSaving ? 'Saving...' : 'Save'}
                         </Button>
                     </div>
