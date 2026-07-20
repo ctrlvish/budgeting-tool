@@ -1,15 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "react"
 import type { BudgetSetting } from '../types'
-import { useBudgetSettings } from "../hooks/use-budget-settings";
+import { db } from '../lib/db'
 import { 
     Card, 
     CardHeader,
     CardContent,
     CardDescription,
     CardTitle
-     } from "./ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "./ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 
 type BudgetSettingsFormData = {
@@ -48,11 +48,38 @@ function formDataToBudgetSettings(formData : BudgetSettingsFormData) : BudgetSet
     }
 }
 
-export default function BudgetSetup(){
-
-    const { settings, save } = useBudgetSettings()
-
+export default function BudgetSetup() {
     const [formData, setFormData] = useState<BudgetSettingsFormData>(defaultSettings)
+    const [isLoading, setIsLoading] = useState(true)
+    const [isSaving, setIsSaving] = useState(false)
+    const [error, setError] = useState('')
+
+    useEffect(() => {
+        let isActive = true
+
+        db.budgetSettings.toArray()
+            .then(records => {
+                if (isActive && records[0]) {
+                    setFormData(budgetSettingsToFormData(records[0]))
+                }
+            })
+            .catch(error => {
+                console.error('Failed to load budget settings', error)
+
+                if (isActive) {
+                    setError('Could not load budget settings')
+                }
+            })
+            .finally(() => {
+                if (isActive) {
+                    setIsLoading(false)
+                }
+            })
+
+        return () => {
+            isActive = false
+        }
+    }, [])
 
     const handleChange = (e : React.ChangeEvent<HTMLInputElement>) => {
         const {name, value} = e.target
@@ -64,83 +91,97 @@ export default function BudgetSetup(){
 
     }
 
-    const handleSubmit = (e : React.SubmitEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e : React.SubmitEvent<HTMLFormElement>) => {
         e.preventDefault()
+        setIsSaving(true)
+        setError('')
 
-        save(formDataToBudgetSettings(formData))
+        try {
+            const settings = formDataToBudgetSettings(formData)
+
+            await db.budgetSettings.clear()
+            await db.budgetSettings.add(settings)
+        } catch (error) {
+            console.error('Failed to save budget settings', error)
+            setError('Could not save budget settings')
+        } finally {
+            setIsSaving(false)
+        }
     }
 
-    useEffect(() => {
-        if (settings) {
-            setFormData(budgetSettingsToFormData(settings))
-        }
-    }, [settings])
+    const isDisabled = isLoading || isSaving
 
-    return(
-    <>
-    <Card className="w-full">
-    <CardHeader>
-        <CardTitle>Budget Setup</CardTitle>
-        <CardDescription>Set your income and monthly allocation targets.</CardDescription>
-    </CardHeader>
-    <CardContent>
-    <form onSubmit={handleSubmit}>
-      <div className="flex flex-col gap-6">
-        <div className="grid gap-2">
-          <Label htmlFor='monthlyIncomeInput'>Monthly Income:</Label>
-          <Input 
-            type = 'number' 
-            id="monthlyIncomeInput"
-            name="monthlyIncome"
-            value={formData.monthlyIncome}
-            onChange={handleChange}
-          ></Input>
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor='startingSavingsBalanceInput'>Starting savings balance:</Label>
-          <Input 
-            type = 'number' 
-            id="startingSavingsBalanceInput"
-            name="startingSavingsBalance"
-            value={formData.startingSavingsBalance}
-            onChange={handleChange}
-          ></Input>
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor='needsInput'>Needs:</Label>
-          <Input 
-            type = 'number' 
-            id="needsInput"
-            name="needs"
-            value={formData.needs}
-            onChange={handleChange}
-          ></Input>
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor='wantsInput'>Wants:</Label>
-          <Input 
-            type = 'number' 
-            id="wantsInput"
-            name="wants"
-            value={formData.wants}
-            onChange={handleChange}
-          ></Input>
-        </div>
-        <div className="grid gap-2">
-          <Label htmlFor='savingsInput'>Savings:</Label>
-          <Input 
-            type = 'number' 
-            id="savingsInput"
-            name="savings"
-            value={formData.savings}
-            onChange={handleChange}
-          ></Input>
-        </div>
-          <Button type="submit">Save</Button>
-      </div>
-    </form>
-    </CardContent>
-    </Card>
-    </>
+    return (
+        <Card className="w-full">
+            <CardHeader>
+                <CardTitle>Budget Setup</CardTitle>
+                <CardDescription>Set your income and monthly allocation targets.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <form onSubmit={handleSubmit}>
+                    <div className="flex flex-col gap-6">
+                        <div className="grid gap-2">
+                            <Label htmlFor='monthlyIncomeInput'>Monthly Income:</Label>
+                            <Input
+                                type='number'
+                                id="monthlyIncomeInput"
+                                name="monthlyIncome"
+                                value={formData.monthlyIncome}
+                                onChange={handleChange}
+                                disabled={isDisabled}
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor='startingSavingsBalanceInput'>Starting savings balance:</Label>
+                            <Input
+                                type='number'
+                                id="startingSavingsBalanceInput"
+                                name="startingSavingsBalance"
+                                value={formData.startingSavingsBalance}
+                                onChange={handleChange}
+                                disabled={isDisabled}
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor='needsInput'>Needs:</Label>
+                            <Input
+                                type='number'
+                                id="needsInput"
+                                name="needs"
+                                value={formData.needs}
+                                onChange={handleChange}
+                                disabled={isDisabled}
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor='wantsInput'>Wants:</Label>
+                            <Input
+                                type='number'
+                                id="wantsInput"
+                                name="wants"
+                                value={formData.wants}
+                                onChange={handleChange}
+                                disabled={isDisabled}
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor='savingsInput'>Savings:</Label>
+                            <Input
+                                type='number'
+                                id="savingsInput"
+                                name="savings"
+                                value={formData.savings}
+                                onChange={handleChange}
+                                disabled={isDisabled}
+                            />
+                        </div>
+                        {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
+                        <Button type="submit" disabled={isDisabled}>
+                            {isLoading ? 'Loading...' : isSaving ? 'Saving...' : 'Save'}
+                        </Button>
+                    </div>
+                </form>
+            </CardContent>
+        </Card>
     )
 }

@@ -16,7 +16,7 @@ export default function Categories(){
         db.categories.toArray()
             .then(category => setCategories(category))
             .catch(error => {
-                console.log(error)
+                console.error(error)
                 setError('Could not load categories')
             })
                 
@@ -37,7 +37,7 @@ export default function Categories(){
             <ul>
                 {savingsCategories.map(savingsCat => <li key={savingsCat.id}>{savingsCat.name}</li>)}
             </ul>
-            {error && <p role="error">{error}</p>}
+            {error && <p role="alert">{error}</p>}
         </div>
         </>
     )
