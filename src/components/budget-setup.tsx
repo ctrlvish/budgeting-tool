@@ -136,25 +136,45 @@ export default function BudgetSetup() {
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="grid gap-2">
                             <Label htmlFor='monthlyIncomeInput'>Monthly income</Label>
-                            <Input
-                                type='number'
-                                id="monthlyIncomeInput"
-                                name="monthlyIncome"
-                                value={formData.monthlyIncome}
-                                onChange={handleChange}
-                                disabled={isDisabled}
-                            />
+                            <div className="relative">
+                                <span
+                                    className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
+                                    aria-hidden="true"
+                                >
+                                    $
+                                </span>
+                                <Input
+                                    className="pl-6"
+                                    type='number'
+                                    id="monthlyIncomeInput"
+                                    name="monthlyIncome"
+                                    value={formData.monthlyIncome}
+                                    onChange={handleChange}
+                                    disabled={isDisabled}
+                                    placeholder="0.00"
+                                />
+                            </div>
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor='startingSavingsBalanceInput'>Starting savings balance</Label>
-                            <Input
-                                type='number'
-                                id="startingSavingsBalanceInput"
-                                name="startingSavingsBalance"
-                                value={formData.startingSavingsBalance}
-                                onChange={handleChange}
-                                disabled={isDisabled}
-                            />
+                            <div className="relative">
+                                <span
+                                    className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
+                                    aria-hidden="true"
+                                >
+                                    $
+                                </span>
+                                <Input
+                                    className="pl-6"
+                                    type='number'
+                                    id="startingSavingsBalanceInput"
+                                    name="startingSavingsBalance"
+                                    value={formData.startingSavingsBalance}
+                                    onChange={handleChange}
+                                    disabled={isDisabled}
+                                    placeholder="0.00"
+                                />
+                            </div>
                         </div>
                     </div>
 
@@ -169,6 +189,7 @@ export default function BudgetSetup() {
                                     value={formData.needs}
                                     onChange={handleChange}
                                     disabled={isDisabled}
+                                    placeholder="50"
                                 />
                             </div>
                             <div className="grid gap-2">
@@ -180,6 +201,7 @@ export default function BudgetSetup() {
                                     value={formData.wants}
                                     onChange={handleChange}
                                     disabled={isDisabled}
+                                    placeholder="30"
                                 />
                             </div>
                             <div className="grid gap-2">
@@ -191,6 +213,7 @@ export default function BudgetSetup() {
                                     value={formData.savings}
                                     onChange={handleChange}
                                     disabled={isDisabled}
+                                    placeholder="20"
                                 />
                             </div>
                         </div>
