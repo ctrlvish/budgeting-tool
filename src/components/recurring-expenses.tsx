@@ -29,8 +29,13 @@ const bucketItems = buckets.map(bucket => ({
     value: bucket
 }))
 
+const currencyFormatter = new Intl.NumberFormat('en-AU', {
+    style: 'currency',
+    currency: 'AUD'
+})
+
 function formatMoney(amountCents : number) {
-    return `$${(amountCents / 100).toFixed(2)}`
+    return currencyFormatter.format(amountCents / 100)
 }
 
 export default function RecurringExpenses() {
@@ -211,16 +216,25 @@ export default function RecurringExpenses() {
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="recurringExpenseAmount">Monthly amount</Label>
-                            <Input
-                                id="recurringExpenseAmount"
-                                type="number"
-                                min="0.01"
-                                step="0.01"
-                                value={amount}
-                                onChange={e => setAmount(e.target.value)}
-                                disabled={isFormDisabled}
-                                placeholder="0.00"
-                            />
+                            <div className="relative">
+                                <span
+                                    className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
+                                    aria-hidden="true"
+                                >
+                                    $
+                                </span>
+                                <Input
+                                    className="pl-6"
+                                    id="recurringExpenseAmount"
+                                    type="number"
+                                    min="0.01"
+                                    step="0.01"
+                                    value={amount}
+                                    onChange={e => setAmount(e.target.value)}
+                                    disabled={isFormDisabled}
+                                    placeholder="0.00"
+                                />
+                            </div>
                         </div>
                     </div>
 
