@@ -42,7 +42,9 @@ export default function Categories(){
     const wantsCategories = categories.filter(category => category.bucket === 'wants')
     const savingsCategories = categories.filter(category => category.bucket === 'savings')
 
-    function handleCategoryAdd(){
+    function handleCategoryAdd(e : React.SubmitEvent<HTMLFormElement>){
+        e.preventDefault()
+
         
     }
 
@@ -62,29 +64,8 @@ export default function Categories(){
             <CardDescription>Configure categories for each bucket.</CardDescription>
         </CardHeader>
         <CardContent>
-        <div className="grid grid-cols-3">
-            <div>
-            <h3>Needs</h3>
-            <ul>
-                {needsCategories.map(needCat => <li key={needCat.id}>{needCat.name}</li>)}
-            </ul>
-            </div>
-            <div>
-            <h3>Wants</h3>
-            <ul>
-                {wantsCategories.map(wantCat => <li key={wantCat.id}>{wantCat.name}</li>)}
-            </ul>
-            </div>
-            <div>
-            <h3>Savings</h3>
-            <ul>
-                {savingsCategories.map(savingsCat => <li key={savingsCat.id}>{savingsCat.name}</li>)}
-            </ul>
-            </div>
-            {error && <p role="alert">{error}</p>}
-        </div>
-        <form className="grid grid-cols-3">
-            <div>
+            <form onSubmit={handleCategoryAdd} className="grid grid-cols-3 gap-4">
+            <div className="grid gap-2">
                 <Label htmlFor="categoryName">Name</Label>
                 <Input
                     id="categoryName"
@@ -93,7 +74,7 @@ export default function Categories(){
 
                 </Input>
             </div>
-            <div>
+            <div className="grid gap-2">
                 <Label htmlFor="categoryBucket">Bucket</Label>
                 <Select
                 id="categoryBucket"
@@ -120,8 +101,43 @@ export default function Categories(){
                 </Select>
             </div>
             <Button
-             onClick={handleCategoryAdd}>Add</Button>
+             className='self-end'
+             type="submit">Add</Button>
         </form>
+        <div className="mt-6 grid gap-6 sm:grid-cols-3">
+            <div>
+                <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Needs ({needsCategories.length})
+                </h3>
+                <ul className="flex flex-wrap gap-1.5">
+                    {needsCategories.map(needCat => <li 
+                        key={needCat.id}
+                        className='rounded-md border px-2 py-1 text-xs'>{needCat.name}</li>)}
+                </ul>
+            </div>
+            <div>
+                <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Wants ({wantsCategories.length})
+                </h3>
+                <ul className="flex flex-wrap gap-1.5">
+                    {wantsCategories.map(wantCat => <li
+                        key={wantCat.id}
+                        className='rounded-md border px-2 py-1 text-xs'>{wantCat.name}</li>)}
+                </ul>
+            </div>
+            <div>
+                <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Savings ({savingsCategories.length})
+                </h3>
+                <ul className="flex flex-wrap gap-1.5">
+                    {savingsCategories.map(savingsCat => <li
+                        key={savingsCat.id}
+                        className='rounded-md border px-2 py-1 text-xs'>{savingsCat.name}</li>)}
+                </ul>
+            </div>
+        </div>
+        {error && <p className="mt-4 text-sm text-destructive" role="alert">{error}</p>}
+
         </CardContent>
         </Card>
     )
