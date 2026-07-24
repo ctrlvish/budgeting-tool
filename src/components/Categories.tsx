@@ -30,6 +30,7 @@ export default function Categories(){
     const [categories, setCategories] = useState<Category[]>([])
     const [name, setName] = useState('')
     const [bucket, setBucket] = useState<Bucket>('needs')
+    const [isAdding, setIsAdding] = useState(false)
 
     const buckets : Bucket[] = ['needs', 'wants', 'savings']
     
@@ -42,10 +43,37 @@ export default function Categories(){
     const wantsCategories = categories.filter(category => category.bucket === 'wants')
     const savingsCategories = categories.filter(category => category.bucket === 'savings')
 
-    function handleCategoryAdd(e : React.SubmitEvent<HTMLFormElement>){
+    async function handleCategoryAdd(e : React.SubmitEvent<HTMLFormElement>){
         e.preventDefault()
 
-        
+        const trimmedName = name.trim()
+
+        const category : Category = {
+            id: crypto.randomUUID(),
+            name: trimmedName,
+            bucket: bucket
+        }
+
+        if (!trimmedName) {
+            setError('Please enter a name')
+            return
+        }
+
+        setIsAdding(true)
+        setError('')
+
+        try {
+            await db.categories.add(category)
+            setCategories(previousCategories => [...previousCategories, category])
+            setName('')
+            setError('')
+        } catch (error) {
+            console.error('failed to create category', error)
+            setError('Could not create category')
+        } finally {
+            setIsAdding(false)
+        }
+
     }
 
     useEffect(() => {
@@ -101,8 +129,9 @@ export default function Categories(){
                 </Select>
             </div>
             <Button
-             className='self-end'
-             type="submit">Add</Button>
+                disabled={isAdding}
+                className='self-end'
+                type="submit">{isAdding ? 'Adding...' : 'Add'}</Button>
         </form>
         <div className="mt-6 grid gap-6 sm:grid-cols-3">
             <div>
@@ -136,7 +165,7 @@ export default function Categories(){
                 </ul>
             </div>
         </div>
-        {error && <p className="mt-4 text-sm text-destructive" role="alert">{error}</p>}
+        {error && <p className="mt-4 font-medium text-sm text-destructive" role="alert">{error}</p>}
 
         </CardContent>
         </Card>
