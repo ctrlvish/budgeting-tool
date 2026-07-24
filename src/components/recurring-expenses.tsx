@@ -287,7 +287,7 @@ export default function RecurringExpenses() {
                         </div>
                     </div>
 
-                    {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
+                    {error && <p className="text-sm font-medium text-destructive" role="alert">{error}</p>}
                     <Button type="submit" disabled={isFormDisabled}>
                         {isAdding ? 'Adding...' : 'Add recurring expense'}
                     </Button>
