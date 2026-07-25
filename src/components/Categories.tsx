@@ -21,7 +21,11 @@ import {
     SelectValue
 
  } from "@/components/ui/select"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { 
+    Dialog, 
+    DialogContent,
+    DialogTitle
+ } from "@/components/ui/dialog"
 
 import type { Bucket } from "../types"
 
@@ -40,8 +44,15 @@ export default function Categories(){
     const [name, setName] = useState('')
     const [bucket, setBucket] = useState<Bucket>('needs')
     const [isAdding, setIsAdding] = useState(false)
+    const [isEditing, setIsEditing] = useState(false)
     const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
     const [editName, setEditName] = useState('')
+    const [editError, setEditError] = useState('')
+    // to check if transactions or recurring expenses are referencing the category which is being edited
+    const [usage, setUsage] = useState<{
+        transactions: number
+        recurringExpenses: number
+    } | null>(null)
 
     const buckets : Bucket[] = ['needs', 'wants', 'savings']
     
@@ -53,6 +64,9 @@ export default function Categories(){
     const needsCategories = categories.filter(category => category.bucket === 'needs')
     const wantsCategories = categories.filter(category => category.bucket === 'wants')
     const savingsCategories = categories.filter(category => category.bucket === 'savings')
+
+    //for deleting category
+    const isReferenced = usage !== null && (usage.transactions > 0 || usage.recurringExpenses > 0)
 
     async function handleCategoryAdd(e : React.SubmitEvent<HTMLFormElement>){
         e.preventDefault()
@@ -87,14 +101,70 @@ export default function Categories(){
 
     }
 
-    function openEditCategory(category: Category) {
+    async function openEditCategory(category: Category) {
         setSelectedCategory(category)
         setEditName(category.name)
-        setError('')
+        setEditError('')
+        setUsage(null)
+
+        const [recurringExpenses, transactions] = await Promise.all([
+            db.recurringExpenses.where('categoryId').equals(category.id).count(),
+            db.transactions.where('categoryId').equals(category.id).count()
+        ])
+
+
+
+        setUsage({ recurringExpenses, transactions })
     }
 
     async function handleCategoryEdit(e : React.SubmitEvent<HTMLFormElement>) {
         e.preventDefault()
+
+        if (!selectedCategory) return
+
+        const trimmedName = editName.trim()
+
+        if (!trimmedName) {
+            setEditError('Please enter a category name')
+            return
+        }
+
+        setIsEditing(true)
+        setEditError('')
+
+        try {
+            //edit category name here
+            await db.categories.update(selectedCategory.id, {
+                name: trimmedName
+            })
+
+            setCategories(previousCategories =>
+            previousCategories.map(category =>
+                category.id === selectedCategory.id
+                    ? { ...category, name: trimmedName }
+                    : category
+            ))
+
+            setSelectedCategory(null)
+        }
+        catch(error) {
+            console.error('failed to rename category', error)
+            setEditError('Could not rename category')
+        }
+        finally{
+            setIsEditing(false)
+        }
+    }
+
+    async function handleCategoryDelete() {
+        if (!selectedCategory) return
+
+        // check references
+        
+
+        // ask for confirmation using alert dialog
+        
+        // delete category
     }
 
 
@@ -206,13 +276,43 @@ export default function Categories(){
             onOpenChange={(open) => {
             if (!open) {
                 setSelectedCategory(null)
+                setEditError('')
             }
         }}>
-            <form onSubmit={handleCategoryEdit}>
-                <DialogContent>
-                    <p>dialog content goes here</p>
-                </DialogContent>
-            </form>
+            <DialogContent>
+                <form className="grid gap-4" onSubmit={handleCategoryEdit}>
+                    <DialogTitle> Edit {selectedCategory?.name}</DialogTitle>
+                    <div className="grid gap-2">
+                        <Label htmlFor="nameInput">Rename category</Label>
+                        <Input
+                            id="nameInput"
+                            value={editName}
+                            onChange={e => setEditName(e.target.value)}
+                            ></Input>
+                    </div>
+                    {editError && (
+                        <p className="text-sm text-destructive" role="alert">
+                            {editError}
+                        </p>
+                    )}
+                    {usage !== null && isReferenced && (
+                        <p className="text-sm leading-relaxed text-muted-foreground">
+                            Used by {usage.transactions} transactions and{' '}
+                            {usage.recurringExpenses} recurring expenses.
+                            <br />
+                            Reassign these items before deleting.
+                        </p>
+                    )}
+                    <div className="grid grid-cols-2 gap-4">
+                        <Button type="submit"
+                            disabled={isEditing}>{isEditing ? 'Saving...' : 'Save'}</Button>
+                        <Button type="button" 
+                            variant='destructive'
+                            onClick={handleCategoryDelete}
+                            disabled={usage === null || isReferenced}>Delete</Button>
+                    </div>
+                </form>
+            </DialogContent>
         </Dialog>
 
         {error && <p className="mt-4 font-medium text-sm text-destructive" role="alert">{error}</p>}
