@@ -21,8 +21,17 @@ import {
     SelectValue
 
  } from "@/components/ui/select"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
+
 import type { Bucket } from "../types"
 
+
+const categoryChipStyles = `
+    rounded-md border px-2 py-1 text-xs
+    transition-[background-color,transform] duration-150 ease-out
+    hover:bg-muted active:scale-[0.97]
+    cursor-pointer
+`
 
 export default function Categories(){
 
@@ -31,6 +40,8 @@ export default function Categories(){
     const [name, setName] = useState('')
     const [bucket, setBucket] = useState<Bucket>('needs')
     const [isAdding, setIsAdding] = useState(false)
+    const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
+    const [editName, setEditName] = useState('')
 
     const buckets : Bucket[] = ['needs', 'wants', 'savings']
     
@@ -75,6 +86,17 @@ export default function Categories(){
         }
 
     }
+
+    function openEditCategory(category: Category) {
+        setSelectedCategory(category)
+        setEditName(category.name)
+        setError('')
+    }
+
+    async function handleCategoryEdit(e : React.SubmitEvent<HTMLFormElement>) {
+        e.preventDefault()
+    }
+
 
     useEffect(() => {
         db.categories.toArray()
@@ -138,10 +160,15 @@ export default function Categories(){
                 <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                     Needs ({needsCategories.length})
                 </h3>
+                {/* {this ul map code repeats, maybe can refine later} */}
                 <ul className="flex flex-wrap gap-1.5">
-                    {needsCategories.map(needCat => <li 
-                        key={needCat.id}
-                        className='rounded-md border px-2 py-1 text-xs'>{needCat.name}</li>)}
+                    {needsCategories.map(category => <li 
+                        key={category.id}><button
+                            type="button"
+                            onClick={() => openEditCategory(category)}
+                            className={categoryChipStyles}>
+                            {category.name}
+                            </button></li>)}
                 </ul>
             </div>
             <div>
@@ -149,9 +176,13 @@ export default function Categories(){
                     Wants ({wantsCategories.length})
                 </h3>
                 <ul className="flex flex-wrap gap-1.5">
-                    {wantsCategories.map(wantCat => <li
-                        key={wantCat.id}
-                        className='rounded-md border px-2 py-1 text-xs'>{wantCat.name}</li>)}
+                    {wantsCategories.map(category => <li
+                        key={category.id}><button
+                            type="button"
+                            onClick={() => openEditCategory(category)}
+                            className={categoryChipStyles}>
+                            {category.name}
+                            </button></li>)}
                 </ul>
             </div>
             <div>
@@ -159,12 +190,31 @@ export default function Categories(){
                     Savings ({savingsCategories.length})
                 </h3>
                 <ul className="flex flex-wrap gap-1.5">
-                    {savingsCategories.map(savingsCat => <li
-                        key={savingsCat.id}
-                        className='rounded-md border px-2 py-1 text-xs'>{savingsCat.name}</li>)}
+                    {savingsCategories.map(category => <li
+                        key={category.id}><button
+                            type="button"
+                            onClick={() => openEditCategory(category)}
+                            className={categoryChipStyles}>
+                            {category.name}
+                            </button></li>)}
                 </ul>
             </div>
         </div>
+        
+        <Dialog
+            open={selectedCategory !== null}
+            onOpenChange={(open) => {
+            if (!open) {
+                setSelectedCategory(null)
+            }
+        }}>
+            <form onSubmit={handleCategoryEdit}>
+                <DialogContent>
+                    <p>dialog content goes here</p>
+                </DialogContent>
+            </form>
+        </Dialog>
+
         {error && <p className="mt-4 font-medium text-sm text-destructive" role="alert">{error}</p>}
 
         </CardContent>
