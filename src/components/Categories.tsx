@@ -28,6 +28,16 @@ import {
  } from "@/components/ui/dialog"
 
 import type { Bucket } from "../types"
+import { 
+    AlertDialog,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogCancel,
+    AlertDialogAction,
+    AlertDialogFooter
+ } from "@/components/ui/alert-dialog"
 
 
 const categoryChipStyles = `
@@ -53,6 +63,7 @@ export default function Categories(){
         transactions: number
         recurringExpenses: number
     } | null>(null)
+    const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null)
 
     const buckets : Bucket[] = ['needs', 'wants', 'savings']
     
@@ -156,15 +167,25 @@ export default function Categories(){
         }
     }
 
+    function openDeleteConfirmation() {
+        if (!selectedCategory || usage === null || isReferenced) return
+
+        setCategoryToDelete(selectedCategory)
+    }
+
     async function handleCategoryDelete() {
-        if (!selectedCategory) return
+        if (!categoryToDelete) return
 
-        // check references
-        
+        await db.categories.delete(categoryToDelete.id)
 
-        // ask for confirmation using alert dialog
-        
-        // delete category
+        setCategories(previous => 
+            previous.filter(prev => 
+                prev.id !== categoryToDelete.id
+            )
+        )
+
+        setCategoryToDelete(null)
+        setSelectedCategory(null)
     }
 
 
@@ -308,12 +329,36 @@ export default function Categories(){
                             disabled={isEditing}>{isEditing ? 'Saving...' : 'Save'}</Button>
                         <Button type="button" 
                             variant='destructive'
-                            onClick={handleCategoryDelete}
+                            onClick={openDeleteConfirmation}
                             disabled={usage === null || isReferenced}>Delete</Button>
                     </div>
                 </form>
             </DialogContent>
         </Dialog>
+        <AlertDialog
+            open={categoryToDelete !== null}
+            onOpenChange={(open) => {
+                if (!open) {
+                    setCategoryToDelete(null)
+                }
+        }}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Delete category?</AlertDialogTitle>
+                    <AlertDialogDescription>“{categoryToDelete?.name}” will be permanently deleted.</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+
+                    <AlertDialogAction
+                        variant="destructive"
+                        onClick={handleCategoryDelete}
+                    >
+                    Delete
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
 
         {error && <p className="mt-4 font-medium text-sm text-destructive" role="alert">{error}</p>}
 
