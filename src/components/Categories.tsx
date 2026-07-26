@@ -64,6 +64,8 @@ export default function Categories(){
         recurringExpenses: number
     } | null>(null)
     const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null)
+    const [isDeleting, setIsDeleting] = useState(false)
+    const [deleteError, setDeleteError] = useState('')
 
     const buckets : Bucket[] = ['needs', 'wants', 'savings']
     
@@ -123,8 +125,6 @@ export default function Categories(){
             db.transactions.where('categoryId').equals(category.id).count()
         ])
 
-
-
         setUsage({ recurringExpenses, transactions })
     }
 
@@ -169,23 +169,58 @@ export default function Categories(){
 
     function openDeleteConfirmation() {
         if (!selectedCategory || usage === null || isReferenced) return
-
+        setDeleteError('')
         setCategoryToDelete(selectedCategory)
     }
 
     async function handleCategoryDelete() {
         if (!categoryToDelete) return
+        if (usage !== null && isReferenced) return
 
-        await db.categories.delete(categoryToDelete.id)
 
-        setCategories(previous => 
-            previous.filter(prev => 
-                prev.id !== categoryToDelete.id
+        setIsDeleting(true)
+        setDeleteError('')
+
+        try{
+            //check references from db
+            const [recurringExpenses, transactions] = await Promise.all([
+                db.recurringExpenses
+                    .where('categoryId')
+                    .equals(categoryToDelete.id)
+                    .count(),
+
+                db.transactions
+                    .where('categoryId')
+                    .equals(categoryToDelete.id)
+                    .count()
+            ])
+            
+            if (recurringExpenses > 0 || transactions > 0) {
+                setUsage({ recurringExpenses, transactions })
+                setDeleteError('This category is now being used and cannot be deleted')
+                return
+            }
+
+            //delete safely
+            await db.categories.delete(categoryToDelete.id)
+
+            setCategories(previous => 
+                previous.filter(prev => 
+                    prev.id !== categoryToDelete.id
+                )
             )
-        )
 
-        setCategoryToDelete(null)
-        setSelectedCategory(null)
+            //close dialogs if successful
+            setCategoryToDelete(null)
+            setSelectedCategory(null)   
+        }catch(error) {
+            console.error('failed to delete category', error)
+            setDeleteError('Could not delete category')
+        }finally{
+            setIsDeleting(false)
+        }
+
+
     }
 
 
@@ -317,7 +352,7 @@ export default function Categories(){
                         </p>
                     )}
                     {usage !== null && isReferenced && (
-                        <p className="text-sm leading-relaxed text-muted-foreground">
+                        <p className="text-xs text-muted-foreground">
                             Used by {usage.transactions} transactions and{' '}
                             {usage.recurringExpenses} recurring expenses.
                             <br />
@@ -346,15 +381,21 @@ export default function Categories(){
                 <AlertDialogHeader>
                     <AlertDialogTitle>Delete category?</AlertDialogTitle>
                     <AlertDialogDescription>“{categoryToDelete?.name}” will be permanently deleted.</AlertDialogDescription>
+                {deleteError && (
+                    <p className="text-sm text-destructive font-medium">
+                        {deleteError}
+                    </p>
+                )}
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
 
                     <AlertDialogAction
+                        disabled={isDeleting || isReferenced}
                         variant="destructive"
                         onClick={handleCategoryDelete}
                     >
-                    Delete
+                        {isDeleting ? 'Deleting...' : 'Delete'}
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
