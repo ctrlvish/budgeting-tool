@@ -1,28 +1,40 @@
 import { Button } from "./ui/button"
-import {Sun} from 'lucide-react'
 import { NavLink } from "react-router"
+import { Plus } from "lucide-react"
 import { ModeToggle } from "./mode-toggle"
+
+const navigationLinkStyles = `
+    px-2.5 py-1.5 font-heading text-xs text-foreground
+    transition-colors duration-150 hover:text-muted-foreground
+    sm:px-3 sm:text-sm
+`
 
 export default function AppHeader(){
     return (
-        <header className="grid max-w-4xl mx-auto grid-cols-[1fr_auto_1fr] border-b py-2 px-5">
-            <div className="">
-                <p>budgeting tool</p>
-            </div>
-            <nav className="flex gap-3">
-                <NavLink to='/'>
-                    home
-                </NavLink>
-                <NavLink to='/transactions'>
-                    transactions
-                </NavLink>
-                <NavLink to='/settings'>
-                    settings
-                </NavLink>
-            </nav>
-            <div className="flex gap-2 justify-self-end">
-                <ModeToggle></ModeToggle>
-                <Button type='button' aria-label="Add Transaction">+</Button>
+        <header className="sticky top-0 z-50 w-full bg-background/90 backdrop-blur-md">
+            <div className="mx-auto grid h-14 w-full max-w-4xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center px-4">
+                <div className="hidden h-full items-center sm:grid">
+                    <NavLink to='/' className='font-heading'>
+                        budgeting tool
+                    </NavLink>
+                </div>
+                <nav className="flex items-center gap-1" aria-label="Primary navigation">
+                    <NavLink to='/' className={navigationLinkStyles} end>
+                        home
+                    </NavLink>
+                    <NavLink to='/transactions' className={navigationLinkStyles}>
+                        transactions
+                    </NavLink>
+                    <NavLink to='/settings' className={navigationLinkStyles}>
+                        settings
+                    </NavLink>
+                </nav>
+                <div className="flex items-center gap-1 justify-self-end">
+                    <ModeToggle />
+                    <Button type='button' size="icon" aria-label="Add transaction">
+                        <Plus className="size-4" />
+                    </Button>
+                </div>
             </div>
         </header>
     )
