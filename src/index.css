@@ -128,4 +128,7 @@
   html {
     @apply font-sans;
     }
+  ::selection {
+    background-color: color-mix(in oklch, var(--foreground) 15%, transparent);
+  }
 }
