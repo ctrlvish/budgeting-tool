@@ -41,10 +41,8 @@ import {
 
 
 const categoryChipStyles = `
-    rounded-md border px-2 py-1 text-xs
-    transition-[background-color,transform] duration-150 ease-out
-    hover:bg-muted active:scale-[0.97]
-    cursor-pointer
+    rounded-md bg-muted/50 px-2 py-1 text-xs text-muted-foreground
+    hover:bg-muted hover:text-foreground hover:cursor-pointer
 `
 
 export default function Categories(){
