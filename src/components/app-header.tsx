@@ -20,7 +20,7 @@ export default function AppHeader(){
                 </div>
                 <nav className="flex items-center gap-1" aria-label="Primary navigation">
                     <NavLink to='/' className={navigationLinkStyles} end>
-                        home
+                        dashboard
                     </NavLink>
                     <NavLink to='/transactions' className={navigationLinkStyles}>
                         transactions
