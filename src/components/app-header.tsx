@@ -1,5 +1,7 @@
 import { Button } from "./ui/button"
 import {Sun} from 'lucide-react'
+import { NavLink } from "react-router"
+import { ModeToggle } from "./mode-toggle"
 
 export default function AppHeader(){
     return (
@@ -8,12 +10,18 @@ export default function AppHeader(){
                 <p>budgeting tool</p>
             </div>
             <nav className="flex gap-3">
-                <Button variant='ghost'>home</Button>
-                <Button variant='ghost'>transactions</Button>
-                <Button variant='secondary'>settings</Button>
+                <NavLink to='/'>
+                    home
+                </NavLink>
+                <NavLink to='/transactions'>
+                    transactions
+                </NavLink>
+                <NavLink to='/settings'>
+                    settings
+                </NavLink>
             </nav>
             <div className="flex gap-2 justify-self-end">
-                <Button type='button' variant='ghost' aria-label="Toggle Theme"><Sun /></Button>
+                <ModeToggle></ModeToggle>
                 <Button type='button' aria-label="Add Transaction">+</Button>
             </div>
         </header>
