@@ -13,7 +13,6 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 
 type BudgetSettingsFormData = {
-    monthlyIncome: string,
     startingSavingsBalance: string,
     needs: string,
     wants: string,
@@ -21,7 +20,6 @@ type BudgetSettingsFormData = {
 }
 
 const defaultSettings: BudgetSettingsFormData = {
-    monthlyIncome: '',
     startingSavingsBalance: '',
     needs: '50',
     wants: '30',
@@ -30,7 +28,6 @@ const defaultSettings: BudgetSettingsFormData = {
 
 function budgetSettingsToFormData(settings : BudgetSetting) : BudgetSettingsFormData {
     return {
-        monthlyIncome: String(settings.monthlyIncome),
         startingSavingsBalance: String(settings.startingSavingsBalance),
         needs: String(settings.needs),
         wants: String(settings.wants),
@@ -40,7 +37,6 @@ function budgetSettingsToFormData(settings : BudgetSetting) : BudgetSettingsForm
 
 function formDataToBudgetSettings(formData : BudgetSettingsFormData) : BudgetSetting {
     return {
-        monthlyIncome: Number(formData.monthlyIncome),
         startingSavingsBalance: Number(formData.startingSavingsBalance),
         needs: Number(formData.needs),
         wants: Number(formData.wants),
@@ -129,52 +125,29 @@ export default function BudgetSetup() {
         <Card className="w-full">
             <CardHeader>
                 <CardTitle>Budget Setup</CardTitle>
-                <CardDescription>Set your income and monthly allocation targets.</CardDescription>
+                <CardDescription>Set your savings baseline and allocation targets.</CardDescription>
             </CardHeader>
             <CardContent>
                 <form className="grid gap-6" onSubmit={handleSubmit}>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        <div className="grid gap-2">
-                            <Label htmlFor='monthlyIncomeInput'>Monthly income</Label>
-                            <div className="relative">
-                                <span
-                                    className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
-                                    aria-hidden="true"
-                                >
-                                    $
-                                </span>
-                                <Input
-                                    className="pl-6"
-                                    type='number'
-                                    id="monthlyIncomeInput"
-                                    name="monthlyIncome"
-                                    value={formData.monthlyIncome}
-                                    onChange={handleChange}
-                                    disabled={isDisabled}
-                                    placeholder="0.00"
-                                />
-                            </div>
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor='startingSavingsBalanceInput'>Starting savings balance</Label>
-                            <div className="relative">
-                                <span
-                                    className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
-                                    aria-hidden="true"
-                                >
-                                    $
-                                </span>
-                                <Input
-                                    className="pl-6"
-                                    type='number'
-                                    id="startingSavingsBalanceInput"
-                                    name="startingSavingsBalance"
-                                    value={formData.startingSavingsBalance}
-                                    onChange={handleChange}
-                                    disabled={isDisabled}
-                                    placeholder="0.00"
-                                />
-                            </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor='startingSavingsBalanceInput'>Starting savings balance</Label>
+                        <div className="relative">
+                            <span
+                                className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
+                                aria-hidden="true"
+                            >
+                                $
+                            </span>
+                            <Input
+                                className="pl-6"
+                                type='number'
+                                id="startingSavingsBalanceInput"
+                                name="startingSavingsBalance"
+                                value={formData.startingSavingsBalance}
+                                onChange={handleChange}
+                                disabled={isDisabled}
+                                placeholder="0.00"
+                            />
                         </div>
                     </div>
 

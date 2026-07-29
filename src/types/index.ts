@@ -8,7 +8,6 @@ export interface Category {
 }
 
 export interface BudgetSetting {
-    monthlyIncome : number
     startingSavingsBalance : number
     needs : number //ratios
     wants : number
