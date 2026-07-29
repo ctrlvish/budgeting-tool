@@ -22,6 +22,21 @@ interface TransactionsProps {
     revision : number
 }
 
+const currencyFormatter = new Intl.NumberFormat('en-AU', {
+    style: 'currency',
+    currency: 'AUD'
+})
+
+function formatMoney(amountCents : number) {
+    return currencyFormatter.format(amountCents / 100)
+}
+
+function formatDate(date : string) {
+    const [year, month, day] = date.split('-')
+
+    return `${day}/${month}/${year}`
+}
+
 export default function Transactions({ onLogTransaction, revision } : TransactionsProps){
 
     const [error, setError] = useState('')
@@ -88,7 +103,7 @@ export default function Transactions({ onLogTransaction, revision } : Transactio
                             <TableHead>Date</TableHead>
                             <TableHead>Description</TableHead>
                             <TableHead>Category</TableHead>
-                            <TableHead>Amount</TableHead>
+                            <TableHead className="text-right">Amount</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -100,13 +115,13 @@ export default function Transactions({ onLogTransaction, revision } : Transactio
 
                             return (
                             <TableRow key={transaction.id}>
-                                <TableCell className="font-medium">{transaction.date}</TableCell>
+                                <TableCell className="font-medium">{formatDate(transaction.date)}</TableCell>
                                 <TableCell>{transaction.description}</TableCell>
                                 <TableCell>
                                     <p>{category?.name}</p>
-                                    <p>{category?.bucket}</p>
+                                    <p className="capitalize text-xs text-muted-foreground">{category?.bucket}</p>
                                 </TableCell>
-                                <TableCell className="text-right">{transaction.amountCents}</TableCell>
+                                <TableCell className="text-right">{formatMoney(transaction.amountCents)}</TableCell>
                             </TableRow>
                         )
                         })}
