@@ -9,7 +9,11 @@ const navigationLinkStyles = `
     sm:px-3 sm:text-sm
 `
 
-export default function AppHeader(){
+interface AppHeaderProps {
+    onLogTransaction : () => void
+}
+
+export default function AppHeader({ onLogTransaction } : AppHeaderProps){
     return (
         <header className="sticky top-0 z-50 w-full bg-background/90 backdrop-blur-md">
             <div className="mx-auto grid h-14 w-full max-w-4xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center px-4">
@@ -31,7 +35,12 @@ export default function AppHeader(){
                 </nav>
                 <div className="flex items-center gap-1 justify-self-end">
                     <ModeToggle />
-                    <Button type='button' size="icon" aria-label="Add transaction">
+                    <Button
+                        type='button'
+                        size="icon"
+                        onClick={onLogTransaction}
+                        aria-label="Add transaction"
+                    >
                         <Plus className="size-4" />
                     </Button>
                 </div>

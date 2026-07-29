@@ -17,7 +17,12 @@ import {
  import { db } from "@/lib/db"
  import type { Transaction, Category } from "@/types"
 
-export default function Transactions(){
+interface TransactionsProps {
+    onLogTransaction : () => void
+    revision : number
+}
+
+export default function Transactions({ onLogTransaction, revision } : TransactionsProps){
 
     const [error, setError] = useState('')
     const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -55,17 +60,19 @@ export default function Transactions(){
         return () => {
             isActive = false
         }
-    }, [])
+    }, [revision])
 
     return (
     <main className='mx-auto grid w-full max-w-4xl gap-6 px-4 py-10'>
         <header className="flex justify-between">
             <div className="space-y-1">
                 <h1 className='font-heading text-3xl font-semibold tracking-tight'>Transactions</h1>
-                <p className='text-sm text-muted-foreground'>Log and manage your spending here</p>
+                <p className='text-sm text-muted-foreground'>Log and manage your income and spending here</p>
             </div>
             <div className="flex">
-                <Button className='p-4 self-center'><Plus className="size-4" /> Log Transaction</Button>
+                <Button className='self-center' onClick={onLogTransaction}>
+                    <Plus className="size-4" /> Log
+                </Button>
             </div>
         </header>
         <Card>
