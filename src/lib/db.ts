@@ -111,7 +111,7 @@ const defaultRecurringTransactions : RecurringTransaction[] = [
 export class BudgetDatabase extends Dexie {
     categories! : Table<Category>
     budgetSettings! : Table<BudgetSetting>
-    recurringExpenses! : Table<RecurringTransaction>
+    recurringTransactions! : Table<RecurringTransaction>
     transactions! : Table<Transaction>
 
     constructor() {
@@ -123,9 +123,68 @@ export class BudgetDatabase extends Dexie {
             transactions : 'id, date, categoryId, recurringExpenseId'
         })
 
+        this.version(2).stores({
+            categories : 'id, type, bucket',
+            budgetSettings : '++autoId',
+            recurringExpenses : 'id, categoryId',
+            recurringTransactions : 'id, categoryId',
+            transactions : 'id, type, date, categoryId, recurringExpenseId, recurringTransactionId'
+        }).upgrade(async schemaTransaction => {
+            const categories = schemaTransaction.table<Category>('categories')
+            const transactions = schemaTransaction.table<{
+                categoryId : string
+                type? : Transaction['type']
+                recurringExpenseId? : string
+                recurringTransactionId? : string
+            }>('transactions')
+            const previousRecurringTransactions = await schemaTransaction
+                .table<RecurringTransaction>('recurringExpenses')
+                .toArray()
+
+            if (previousRecurringTransactions.length > 0) {
+                await schemaTransaction
+                    .table<RecurringTransaction>('recurringTransactions')
+                    .bulkPut(previousRecurringTransactions)
+            }
+
+            await categories.toCollection().modify(category => {
+                if (category.id === 'salary' || category.id === 'tax-returns') {
+                    category.type = 'income'
+                    delete category.bucket
+                } else {
+                    category.type = 'expense'
+                }
+            })
+
+            const incomeCategoryIds = new Set(
+                (await categories.toArray())
+                    .filter(category => category.type === 'income')
+                    .map(category => category.id)
+            )
+
+            await transactions.toCollection().modify(transaction => {
+                transaction.type = incomeCategoryIds.has(transaction.categoryId)
+                    ? 'income'
+                    : 'expense'
+
+                if (transaction.recurringExpenseId) {
+                    transaction.recurringTransactionId = transaction.recurringExpenseId
+                    delete transaction.recurringExpenseId
+                }
+            })
+        })
+
+        this.version(3).stores({
+            categories : 'id, type, bucket',
+            budgetSettings : '++autoId',
+            recurringExpenses : null,
+            recurringTransactions : 'id, categoryId',
+            transactions : 'id, type, date, categoryId, recurringTransactionId'
+        })
+
         this.on('populate', async () => {
             await this.categories.bulkAdd(defaultCategories)
-            await this.recurringExpenses.bulkAdd(defaultRecurringTransactions)
+            await this.recurringTransactions.bulkAdd(defaultRecurringTransactions)
         })
     }
 }

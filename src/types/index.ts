@@ -19,7 +19,7 @@ export interface BudgetSetting {
     savings : number
 }
 
-export interface RecurringExpense {
+export interface RecurringTransaction {
     id : string
     name : string
     amountCents : number
@@ -32,7 +32,7 @@ export interface Transaction {
     description : string
     categoryId : string
     amountCents : number
-    recurringExpenseId? : string //to derive if its logged
+    recurringTransactionId? : string //to derive if its logged
     type : TransactionType
 
 }

@@ -56,10 +56,10 @@ export default function Categories(){
     const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
     const [editName, setEditName] = useState('')
     const [editError, setEditError] = useState('')
-    // to check if transactions or recurring expenses are referencing the category which is being edited
+    // to check if transactions or recurring transactions are referencing the category which is being edited
     const [usage, setUsage] = useState<{
         transactions: number
-        recurringExpenses: number
+        recurringTransactions: number
     } | null>(null)
     const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null)
     const [isDeleting, setIsDeleting] = useState(false)
@@ -77,7 +77,7 @@ export default function Categories(){
     const incomeCategories = categories.filter(category => category.type === 'income')
 
     //for deleting category
-    const isReferenced = usage !== null && (usage.transactions > 0 || usage.recurringExpenses > 0)
+    const isReferenced = usage !== null && (usage.transactions > 0 || usage.recurringTransactions > 0)
 
     async function handleCategoryAdd(e : React.SubmitEvent<HTMLFormElement>){
         e.preventDefault()
@@ -119,12 +119,12 @@ export default function Categories(){
         setEditError('')
         setUsage(null)
 
-        const [recurringExpenses, transactions] = await Promise.all([
-            db.recurringExpenses.where('categoryId').equals(category.id).count(),
+        const [recurringTransactions, transactions] = await Promise.all([
+            db.recurringTransactions.where('categoryId').equals(category.id).count(),
             db.transactions.where('categoryId').equals(category.id).count()
         ])
 
-        setUsage({ recurringExpenses, transactions })
+        setUsage({ recurringTransactions, transactions })
     }
 
     async function handleCategoryEdit(e : React.SubmitEvent<HTMLFormElement>) {
@@ -182,8 +182,8 @@ export default function Categories(){
 
         try{
             //check references from db
-            const [recurringExpenses, transactions] = await Promise.all([
-                db.recurringExpenses
+            const [recurringTransactions, transactions] = await Promise.all([
+                db.recurringTransactions
                     .where('categoryId')
                     .equals(categoryToDelete.id)
                     .count(),
@@ -194,8 +194,8 @@ export default function Categories(){
                     .count()
             ])
             
-            if (recurringExpenses > 0 || transactions > 0) {
-                setUsage({ recurringExpenses, transactions })
+            if (recurringTransactions > 0 || transactions > 0) {
+                setUsage({ recurringTransactions, transactions })
                 setDeleteError('This category is now being used and cannot be deleted')
                 return
             }
@@ -249,6 +249,7 @@ export default function Categories(){
                         id="categoryName"
                         value={name}
                         onChange={e => setName(e.target.value)}
+                        placeholder="e.g. Groceries"
                     />
                 </div>
 
@@ -281,7 +282,7 @@ export default function Categories(){
 
                 <Button
                     disabled={isAdding}
-                    className="self-end"
+                    className="min-w-24 self-end"
                     type="submit"
                 >
                     {isAdding ? 'Adding...' : 'Add'}
@@ -375,7 +376,7 @@ export default function Categories(){
                     {usage !== null && isReferenced && (
                         <p className="text-xs text-muted-foreground">
                             Used by {usage.transactions} transactions and{' '}
-                            {usage.recurringExpenses} recurring expenses.
+                            {usage.recurringTransactions} recurring transactions.
                             <br />
                             Reassign these items before deleting.
                         </p>

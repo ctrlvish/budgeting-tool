@@ -1,17 +1,17 @@
 import { db } from '../lib/db'
 import { useState, useEffect } from 'react'
 import { Trash2 } from 'lucide-react'
-import type { RecurringExpense, Bucket, Category } from '../types'
-import { 
-    Card, 
+import type { RecurringTransaction, CategoryGroup, Category } from '../types'
+import {
+    Card,
     CardHeader,
     CardContent,
     CardDescription,
     CardTitle
-} from "./ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
+} from './ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
 import {
     Select,
     SelectContent,
@@ -20,13 +20,13 @@ import {
     SelectLabel,
     SelectTrigger,
     SelectValue
-} from "@/components/ui/select"
+} from '@/components/ui/select'
 
-const buckets : Bucket[] = ['needs', 'wants', 'savings']
+const categoryGroups : CategoryGroup[] = ['income', 'needs', 'wants', 'savings']
 
-const bucketItems = buckets.map(bucket => ({
-    label: bucket.charAt(0).toUpperCase() + bucket.slice(1),
-    value: bucket
+const categoryGroupItems = categoryGroups.map(group => ({
+    label: group.charAt(0).toUpperCase() + group.slice(1),
+    value: group
 }))
 
 const currencyFormatter = new Intl.NumberFormat('en-AU', {
@@ -38,9 +38,15 @@ function formatMoney(amountCents : number) {
     return currencyFormatter.format(amountCents / 100)
 }
 
-export default function RecurringExpenses() {
-    const [recurringExpenses, setRecurringExpenses] = useState<RecurringExpense[]>([])
-    const [bucket, setBucket] = useState<Bucket>('needs')
+function getCategoryGroup(category : Category | undefined) {
+    if (!category) return 'Unknown'
+
+    return category.type === 'income' ? 'Income' : category.bucket ?? 'Unknown'
+}
+
+export default function RecurringTransactions() {
+    const [recurringTransactions, setRecurringTransactions] = useState<RecurringTransaction[]>([])
+    const [categoryGroup, setCategoryGroup] = useState<CategoryGroup>('needs')
     const [categories, setCategories] = useState<Category[]>([])
     const [categoryId, setCategoryId] = useState<string | null>(null)
     const [name, setName] = useState('')
@@ -50,7 +56,13 @@ export default function RecurringExpenses() {
     const [isAdding, setIsAdding] = useState(false)
     const [deletingId, setDeletingId] = useState<string | null>(null)
 
-    const filteredCategories = categories.filter(category => category.bucket === bucket)
+    const filteredCategories = categories.filter(category => {
+        if (categoryGroup === 'income') {
+            return category.type === 'income'
+        }
+
+        return category.type === 'expense' && category.bucket === categoryGroup
+    })
 
     async function handleAdd(e : React.SubmitEvent<HTMLFormElement>) {
         e.preventDefault()
@@ -74,11 +86,10 @@ export default function RecurringExpenses() {
             return
         }
 
-        const expense : RecurringExpense = {
+        const transaction : RecurringTransaction = {
             id: crypto.randomUUID(),
             name: trimmedName,
             amountCents,
-            bucket,
             categoryId
         }
 
@@ -86,24 +97,27 @@ export default function RecurringExpenses() {
         setError('')
 
         try {
-            await db.recurringExpenses.add(expense)
-            setRecurringExpenses(previousExpenses => [...previousExpenses, expense])
+            await db.recurringTransactions.add(transaction)
+            setRecurringTransactions(previousTransactions => [
+                ...previousTransactions,
+                transaction
+            ])
             setName('')
             setAmount('')
             setCategoryId(null)
             setError('')
         } catch (error) {
-            console.error('failed to create recurring expense', error)
-            setError('Could not create recurring expense')
+            console.error('failed to create recurring transaction', error)
+            setError('Could not create recurring transaction')
         } finally {
             setIsAdding(false)
         }
     }
 
-    function handleBucketChange(value : Bucket | null) {
+    function handleGroupChange(value : CategoryGroup | null) {
         if (!value) return
 
-        setBucket(value)
+        setCategoryGroup(value)
         setCategoryId(null)
     }
 
@@ -111,12 +125,14 @@ export default function RecurringExpenses() {
         setDeletingId(id)
 
         try {
-            await db.recurringExpenses.delete(id)
-            setRecurringExpenses(previousExpenses => previousExpenses.filter(expense => expense.id !== id))
+            await db.recurringTransactions.delete(id)
+            setRecurringTransactions(previousTransactions =>
+                previousTransactions.filter(transaction => transaction.id !== id)
+            )
             setError('')
         } catch (error) {
-            console.error('failed to delete recurring expense', error)
-            setError('Could not delete recurring expense')
+            console.error('failed to delete recurring transaction', error)
+            setError('Could not delete recurring transaction')
         } finally {
             setDeletingId(null)
         }
@@ -126,20 +142,20 @@ export default function RecurringExpenses() {
         let isActive = true
 
         Promise.all([
-            db.recurringExpenses.toArray(),
+            db.recurringTransactions.toArray(),
             db.categories.toArray()
         ])
-            .then(([expenses, categories]) => {
+            .then(([transactions, categories]) => {
                 if (!isActive) return
 
-                setRecurringExpenses(expenses)
+                setRecurringTransactions(transactions)
                 setCategories(categories)
             })
             .catch(error => {
-                console.error('failed to load recurring expense data', error)
+                console.error('failed to load recurring transaction data', error)
 
                 if (isActive) {
-                    setError('Could not load recurring expenses')
+                    setError('Could not load recurring transactions')
                 }
             })
             .finally(() => {
@@ -161,52 +177,65 @@ export default function RecurringExpenses() {
             value: category.id
         }))
     ]
-    
+
     return (
         <Card className="w-full">
             <CardHeader>
-                <CardTitle>Recurring expenses</CardTitle>
-                <CardDescription>Add expenses that repeat each month, such as rent or subscriptions.</CardDescription>
+                <CardTitle>Recurring transactions</CardTitle>
+                <CardDescription>Create templates for income and expenses you log often.</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-6">
                 {isLoading ? (
-                    <p className="text-sm text-muted-foreground">Loading recurring expenses...</p>
-                ) : recurringExpenses.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Loading recurring transactions...</p>
+                ) : recurringTransactions.length === 0 ? (
                     <p className="rounded-lg border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
-                        No recurring expenses yet.
+                        No recurring transactions yet.
                     </p>
                 ) : (
                     <ul className="divide-y rounded-lg border">
-                        {recurringExpenses.map(expense => (
-                            <li className="flex items-center justify-between gap-4 px-3 py-2.5" key={expense.id}>
-                                <div className="min-w-0">
-                                    <p className="truncate font-medium">{expense.name}</p>
-                                    <p className="text-xs capitalize text-muted-foreground">{expense.bucket}</p>
-                                </div>
-                                <div className="flex shrink-0 items-center gap-2">
-                                    <span className="font-medium tabular-nums">{formatMoney(expense.amountCents)}</span>
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon-sm"
-                                        onClick={() => handleDelete(expense.id)}
-                                        disabled={deletingId === expense.id}
-                                        aria-label={`Delete ${expense.name}`}
-                                    >
-                                        <Trash2 />
-                                    </Button>
-                                </div>
-                            </li>
-                        ))}
+                        {recurringTransactions.map(transaction => {
+                            const category = categories.find(
+                                category => category.id === transaction.categoryId
+                            )
+
+                            return (
+                                <li
+                                    className="flex items-center justify-between gap-4 px-3 py-2.5"
+                                    key={transaction.id}
+                                >
+                                    <div className="min-w-0">
+                                        <p className="truncate font-medium">{transaction.name}</p>
+                                        <p className="text-xs capitalize text-muted-foreground">
+                                            {getCategoryGroup(category)}
+                                        </p>
+                                    </div>
+                                    <div className="flex shrink-0 items-center gap-2">
+                                        <span className="font-medium tabular-nums">
+                                            {formatMoney(transaction.amountCents)}
+                                        </span>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon-sm"
+                                            onClick={() => handleDelete(transaction.id)}
+                                            disabled={deletingId === transaction.id}
+                                            aria-label={`Delete ${transaction.name}`}
+                                        >
+                                            <Trash2 />
+                                        </Button>
+                                    </div>
+                                </li>
+                            )
+                        })}
                     </ul>
                 )}
 
                 <form className="grid gap-4 border-t pt-6" onSubmit={handleAdd}>
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="grid gap-2">
-                            <Label htmlFor="recurringExpenseName">Name</Label>
+                            <Label htmlFor="recurringTransactionName">Name</Label>
                             <Input
-                                id="recurringExpenseName"
+                                id="recurringTransactionName"
                                 type="text"
                                 value={name}
                                 onChange={e => setName(e.target.value)}
@@ -215,7 +244,7 @@ export default function RecurringExpenses() {
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="recurringExpenseAmount">Monthly amount</Label>
+                            <Label htmlFor="recurringTransactionAmount">Amount</Label>
                             <div className="relative">
                                 <span
                                     className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
@@ -225,7 +254,7 @@ export default function RecurringExpenses() {
                                 </span>
                                 <Input
                                     className="pl-6"
-                                    id="recurringExpenseAmount"
+                                    id="recurringTransactionAmount"
                                     type="number"
                                     min="0.01"
                                     step="0.01"
@@ -240,20 +269,20 @@ export default function RecurringExpenses() {
 
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="grid gap-2">
-                            <Label htmlFor="recurringExpenseBucket">Bucket</Label>
+                            <Label htmlFor="recurringTransactionGroup">Group</Label>
                             <Select
-                                items={bucketItems}
-                                value={bucket}
-                                onValueChange={handleBucketChange}
+                                items={categoryGroupItems}
+                                value={categoryGroup}
+                                onValueChange={handleGroupChange}
                                 disabled={isFormDisabled}
                             >
-                                <SelectTrigger id="recurringExpenseBucket" className="w-full">
+                                <SelectTrigger id="recurringTransactionGroup" className="w-full">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectGroup>
-                                        <SelectLabel>Buckets</SelectLabel>
-                                        {bucketItems.map(item => (
+                                        <SelectLabel>Groups</SelectLabel>
+                                        {categoryGroupItems.map(item => (
                                             <SelectItem key={item.value} value={item.value}>
                                                 {item.label}
                                             </SelectItem>
@@ -263,14 +292,14 @@ export default function RecurringExpenses() {
                             </Select>
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="recurringExpenseCategory">Category</Label>
+                            <Label htmlFor="recurringTransactionCategory">Category</Label>
                             <Select
                                 items={categoryItems}
                                 value={categoryId}
                                 onValueChange={setCategoryId}
                                 disabled={isFormDisabled || filteredCategories.length === 0}
                             >
-                                <SelectTrigger id="recurringExpenseCategory" className="w-full">
+                                <SelectTrigger id="recurringTransactionCategory" className="w-full">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -287,9 +316,13 @@ export default function RecurringExpenses() {
                         </div>
                     </div>
 
-                    {error && <p className="text-sm font-medium text-destructive" role="alert">{error}</p>}
+                    {error && (
+                        <p className="text-sm font-medium text-destructive" role="alert">
+                            {error}
+                        </p>
+                    )}
                     <Button type="submit" disabled={isFormDisabled}>
-                        {isAdding ? 'Adding...' : 'Add recurring expense'}
+                        {isAdding ? 'Adding...' : 'Add recurring transaction'}
                     </Button>
                 </form>
             </CardContent>
