@@ -1,99 +1,109 @@
 import Dexie, {type Table} from 'dexie'
-import type {Category, BudgetSetting, RecurringExpense, Transaction} from '../types'
+import type {Category, BudgetSetting, RecurringTransaction, Transaction} from '../types'
 
 const defaultCategories : Category[] = [
     {
         id : 'rent',
         name : 'Rent',
+        type: 'expense',
         bucket : 'needs'
     },
     {
         id : 'groceries',
         name : 'Groceries',
+        type: 'expense',
         bucket : 'needs'
     },
     {
         id : 'bills',
         name : 'Bills',
+        type: 'expense',
         bucket : 'needs'
     },
     {
         id : 'transport',
         name : 'Transport',
+        type: 'expense',
         bucket : 'needs'
     },
     {
         id : 'food',
         name : 'Food',
+        type: 'expense',
         bucket : 'needs'
     },
     {
         id : 'medical',
         name : 'Medical',
+        type: 'expense',
         bucket : 'needs'
     },
     {
         id : 'activities',
         name : 'Activities',
+        type: 'expense',
         bucket : 'wants'
     },
     {
         id : 'shopping',
         name : 'Shopping',
+        type: 'expense',
         bucket : 'wants'
     },
     {
         id : 'self-care',
         name : 'Self-care',
+        type: 'expense',
         bucket : 'wants'
     },
     {
         id : 'eating-out',
         name : 'Eating out',
+        type: 'expense',
         bucket : 'wants'
     },
     {
         id : 'subscriptions',
         name : 'Subscriptions',
+        type: 'expense',
         bucket : 'wants'
     },
     {
         id : 'salary',
         name : 'Salary',
-        bucket : 'savings'
+        type: 'income'
     },
     {
         id : 'stocks',
         name : 'Stocks',
-        bucket : 'savings'
+        type: 'expense',
+        bucket: 'savings'
+
     },
     {
         id : 'tax-returns',
         name : 'Tax returns',
-        bucket : 'savings'
+        type: 'income'
     }
 ]
 
-const defaultRecurringExpenses : RecurringExpense[] = [
+const defaultRecurringTransactions : RecurringTransaction[] = [
     {
         id : 'rent',
         name : 'Rent',
         amountCents : 150000,
-        bucket : 'needs',
-        categoryId : 'rent'
+        categoryId : 'rent',
     },
     {
-        id : 'bills',
-        name : 'Bills',
-        amountCents : 10000,
-        bucket : 'needs',
-        categoryId : 'bills'
+        id : 'salary',
+        name : 'Salary',
+        amountCents : 420000,
+        categoryId : 'salary'
     },
     {
         id : 'netflix',
         name : 'Netflix',
         amountCents : 1700,
-        bucket : 'wants',
         categoryId : 'subscriptions'
     }
 ]
@@ -101,7 +111,7 @@ const defaultRecurringExpenses : RecurringExpense[] = [
 export class BudgetDatabase extends Dexie {
     categories! : Table<Category>
     budgetSettings! : Table<BudgetSetting>
-    recurringExpenses! : Table<RecurringExpense>
+    recurringExpenses! : Table<RecurringTransaction>
     transactions! : Table<Transaction>
 
     constructor() {
@@ -115,7 +125,7 @@ export class BudgetDatabase extends Dexie {
 
         this.on('populate', async () => {
             await this.categories.bulkAdd(defaultCategories)
-            await this.recurringExpenses.bulkAdd(defaultRecurringExpenses)
+            await this.recurringExpenses.bulkAdd(defaultRecurringTransactions)
         })
     }
 }

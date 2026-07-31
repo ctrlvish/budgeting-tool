@@ -27,7 +27,7 @@ import {
     DialogTitle
  } from "@/components/ui/dialog"
 
-import type { Bucket } from "../types"
+import type { CategoryGroup } from "../types"
 import { 
     AlertDialog,
     AlertDialogContent,
@@ -50,7 +50,7 @@ export default function Categories(){
     const [error, setError] = useState('')
     const [categories, setCategories] = useState<Category[]>([])
     const [name, setName] = useState('')
-    const [bucket, setBucket] = useState<Bucket>('needs')
+    const [categoryGroup, setCategoryGroup] = useState<CategoryGroup>('needs')
     const [isAdding, setIsAdding] = useState(false)
     const [isEditing, setIsEditing] = useState(false)
     const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
@@ -64,17 +64,17 @@ export default function Categories(){
     const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null)
     const [isDeleting, setIsDeleting] = useState(false)
     const [deleteError, setDeleteError] = useState('')
-
-    const buckets : Bucket[] = ['needs', 'wants', 'savings']
+    const categoryGroups : CategoryGroup[] = ['income', 'needs', 'wants', 'savings']
     
-    const bucketItems = buckets.map(bucket => ({
-        label: bucket.charAt(0).toUpperCase() + bucket.slice(1),
-        value: bucket
+    const categoryGroupItems = categoryGroups.map(group => ({
+        label: group.charAt(0).toUpperCase() + group.slice(1),
+        value: group
     }))
 
     const needsCategories = categories.filter(category => category.bucket === 'needs')
     const wantsCategories = categories.filter(category => category.bucket === 'wants')
     const savingsCategories = categories.filter(category => category.bucket === 'savings')
+    const incomeCategories = categories.filter(category => category.type === 'income')
 
     //for deleting category
     const isReferenced = usage !== null && (usage.transactions > 0 || usage.recurringExpenses > 0)
@@ -87,7 +87,8 @@ export default function Categories(){
         const category : Category = {
             id: crypto.randomUUID(),
             name: trimmedName,
-            bucket: bucket
+            type: categoryGroup === 'income' ? 'income' : 'expense',
+            ...(categoryGroup !== 'income' ? { bucket: categoryGroup } : {})
         }
 
         if (!trimmedName) {
@@ -235,51 +236,73 @@ export default function Categories(){
         <Card className="w-full">
         <CardHeader>
             <CardTitle>Categories</CardTitle>
-            <CardDescription>Configure categories for each bucket.</CardDescription>
+            <CardDescription>Configure income sources and expense categories.</CardDescription>
         </CardHeader>
         <CardContent>
-            <form onSubmit={handleCategoryAdd} className="grid grid-cols-3 gap-4">
-            <div className="grid gap-2">
-                <Label htmlFor="categoryName">Name</Label>
-                <Input
-                    id="categoryName"
-                    value={name}
-                    onChange={e => setName(e.target.value)}>
+            <form
+                onSubmit={handleCategoryAdd}
+                className="grid gap-4 sm:grid-cols-[1fr_1fr_auto]"
+            >
+                <div className="grid gap-2">
+                    <Label htmlFor="categoryName">Name</Label>
+                    <Input
+                        id="categoryName"
+                        value={name}
+                        onChange={e => setName(e.target.value)}
+                    />
+                </div>
 
-                </Input>
+                <div className="grid gap-2">
+                    <Label htmlFor="categoryGroup">Group</Label>
+                    <Select
+                        id="categoryGroup"
+                        items={categoryGroupItems}
+                        value={categoryGroup}
+                        onValueChange={value => {
+                            if (value) setCategoryGroup(value)
+                        }}
+                    >
+                        <SelectTrigger id="categoryGroup" className="w-full">
+                            <SelectValue />
+                        </SelectTrigger>
+
+                        <SelectContent>
+                            <SelectGroup>
+                                <SelectLabel>Groups</SelectLabel>
+                                {categoryGroupItems.map(item => (
+                                    <SelectItem key={item.value} value={item.value}>
+                                        {item.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <Button
+                    disabled={isAdding}
+                    className="self-end"
+                    type="submit"
+                >
+                    {isAdding ? 'Adding...' : 'Add'}
+                </Button>
+            </form>
+
+        <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <div>
+                <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    Income ({incomeCategories.length})
+                </h3>
+                <ul className="flex flex-wrap gap-1.5">
+                    {incomeCategories.map(category => <li
+                        key={category.id}><button
+                            type="button"
+                            onClick={() => openEditCategory(category)}
+                            className={categoryChipStyles}>
+                            {category.name}
+                            </button></li>)}
+                </ul>
             </div>
-            <div className="grid gap-2">
-                <Label htmlFor="categoryBucket">Bucket</Label>
-                <Select
-                id="categoryBucket"
-                items={bucketItems}
-                value={bucket}
-                onValueChange={value => {
-                    if (value) setBucket(value)
-                }}>
-                    <SelectTrigger id="categoryBucket" className="w-full">
-                        <SelectValue />
-                    </SelectTrigger>
-
-                    <SelectContent>
-                        <SelectGroup>
-                            <SelectLabel>Buckets</SelectLabel>
-                            {bucketItems.map(item => (
-                                <SelectItem key={item.value} value={item.value}>
-                                    {item.label}
-                                </SelectItem>
-                            ))}
-                        </SelectGroup>
-                    </SelectContent>
-
-                </Select>
-            </div>
-            <Button
-                disabled={isAdding}
-                className='self-end'
-                type="submit">{isAdding ? 'Adding...' : 'Add'}</Button>
-        </form>
-        <div className="mt-6 grid gap-6 sm:grid-cols-3">
             <div>
                 <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                     Needs ({needsCategories.length})

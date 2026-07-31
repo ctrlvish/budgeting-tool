@@ -1,10 +1,15 @@
 // data models
 export type Bucket = 'needs' | 'wants' | 'savings'
 
+export type TransactionType = 'income' | 'expense'
+
+export type CategoryGroup = 'income' | Bucket
+
 export interface Category {
     id : string
     name : string
-    bucket : Bucket
+    type : TransactionType
+    bucket? : Bucket
 }
 
 export interface BudgetSetting {
@@ -18,7 +23,6 @@ export interface RecurringExpense {
     id : string
     name : string
     amountCents : number
-    bucket : Bucket
     categoryId : string
 }
 
@@ -29,5 +33,6 @@ export interface Transaction {
     categoryId : string
     amountCents : number
     recurringExpenseId? : string //to derive if its logged
+    type : TransactionType
 
 }

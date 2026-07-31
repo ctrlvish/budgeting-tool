@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { CalendarIcon } from "lucide-react"
-import type { Bucket, Category, Transaction } from "@/types"
+import type { Bucket, Category, Transaction, TransactionType } from "@/types"
 import { db } from "@/lib/db"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
@@ -91,6 +91,7 @@ export default function TransactionDialog({
     const [error, setError] = useState('')
     const [isLoading, setIsLoading] = useState(true)
     const [isSaving, setIsSaving] = useState(false)
+    const [transactionType, setTransactionType] = useState<TransactionType>('expense')
 
     useEffect(() => {
         if (!open) return
@@ -132,6 +133,7 @@ export default function TransactionDialog({
         setIsDatePickerOpen(false)
         setCategoryId(null)
         setError('')
+        setTransactionType('expense')
     }
 
     function handleOpenChange(nextOpen : boolean) {
@@ -176,7 +178,8 @@ export default function TransactionDialog({
             date: formatStoredDate(date),
             description: trimmedDescription,
             categoryId,
-            amountCents
+            amountCents,
+            type: transactionType
         }
 
         setIsSaving(true)
@@ -208,8 +211,20 @@ export default function TransactionDialog({
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Log transaction</DialogTitle>
-                    <DialogDescription>Add a transaction to your budget.</DialogDescription>
+                    <DialogTitle>Log Income/Expense</DialogTitle>
+                    <DialogDescription>Add income or expense to your budget.</DialogDescription>
+                    <div className="flex justify-evenly">
+                        <Button 
+                            variant='ghost' 
+                            type="button"
+                            onClick={() => setTransactionType('expense')}
+                        >Expense</Button>
+                        <Button 
+                            variant='ghost' 
+                            type="button"
+                            onClick={() => setTransactionType('income')}
+                        >Income</Button>
+                    </div>
                 </DialogHeader>
 
                 <form className="grid gap-4" onSubmit={handleSubmit}>

@@ -124,7 +124,7 @@ export default function BudgetSetup() {
     return (
         <Card className="w-full">
             <CardHeader>
-                <CardTitle>Budget Setup</CardTitle>
+                <CardTitle className="">Budget Setup</CardTitle>
                 <CardDescription>Set your savings baseline and allocation targets.</CardDescription>
             </CardHeader>
             <CardContent>
