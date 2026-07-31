@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { CalendarIcon } from "lucide-react"
-import type { Bucket, Category, Transaction, TransactionType } from "@/types"
+import type { Category, CategoryGroup, Transaction } from "@/types"
 import { db } from "@/lib/db"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
@@ -26,18 +26,21 @@ import {
     PopoverTrigger
 } from "@/components/ui/popover"
 import {
-    Select,
-    SelectContent,
-    SelectGroup,
-    SelectItem,
-    SelectLabel,
-    SelectTrigger,
-    SelectValue
-} from "@/components/ui/select"
+    Combobox,
+    ComboboxCollection,
+    ComboboxContent,
+    ComboboxEmpty,
+    ComboboxGroup,
+    ComboboxInput,
+    ComboboxItem,
+    ComboboxLabel,
+    ComboboxList
+} from "@/components/ui/combobox"
 
-const buckets : Bucket[] = ['needs', 'wants', 'savings']
+const categoryGroups : CategoryGroup[] = ['income', 'needs', 'wants', 'savings']
 
-const bucketLabels : Record<Bucket, string> = {
+const categoryGroupLabels : Record<CategoryGroup, string> = {
+    income: 'Income',
     needs: 'Needs',
     wants: 'Wants',
     savings: 'Savings'
@@ -91,7 +94,6 @@ export default function TransactionDialog({
     const [error, setError] = useState('')
     const [isLoading, setIsLoading] = useState(true)
     const [isSaving, setIsSaving] = useState(false)
-    const [transactionType, setTransactionType] = useState<TransactionType>('expense')
 
     useEffect(() => {
         if (!open) return
@@ -133,7 +135,6 @@ export default function TransactionDialog({
         setIsDatePickerOpen(false)
         setCategoryId(null)
         setError('')
-        setTransactionType('expense')
     }
 
     function handleOpenChange(nextOpen : boolean) {
@@ -173,13 +174,20 @@ export default function TransactionDialog({
             return
         }
 
+        const selectedCategory = categories.find(category => category.id === categoryId)
+
+        if (!selectedCategory) {
+            setError('Please choose a valid category')
+            return
+        }
+
         const transaction : Transaction = {
             id: crypto.randomUUID(),
             date: formatStoredDate(date),
             description: trimmedDescription,
             categoryId,
             amountCents,
-            type: transactionType
+            type: selectedCategory.type
         }
 
         setIsSaving(true)
@@ -199,32 +207,26 @@ export default function TransactionDialog({
     }
 
     const isFormDisabled = isLoading || isSaving
-    const categoryItems = [
-        { label: 'Choose category', value: null },
-        ...categories.map(category => ({
-            label: category.name,
-            value: category.id
+    const groupedCategories = categoryGroups
+        .map(group => ({
+            group,
+            label: categoryGroupLabels[group],
+            items: categories.filter(category => {
+                if (group === 'income') {
+                    return category.type === 'income'
+                }
+
+                return category.type === 'expense' && category.bucket === group
+            })
         }))
-    ]
+        .filter(group => group.items.length > 0)
 
     return (
         <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Log Income/Expense</DialogTitle>
-                    <DialogDescription>Add income or expense to your budget.</DialogDescription>
-                    <div className="flex justify-evenly">
-                        <Button 
-                            variant='ghost' 
-                            type="button"
-                            onClick={() => setTransactionType('expense')}
-                        >Expense</Button>
-                        <Button 
-                            variant='ghost' 
-                            type="button"
-                            onClick={() => setTransactionType('income')}
-                        >Income</Button>
-                    </div>
+                    <DialogTitle>Log transaction</DialogTitle>
+                    <DialogDescription>Add income or an expense to your budget.</DialogDescription>
                 </DialogHeader>
 
                 <form className="grid gap-4" onSubmit={handleSubmit}>
@@ -335,36 +337,48 @@ export default function TransactionDialog({
 
                     <div className="grid gap-2">
                         <Label htmlFor="transactionCategory">Category</Label>
-                        <Select
-                            items={categoryItems}
-                            value={categoryId}
-                            onValueChange={setCategoryId}
+                        <Combobox
+                            items={groupedCategories}
+                            value={categories.find(category => category.id === categoryId) ?? null}
+                            onValueChange={category => {
+                                setCategoryId(category?.id ?? null)
+                                setError('')
+                            }}
+                            itemToStringLabel={category => category.name}
+                            itemToStringValue={category => category.id}
+                            isItemEqualToValue={(category, value) => category.id === value.id}
                             disabled={isFormDisabled || categories.length === 0}
+                            autoHighlight
                         >
-                            <SelectTrigger id="transactionCategory" className="w-full">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {buckets.map(bucket => {
-                                    const bucketCategories = categories.filter(
-                                        category => category.bucket === bucket
-                                    )
-
-                                    if (bucketCategories.length === 0) return null
-
-                                    return (
-                                        <SelectGroup key={bucket}>
-                                            <SelectLabel>{bucketLabels[bucket]}</SelectLabel>
-                                            {bucketCategories.map(category => (
-                                                <SelectItem key={category.id} value={category.id}>
-                                                    {category.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectGroup>
-                                    )
-                                })}
-                            </SelectContent>
-                        </Select>
+                            <ComboboxInput
+                                id="transactionCategory"
+                                className="w-full"
+                                placeholder="Assign a category"
+                                disabled={isFormDisabled || categories.length === 0}
+                            />
+                            <ComboboxContent>
+                                <ComboboxEmpty>No categories found.</ComboboxEmpty>
+                                <ComboboxList>
+                                    {(group : (typeof groupedCategories)[number]) => (
+                                        <ComboboxGroup key={group.group} items={group.items}>
+                                            <ComboboxLabel>{group.label}</ComboboxLabel>
+                                            <ComboboxCollection>
+                                                {(category : Category) => (
+                                                    <ComboboxItem key={category.id} value={category}>
+                                                        {category.name}
+                                                    </ComboboxItem>
+                                                )}
+                                            </ComboboxCollection>
+                                        </ComboboxGroup>
+                                    )}
+                                </ComboboxList>
+                            </ComboboxContent>
+                        </Combobox>
+                        {!isLoading && categories.length === 0 && (
+                            <p className="text-xs text-muted-foreground">
+                                Add a category in Settings first.
+                            </p>
+                        )}
                     </div>
 
                     {error && (
