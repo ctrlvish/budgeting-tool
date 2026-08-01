@@ -71,12 +71,17 @@ function formatDisplayDate(date : Date | undefined) {
     })
 }
 
-function formatStoredDate(date : Date) {
+function formatStoredDate(date : Date): string {
     const year = date.getFullYear()
     const month = String(date.getMonth() + 1).padStart(2, '0')
     const day = String(date.getDate()).padStart(2, '0')
 
     return `${year}-${month}-${day}`
+}
+
+function parseStoredDate(dateStr : string): Date{
+    const splitDate = dateStr.split('-').map(Number)
+    return new Date(splitDate[0], splitDate[1] - 1, splitDate[2])
 }
 
 function isValidDate(date : Date | undefined) {
@@ -91,12 +96,14 @@ interface TransactionDialogProps {
     open : boolean
     onOpenChange : (open : boolean) => void
     onCreated : () => void
+    transaction : Transaction | null
 }
 
 export default function TransactionDialog({
     open,
     onOpenChange,
-    onCreated
+    onCreated,
+    transaction
 } : TransactionDialogProps) {
     const [categories, setCategories] = useState<Category[]>([])
     const [description, setDescription] = useState('')
@@ -147,6 +154,17 @@ export default function TransactionDialog({
         }
     }, [open])
 
+    useEffect(() => {
+        if (!open || transaction === null) return
+        const parsedDate = parseStoredDate(transaction.date)
+        setDescription(transaction.description)
+        setAmount((transaction.amountCents/100).toFixed(2))
+        setDate(parsedDate)
+        setDateValue(formatDisplayDate(parsedDate))
+        setCalendarMonth(parsedDate)
+        setCategoryId(transaction.categoryId)
+    }, [open, transaction])
+
     function resetForm() {
         const today = getToday()
 
@@ -164,11 +182,11 @@ export default function TransactionDialog({
     function handleOpenChange(nextOpen : boolean) {
         if (!nextOpen && isSaving) return
 
+        onOpenChange(nextOpen)
+
         if (!nextOpen) {
             resetForm()
         }
-
-        onOpenChange(nextOpen)
     }
 
     function handleRecurringTransactionChange(value : string | null){
@@ -223,7 +241,8 @@ export default function TransactionDialog({
             description: trimmedDescription,
             categoryId,
             amountCents,
-            type: selectedCategory.type
+            type: selectedCategory.type,
+            recurringTransactionId: recurringTransactionId ?? undefined
         }
 
         setIsSaving(true)
@@ -231,9 +250,9 @@ export default function TransactionDialog({
 
         try {
             await db.transactions.add(transaction)
-            resetForm()
             onCreated()
             onOpenChange(false)
+            resetForm()
         } catch (error) {
             console.error('failed to create transaction', error)
             setError('Could not save transaction')

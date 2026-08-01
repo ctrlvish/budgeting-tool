@@ -5,17 +5,26 @@ import { Route, Routes } from 'react-router'
 import Home from './pages/home'
 import Transactions from './pages/transactions'
 import Settings from './pages/settings'
+import type { Transaction } from './types'
 
 function App() {
     const [isTransactionDialogOpen, setIsTransactionDialogOpen] = useState(false)
     const [transactionsRevision, setTransactionsRevision] = useState(0)
+    const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
 
     function openTransactionDialog() {
+        setSelectedTransaction(null)
         setIsTransactionDialogOpen(true)
     }
 
     function handleTransactionCreated() {
         setTransactionsRevision(previousRevision => previousRevision + 1)
+    }
+
+    function openEditTransaction(transaction : Transaction) {
+      
+        setSelectedTransaction(transaction)
+        setIsTransactionDialogOpen(true)
     }
 
     return (
@@ -31,6 +40,7 @@ function App() {
                             <Transactions
                                 onLogTransaction={openTransactionDialog}
                                 revision={transactionsRevision}
+                                onEditTransaction={openEditTransaction}
                             />
                         }
                     />
@@ -42,6 +52,7 @@ function App() {
                 open={isTransactionDialogOpen}
                 onOpenChange={setIsTransactionDialogOpen}
                 onCreated={handleTransactionCreated}
+                transaction={selectedTransaction}
             />
         </div>
     )

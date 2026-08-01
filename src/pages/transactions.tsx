@@ -23,6 +23,7 @@ import EmptyTable from "@/components/empty-table"
 interface TransactionsProps {
     onLogTransaction : () => void
     revision : number
+    onEditTransaction : (transaction : Transaction) => void
 }
 
 const currencyFormatter = new Intl.NumberFormat('en-AU', {
@@ -40,7 +41,8 @@ function formatDate(date : string) {
     return `${day}/${month}/${year}`
 }
 
-export default function Transactions({ onLogTransaction, revision } : TransactionsProps){
+
+export default function Transactions({ onLogTransaction, revision, onEditTransaction } : TransactionsProps){
 
     const [error, setError] = useState('')
     const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -119,7 +121,11 @@ export default function Transactions({ onLogTransaction, revision } : Transactio
                             )
 
                             return (
-                            <TableRow key={transaction.id}>
+                            <TableRow 
+                                key={transaction.id} 
+                                className="cursor-pointer transition-colors hover:bg-muted/50" 
+                                tabIndex={0}
+                                onClick={() => onEditTransaction(transaction)}>
                                 <TableCell className="font-medium">{formatDate(transaction.date)}</TableCell>
                                 <TableCell>{transaction.description}</TableCell>
                                 <TableCell>
