@@ -151,6 +151,18 @@ export default function TransactionDialog({
 
                 setRecurringTransactions(transactions)
                 setCategories(categories)
+
+                if (transaction) {
+                    const parsedDate = parseStoredDate(transaction.date)
+
+                    setDescription(transaction.description)
+                    setAmount((transaction.amountCents / 100).toFixed(2))
+                    setDate(parsedDate)
+                    setDateValue(formatDisplayDate(parsedDate))
+                    setCalendarMonth(parsedDate)
+                    setCategoryId(transaction.categoryId)
+                    setRecurringTransactionId(transaction.recurringTransactionId ?? null)
+                }
             })
             .catch(error => {
                 console.error('failed to load recurring transaction data', error)
@@ -168,18 +180,6 @@ export default function TransactionDialog({
         return () => {
             isActive = false
         }
-    }, [open])
-
-    useEffect(() => {
-        if (!open || transaction === null) return
-        const parsedDate = parseStoredDate(transaction.date)
-        setDescription(transaction.description)
-        setAmount((transaction.amountCents/100).toFixed(2))
-        setDate(parsedDate)
-        setDateValue(formatDisplayDate(parsedDate))
-        setCalendarMonth(parsedDate)
-        setCategoryId(transaction.categoryId)
-        setRecurringTransactionId(transaction.recurringTransactionId ?? null)
     }, [open, transaction])
 
     function resetForm() {
