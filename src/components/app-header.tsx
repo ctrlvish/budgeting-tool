@@ -6,7 +6,7 @@ import { ModeToggle } from "./mode-toggle"
 const navigationLinkStyles = `
     px-2.5 py-1.5 font-heading text-xs text-foreground
     transition-colors duration-150 hover:text-muted-foreground
-    sm:px-3 sm:text-sm
+    sm:px-3 sm:text-sm font-medium dark:font-normal
 `
 
 interface AppHeaderProps {
@@ -15,10 +15,10 @@ interface AppHeaderProps {
 
 export default function AppHeader({ onLogTransaction } : AppHeaderProps){
     return (
-        <header className="sticky top-0 z-50 w-full bg-background/90 backdrop-blur-md">
+        <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-md border-b border-border/40">
             <div className="mx-auto grid h-14 w-full max-w-4xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center px-4">
                 <div className="hidden h-full items-center sm:grid">
-                    <NavLink to='/' className='font-heading'>
+                    <NavLink to='/' className='font-heading font-medium dark:font-normal'>
                         budgeting tool
                     </NavLink>
                 </div>
