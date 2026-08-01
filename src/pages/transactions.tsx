@@ -16,7 +16,6 @@ import {
  } from "@/components/ui/table"
 import { db } from "@/lib/db"
 import type { Transaction, Category } from "@/types"
-import { Ellipsis } from "lucide-react"
 import { SkeletonTable } from "@/components/skeleton-table"
 import EmptyTable from "@/components/empty-table"
 
@@ -110,7 +109,6 @@ export default function Transactions({ onLogTransaction, revision, onEditTransac
                             <TableHead>Description</TableHead>
                             <TableHead>Category</TableHead>
                             <TableHead className="text-right">Amount</TableHead>
-                            <TableHead className="w-10"/>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -133,11 +131,6 @@ export default function Transactions({ onLogTransaction, revision, onEditTransac
                                     <p className="capitalize text-xs text-muted-foreground">{category?.bucket}</p>
                                 </TableCell>
                                 <TableCell className="text-right">{formatMoney(transaction.amountCents)}</TableCell>
-                                <TableCell className="w-10 text-right px-4">
-                                    <Ellipsis
-                                    className="h-4 w-4 cursor-pointer text-foreground hover:text-muted-foreground"
-                                    />
-                                </TableCell>
                             </TableRow>
                         )
                         })}
