@@ -17,6 +17,16 @@ import {
     DialogHeader,
     DialogTitle
 } from "@/components/ui/dialog"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle
+} from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
 import {
     InputGroup,
@@ -116,6 +126,9 @@ export default function TransactionDialog({
     const [error, setError] = useState('')
     const [isLoading, setIsLoading] = useState(true)
     const [isSaving, setIsSaving] = useState(false)
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+    const [isDeleting, setIsDeleting] = useState(false)
+    const [deleteError, setDeleteError] = useState('')
     const [recurringTransactions, setRecurringTransactions] = useState<RecurringTransaction[]>([])
     const [recurringTransactionId, setRecurringTransactionId] =
     useState<string | null>(null)
@@ -255,19 +268,42 @@ export default function TransactionDialog({
         setError('')
 
         try {
-            isEditing ? await db.transactions.update(transaction.id, transactionData) : await db.transactions.add({ id: crypto.randomUUID(), ...transactionData })
+            if (isEditing) {
+                await db.transactions.update(transaction.id, transactionData)
+            } else {
+                await db.transactions.add({ id: crypto.randomUUID(), ...transactionData })
+            }
+
             onCreated()
             onOpenChange(false)
         } catch (error) {
-            isEditing ? console.error('failed to edit transaction', error) : console.error('failed to create transaction', error)
+            console.error(
+                isEditing ? 'failed to edit transaction' : 'failed to create transaction',
+                error
+            )
             setError('Could not save transaction')
         } finally {
             setIsSaving(false)
         }
     }
 
-    async function handleTransactionDelete(e : React.SubmitEvent<HTMLFormElement>){
-        db.transaction.delete(transaction)
+    async function handleTransactionDelete() {
+        if (!transaction) return
+
+        setIsDeleting(true)
+        setDeleteError('')
+
+        try {
+            await db.transactions.delete(transaction.id)
+            onCreated()
+            setIsDeleteDialogOpen(false)
+            onOpenChange(false)
+        } catch (error) {
+            console.error('failed to delete transaction', error)
+            setDeleteError('Could not delete transaction')
+        } finally {
+            setIsDeleting(false)
+        }
     }
 
     const isFormDisabled = isLoading || isSaving
@@ -294,11 +330,12 @@ export default function TransactionDialog({
         .filter(group => group.items.length > 0)
 
     return (
-        <Dialog
-            open={open}
-            onOpenChange={handleOpenChange}
-            onOpenChangeComplete={handleOpenChangeComplete}
-        >
+        <>
+            <Dialog
+                open={open}
+                onOpenChange={handleOpenChange}
+                onOpenChangeComplete={handleOpenChangeComplete}
+            >
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>
@@ -494,7 +531,10 @@ export default function TransactionDialog({
                             <Button
                                 type="button"
                                 variant="destructive"
-                                onClick={() => handleTransactionDelete()}
+                                onClick={() => {
+                                    setDeleteError('')
+                                    setIsDeleteDialogOpen(true)
+                                }}
                                 disabled={isSaving}
                             >
                                 Delete
@@ -514,7 +554,45 @@ export default function TransactionDialog({
                         </Button>
                     </DialogFooter>
                 </form>
-            </DialogContent>
-        </Dialog>
+                </DialogContent>
+            </Dialog>
+
+            <AlertDialog
+                open={isDeleteDialogOpen}
+                onOpenChange={nextOpen => {
+                    if (!nextOpen && isDeleting) return
+
+                    setIsDeleteDialogOpen(nextOpen)
+
+                    if (!nextOpen) {
+                        setDeleteError('')
+                    }
+                }}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete transaction?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            “{transaction?.description}” will be permanently deleted.
+                        </AlertDialogDescription>
+                        {deleteError && (
+                            <p className="text-sm font-medium text-destructive" role="alert">
+                                {deleteError}
+                            </p>
+                        )}
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            variant="destructive"
+                            disabled={isDeleting}
+                            onClick={handleTransactionDelete}
+                        >
+                            {isDeleting ? 'Deleting...' : 'Delete'}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </>
     )
 }
