@@ -17,6 +17,8 @@ import {
 import { db } from "@/lib/db"
 import type { Transaction, Category } from "@/types"
 import { Ellipsis } from "lucide-react"
+import { SkeletonTable } from "@/components/skeleton-table"
+import EmptyTable from "@/components/empty-table"
 
 interface TransactionsProps {
     onLogTransaction : () => void
@@ -79,7 +81,7 @@ export default function Transactions({ onLogTransaction, revision } : Transactio
     }, [revision])
 
     return (
-    <main className='mx-auto grid w-full max-w-4xl gap-6 px-4 py-10'>
+    <main className='mx-auto grid w-full max-w-5xl gap-6 px-4 py-10'>
         <header className="flex justify-between">
             <div className="space-y-1">
                 <h1 className='font-heading text-3xl font-semibold tracking-tight'>Transactions</h1>
@@ -97,8 +99,9 @@ export default function Transactions({ onLogTransaction, revision } : Transactio
             </CardHeader>
             <CardContent>
                 {error && <p>error: {error}</p>}
-                {isLoading && <p>loading transactions...</p>}
-                <Table>
+                {isLoading ? <SkeletonTable /> : 
+                    transactions.length === 0 ? <EmptyTable onAdd={onLogTransaction}/> :
+                                        <Table>
                     <TableHeader>
                         <TableRow>
                             <TableHead>Date</TableHead>
@@ -133,7 +136,8 @@ export default function Transactions({ onLogTransaction, revision } : Transactio
                         )
                         })}
                     </TableBody>
-                </Table>
+                </Table>}
+
             </CardContent>
         </Card>
     </main>

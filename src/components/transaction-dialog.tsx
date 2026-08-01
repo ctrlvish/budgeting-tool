@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react"
 import { CalendarIcon } from "lucide-react"
-import type { Category, CategoryGroup, Transaction } from "@/types"
+import type { 
+    Category, 
+    CategoryGroup, 
+    Transaction, 
+    RecurringTransaction 
+} from "@/types"
 import { db } from "@/lib/db"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
@@ -36,6 +41,16 @@ import {
     ComboboxLabel,
     ComboboxList
 } from "@/components/ui/combobox"
+
+import { 
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectLabel,
+    SelectTrigger,
+    SelectValue
+ } from "./ui/select"
 
 const categoryGroups : CategoryGroup[] = ['income', 'needs', 'wants', 'savings']
 
@@ -94,23 +109,31 @@ export default function TransactionDialog({
     const [error, setError] = useState('')
     const [isLoading, setIsLoading] = useState(true)
     const [isSaving, setIsSaving] = useState(false)
+    const [recurringTransactions, setRecurringTransactions] = useState<RecurringTransaction[]>([])
+    const [recurringTransactionId, setRecurringTransactionId] =
+    useState<string | null>(null)
+
 
     useEffect(() => {
         if (!open) return
 
         let isActive = true
 
-        db.categories.toArray()
-            .then(categories => {
-                if (isActive) {
-                    setCategories(categories)
-                }
+        Promise.all([
+            db.recurringTransactions.toArray(),
+            db.categories.toArray()
+        ])
+            .then(([transactions, categories]) => {
+                if (!isActive) return
+
+                setRecurringTransactions(transactions)
+                setCategories(categories)
             })
             .catch(error => {
-                console.error('failed to load transaction categories', error)
+                console.error('failed to load recurring transaction data', error)
 
                 if (isActive) {
-                    setError('Could not load categories')
+                    setError('Could not load recurring transactions')
                 }
             })
             .finally(() => {
@@ -135,6 +158,7 @@ export default function TransactionDialog({
         setIsDatePickerOpen(false)
         setCategoryId(null)
         setError('')
+        setRecurringTransactionId(null)
     }
 
     function handleOpenChange(nextOpen : boolean) {
@@ -145,6 +169,18 @@ export default function TransactionDialog({
         }
 
         onOpenChange(nextOpen)
+    }
+
+    function handleRecurringTransactionChange(value : string | null){
+        setRecurringTransactionId(value)
+        if (value === null) return
+        
+        const foundTransaction = recurringTransactions.find(transaction => value === transaction.id)
+        if (!foundTransaction) return
+        
+        setDescription(foundTransaction.name)
+        setAmount((foundTransaction.amountCents / 100).toFixed(2))
+        setCategoryId(foundTransaction.categoryId)
     }
 
     async function handleSubmit(e : React.SubmitEvent<HTMLFormElement>) {
@@ -207,6 +243,14 @@ export default function TransactionDialog({
     }
 
     const isFormDisabled = isLoading || isSaving
+    const recurringTransactionItems = [
+        { label: 'Choose template (optional)', value: null },
+        ...recurringTransactions.map(transaction => ({
+            label: transaction.name,
+            value: transaction.id
+        }))
+    ]
+
     const groupedCategories = categoryGroups
         .map(group => ({
             group,
@@ -230,6 +274,30 @@ export default function TransactionDialog({
                 </DialogHeader>
 
                 <form className="grid gap-4" onSubmit={handleSubmit}>
+                    <div className="grid gap-2">
+                        <Label htmlFor="transactionTemplate">Template</Label>
+                        <Select
+                            items={recurringTransactionItems}
+                            value={recurringTransactionId}
+                            onValueChange={handleRecurringTransactionChange}
+                            disabled={isFormDisabled}
+                            id="transactionTemplate"
+                        >
+                            <SelectTrigger id="transactionTemplate" className="w-full">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectGroup>
+                                    <SelectLabel>Templates</SelectLabel>
+                                    {recurringTransactionItems.map(item => (
+                                        <SelectItem key={item.value} value={item.value}>
+                                            {item.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectGroup>
+                            </SelectContent>
+                        </Select>
+                    </div>
                     <div className="grid gap-2">
                         <Label htmlFor="transactionDescription">Description</Label>
                         <Input
