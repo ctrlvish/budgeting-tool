@@ -183,7 +183,9 @@ export default function TransactionDialog({
         if (!nextOpen && isSaving) return
 
         onOpenChange(nextOpen)
+    }
 
+    function handleOpenChangeComplete(nextOpen : boolean) {
         if (!nextOpen) {
             resetForm()
         }
@@ -252,7 +254,6 @@ export default function TransactionDialog({
             await db.transactions.add(transaction)
             onCreated()
             onOpenChange(false)
-            resetForm()
         } catch (error) {
             console.error('failed to create transaction', error)
             setError('Could not save transaction')
@@ -285,7 +286,11 @@ export default function TransactionDialog({
         .filter(group => group.items.length > 0)
 
     return (
-        <Dialog open={open} onOpenChange={handleOpenChange}>
+        <Dialog
+            open={open}
+            onOpenChange={handleOpenChange}
+            onOpenChangeComplete={handleOpenChangeComplete}
+        >
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Log transaction</DialogTitle>
