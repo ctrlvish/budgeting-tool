@@ -120,6 +120,9 @@ export default function TransactionDialog({
     const [recurringTransactionId, setRecurringTransactionId] =
     useState<string | null>(null)
 
+    // logic to control if edit dialog is shown or create dialog is shown
+    const isEditing = transaction !== null
+
 
     useEffect(() => {
         if (!open) return
@@ -163,6 +166,7 @@ export default function TransactionDialog({
         setDateValue(formatDisplayDate(parsedDate))
         setCalendarMonth(parsedDate)
         setCategoryId(transaction.categoryId)
+        setRecurringTransactionId(transaction.recurringTransactionId ?? null)
     }, [open, transaction])
 
     function resetForm() {
@@ -237,8 +241,7 @@ export default function TransactionDialog({
             return
         }
 
-        const transaction : Transaction = {
-            id: crypto.randomUUID(),
+        const transactionData = {
             date: formatStoredDate(date),
             description: trimmedDescription,
             categoryId,
@@ -247,19 +250,24 @@ export default function TransactionDialog({
             recurringTransactionId: recurringTransactionId ?? undefined
         }
 
+
         setIsSaving(true)
         setError('')
 
         try {
-            await db.transactions.add(transaction)
+            isEditing ? await db.transactions.update(transaction.id, transactionData) : await db.transactions.add({ id: crypto.randomUUID(), ...transactionData })
             onCreated()
             onOpenChange(false)
         } catch (error) {
-            console.error('failed to create transaction', error)
+            isEditing ? console.error('failed to edit transaction', error) : console.error('failed to create transaction', error)
             setError('Could not save transaction')
         } finally {
             setIsSaving(false)
         }
+    }
+
+    async function handleTransactionDelete(e : React.SubmitEvent<HTMLFormElement>){
+        db.transaction.delete(transaction)
     }
 
     const isFormDisabled = isLoading || isSaving
@@ -293,12 +301,14 @@ export default function TransactionDialog({
         >
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Log transaction</DialogTitle>
-                    <DialogDescription>Add income or an expense to your budget.</DialogDescription>
+                    <DialogTitle>
+                        {isEditing ? 'Edit Transaction' : 'Log Transaction'}
+                    </DialogTitle>
+                    {!isEditing && <DialogDescription>Add income or an expense to your budget.</DialogDescription>}
                 </DialogHeader>
 
                 <form className="grid gap-4" onSubmit={handleSubmit}>
-                    <div className="grid gap-2">
+                    {!isEditing && <div className="grid gap-2">
                         <Label htmlFor="transactionTemplate">Template</Label>
                         <Select
                             items={recurringTransactionItems}
@@ -321,7 +331,7 @@ export default function TransactionDialog({
                                 </SelectGroup>
                             </SelectContent>
                         </Select>
-                    </div>
+                    </div>}
                     <div className="grid gap-2">
                         <Label htmlFor="transactionDescription">Description</Label>
                         <Input
@@ -480,14 +490,25 @@ export default function TransactionDialog({
                     )}
 
                     <DialogFooter>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => handleOpenChange(false)}
-                            disabled={isSaving}
-                        >
-                            Cancel
-                        </Button>
+                        {isEditing ? (
+                            <Button
+                                type="button"
+                                variant="destructive"
+                                onClick={() => handleTransactionDelete()}
+                                disabled={isSaving}
+                            >
+                                Delete
+                            </Button>
+                        ) : (
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => handleOpenChange(false)}
+                                disabled={isSaving}
+                            >
+                                Cancel
+                            </Button>
+                        )}
                         <Button type="submit" disabled={isFormDisabled}>
                             {isSaving ? 'Saving...' : 'Save'}
                         </Button>
