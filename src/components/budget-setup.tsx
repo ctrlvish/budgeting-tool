@@ -28,7 +28,7 @@ const defaultSettings: BudgetSettingsFormData = {
 
 function budgetSettingsToFormData(settings : BudgetSetting) : BudgetSettingsFormData {
     return {
-        startingSavingsBalance: String(settings.startingSavingsBalance),
+        startingSavingsBalance: String(settings.startingSavingsBalanceCents / 100),
         needs: String(settings.needs),
         wants: String(settings.wants),
         savings: String(settings.savings)
@@ -37,7 +37,7 @@ function budgetSettingsToFormData(settings : BudgetSetting) : BudgetSettingsForm
 
 function formDataToBudgetSettings(formData : BudgetSettingsFormData) : BudgetSetting {
     return {
-        startingSavingsBalance: Number(formData.startingSavingsBalance),
+        startingSavingsBalanceCents: Math.round(Number(formData.startingSavingsBalance) * 100),
         needs: Number(formData.needs),
         wants: Number(formData.wants),
         savings: Number(formData.savings)
@@ -141,6 +141,7 @@ export default function BudgetSetup() {
                             <Input
                                 className="pl-6"
                                 type='number'
+                                step='0.01'
                                 id="startingSavingsBalanceInput"
                                 name="startingSavingsBalance"
                                 value={formData.startingSavingsBalance}

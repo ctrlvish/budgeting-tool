@@ -108,6 +108,11 @@ const defaultRecurringTransactions : RecurringTransaction[] = [
     }
 ]
 
+type LegacyBudgetSetting = Omit<BudgetSetting, 'startingSavingsBalanceCents'> & {
+    startingSavingsBalance? : number
+    startingSavingsBalanceCents? : number
+}
+
 export class BudgetDatabase extends Dexie {
     categories! : Table<Category>
     budgetSettings! : Table<BudgetSetting>
@@ -180,6 +185,29 @@ export class BudgetDatabase extends Dexie {
             recurringExpenses : null,
             recurringTransactions : 'id, categoryId',
             transactions : 'id, type, date, categoryId, recurringTransactionId'
+        })
+
+        this.version(4).stores({
+            categories : 'id, type, bucket',
+            budgetSettings : '++autoId',
+            recurringTransactions : 'id, categoryId',
+            transactions : 'id, type, date, categoryId, recurringTransactionId'
+        }).upgrade(schemaTransaction => {
+            const budgetSettings = schemaTransaction
+                .table<LegacyBudgetSetting>('budgetSettings')
+
+            return budgetSettings.toCollection().modify(settings => {
+                if (
+                    typeof settings.startingSavingsBalance === 'number'
+                    && typeof settings.startingSavingsBalanceCents !== 'number'
+                ) {
+                    settings.startingSavingsBalanceCents = Math.round(
+                        settings.startingSavingsBalance * 100
+                    )
+                }
+
+                delete settings.startingSavingsBalance
+            })
         })
 
         this.on('populate', async () => {
