@@ -220,6 +220,9 @@ export default function Transactions({ onLogTransaction, revision, onEditTransac
                         {filteredTransactions.map((transaction) => {
 
                             const category = categoryMap.get(transaction.categoryId)
+                            const categoryGroup = transaction.type === 'income'
+                                ? 'income'
+                                : category?.bucket
 
                             return (
                             <TableRow 
@@ -231,7 +234,7 @@ export default function Transactions({ onLogTransaction, revision, onEditTransac
                                 <TableCell>{transaction.description}</TableCell>
                                 <TableCell>
                                     <p>{category?.name}</p>
-                                    <p className="capitalize text-xs text-muted-foreground">{category?.bucket}</p>
+                                    <p className="capitalize text-xs text-muted-foreground">{categoryGroup}</p>
                                 </TableCell>
                                 <TableCell className="text-right">{formatMoney(transaction.amountCents)}</TableCell>
                             </TableRow>
