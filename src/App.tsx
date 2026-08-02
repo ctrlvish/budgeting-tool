@@ -2,7 +2,7 @@ import { useState } from 'react'
 import AppHeader from './components/app-header'
 import TransactionDialog from './components/transaction-dialog'
 import { Route, Routes } from 'react-router'
-import Home from './pages/home'
+import Dashboard from './pages/dashboard'
 import Transactions from './pages/transactions'
 import Settings from './pages/settings'
 import type { Transaction } from './types'
@@ -33,7 +33,7 @@ function App() {
 
             <main>
                 <Routes>
-                    <Route path="/" element={<Home />} />
+                    <Route path="/" element={<Dashboard />} />
                     <Route
                         path="/transactions"
                         element={
