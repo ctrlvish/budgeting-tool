@@ -15,7 +15,7 @@ import {
     TableCell
  } from "@/components/ui/table"
 import { db } from "@/lib/db"
-import type { Transaction, Category } from "@/types"
+import type { Transaction, Category, CategoryGroup } from "@/types"
 import { SkeletonTable } from "@/components/skeleton-table"
 import EmptyTable from "@/components/empty-table"
 import { 
@@ -24,11 +24,29 @@ import {
     InputGroupAddon
  } from "@/components/ui/input-group"
 import { SearchIcon } from "lucide-react"
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectLabel,
+    SelectTrigger,
+    SelectValue
+} from "@/components/ui/select"
 
 interface TransactionsProps {
     onLogTransaction : () => void
     revision : number
     onEditTransaction : (transaction : Transaction) => void
+}
+
+const categoryGroups : CategoryGroup[] = ['income', 'needs', 'wants', 'savings']
+
+const categoryGroupLabels : Record<CategoryGroup, string> = {
+    income: 'Income',
+    needs: 'Needs',
+    wants: 'Wants',
+    savings: 'Savings'
 }
 
 const currencyFormatter = new Intl.NumberFormat('en-AU', {
@@ -54,6 +72,7 @@ export default function Transactions({ onLogTransaction, revision, onEditTransac
     const [categories, setCategories] = useState<Category[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [search, setSearch] = useState('')
+    const [selectedCategoryId, setSelectedCategoryId] = useState('all')
 
 
 
@@ -100,8 +119,36 @@ export default function Transactions({ onLogTransaction, revision, onEditTransac
     }, [categories])
 
     const filteredTransactions = transactions.filter(transaction => {
-        return transaction.description.toLowerCase().includes(search.trim().toLowerCase())  
+        const matchesSearch = transaction.description
+            .toLowerCase()
+            .includes(search.trim().toLowerCase())
+        const matchesCategory = selectedCategoryId === 'all'
+            || transaction.categoryId === selectedCategoryId
+
+        return matchesSearch && matchesCategory
     })
+
+    const categoryItems = [
+        { label: 'All categories', value: 'all' },
+        ...categories.map(category => ({
+            label: category.name,
+            value: category.id
+        }))
+    ]
+
+    const groupedCategories = categoryGroups
+        .map(group => ({
+            group,
+            label: categoryGroupLabels[group],
+            items: categories.filter(category => {
+                if (group === 'income') {
+                    return category.type === 'income'
+                }
+
+                return category.type === 'expense' && category.bucket === group
+            })
+        }))
+        .filter(group => group.items.length > 0)
 
     return (
     <main className='mx-auto grid w-full max-w-5xl gap-6 px-4 py-10'>
@@ -116,10 +163,10 @@ export default function Transactions({ onLogTransaction, revision, onEditTransac
                 </Button>
             </div>
         </header>
-        <Card>
-            <CardHeader>
-                <InputGroup>
-                <InputGroupAddon><SearchIcon /></InputGroupAddon>
+        <Card className="lg:min-h-144">
+            <CardHeader className="flex flex-col gap-3 sm:flex-row">
+                <InputGroup className="sm:flex-1">
+                    <InputGroupAddon><SearchIcon /></InputGroupAddon>
                     <InputGroupInput
                         value={search}
                         onChange={e => setSearch(e.target.value)}
@@ -127,6 +174,34 @@ export default function Transactions({ onLogTransaction, revision, onEditTransac
                         aria-label="Search transactions"
                     />
                 </InputGroup>
+                <Select
+                    items={categoryItems}
+                    value={selectedCategoryId}
+                    onValueChange={value => setSelectedCategoryId(value ?? 'all')}
+                >
+                    <SelectTrigger
+                        className="w-full sm:w-52"
+                        aria-label="Filter by category"
+                    >
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent alignItemWithTrigger={false} className="max-h-64">
+                        <SelectGroup>
+                            <SelectLabel>Categories</SelectLabel>
+                            <SelectItem value="all">All categories</SelectItem>
+                        </SelectGroup>
+                        {groupedCategories.map(group => (
+                            <SelectGroup key={group.group}>
+                                <SelectLabel>{group.label}</SelectLabel>
+                                {group.items.map(category => (
+                                    <SelectItem key={category.id} value={category.id}>
+                                        {category.name}
+                                    </SelectItem>
+                                ))}
+                            </SelectGroup>
+                        ))}
+                    </SelectContent>
+                </Select>
             </CardHeader>
             <CardContent>
                 {error && <p>error: {error}</p>}
