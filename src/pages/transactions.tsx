@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import { 
@@ -88,6 +88,17 @@ export default function Transactions({ onLogTransaction, revision, onEditTransac
         }
     }, [revision])
 
+
+    const categoryMap = useMemo(() => {
+        const map = new Map<string, Category>()
+
+        for (const category of categories) {
+            map.set(category.id, category)
+        }
+
+        return map
+    }, [categories])
+
     const filteredTransactions = transactions.filter(transaction => {
         return transaction.description.toLowerCase().includes(search.trim().toLowerCase())  
     })
@@ -133,9 +144,7 @@ export default function Transactions({ onLogTransaction, revision, onEditTransac
                     <TableBody>
                         {filteredTransactions.map((transaction) => {
 
-                            const category = categories.find(
-                                category => transaction.categoryId === category.id
-                            )
+                            const category = categoryMap.get(transaction.categoryId)
 
                             return (
                             <TableRow 
