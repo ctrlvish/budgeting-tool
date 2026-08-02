@@ -18,6 +18,12 @@ import { db } from "@/lib/db"
 import type { Transaction, Category } from "@/types"
 import { SkeletonTable } from "@/components/skeleton-table"
 import EmptyTable from "@/components/empty-table"
+import { 
+    InputGroup,
+    InputGroupInput,
+    InputGroupAddon
+ } from "@/components/ui/input-group"
+import { SearchIcon } from "lucide-react"
 
 interface TransactionsProps {
     onLogTransaction : () => void
@@ -47,6 +53,7 @@ export default function Transactions({ onLogTransaction, revision, onEditTransac
     const [transactions, setTransactions] = useState<Transaction[]>([])
     const [categories, setCategories] = useState<Category[]>([])
     const [isLoading, setIsLoading] = useState(true)
+    const [search, setSearch] = useState('')
 
 
 
@@ -81,6 +88,10 @@ export default function Transactions({ onLogTransaction, revision, onEditTransac
         }
     }, [revision])
 
+    const filteredTransactions = transactions.filter(transaction => {
+        return transaction.description.toLowerCase().includes(search.trim().toLowerCase())  
+    })
+
     return (
     <main className='mx-auto grid w-full max-w-5xl gap-6 px-4 py-10'>
         <header className="flex justify-between">
@@ -96,7 +107,15 @@ export default function Transactions({ onLogTransaction, revision, onEditTransac
         </header>
         <Card>
             <CardHeader>
-                {/* Search and filters go here */}
+                <InputGroup>
+                <InputGroupAddon><SearchIcon /></InputGroupAddon>
+                    <InputGroupInput
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        placeholder='Search transactions...'
+                        aria-label="Search transactions"
+                    />
+                </InputGroup>
             </CardHeader>
             <CardContent>
                 {error && <p>error: {error}</p>}
@@ -112,7 +131,7 @@ export default function Transactions({ onLogTransaction, revision, onEditTransac
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {transactions.map((transaction) => {
+                        {filteredTransactions.map((transaction) => {
 
                             const category = categories.find(
                                 category => transaction.categoryId === category.id
