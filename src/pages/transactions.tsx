@@ -34,11 +34,29 @@ import {
     SelectValue
 } from "@/components/ui/select"
 
+import { Calendar } from "@/components/ui/calendar"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { CalendarIcon } from "lucide-react"
+import { type DateRange } from "react-day-picker"
+import {
+    endOfMonth,
+    endOfWeek,
+    format,
+    startOfMonth,
+    startOfWeek
+} from "date-fns"
+
 interface TransactionsProps {
     onLogTransaction : () => void
     revision : number
     onEditTransaction : (transaction : Transaction) => void
 }
+
+type DatePreset = 'today' | 'week' | 'month' | 'custom' | null
 
 const categoryGroups : CategoryGroup[] = ['income', 'needs', 'wants', 'savings']
 
@@ -73,7 +91,9 @@ export default function Transactions({ onLogTransaction, revision, onEditTransac
     const [isLoading, setIsLoading] = useState(true)
     const [search, setSearch] = useState('')
     const [selectedCategoryId, setSelectedCategoryId] = useState('all')
-
+    const [date, setDate] = useState<DateRange | undefined>(undefined)
+    const [datePreset, setDatePreset] = useState<DatePreset>(null)
+    const [isDateFilterOpen, setIsDateFilterOpen] = useState(false)
 
 
     useEffect(() => {
@@ -124,8 +144,17 @@ export default function Transactions({ onLogTransaction, revision, onEditTransac
             .includes(search.trim().toLowerCase())
         const matchesCategory = selectedCategoryId === 'all'
             || transaction.categoryId === selectedCategoryId
+        const fromDate = date?.from
+            ? format(date.from, 'yyyy-MM-dd')
+            : undefined
+        const toDate = date?.from
+            ? format(date.to ?? date.from, 'yyyy-MM-dd')
+            : undefined
+        const matchesDate = !fromDate
+            || !toDate
+            || (transaction.date >= fromDate && transaction.date <= toDate)
 
-        return matchesSearch && matchesCategory
+        return matchesSearch && matchesCategory && matchesDate
     })
 
     const categoryItems = [
@@ -149,6 +178,37 @@ export default function Transactions({ onLogTransaction, revision, onEditTransac
             })
         }))
         .filter(group => group.items.length > 0)
+
+    function handleDatePreset(preset : Exclude<DatePreset, 'custom' | null>) {
+        const today = new Date()
+
+        if (preset === 'today') {
+            setDate({ from: today, to: today })
+        }
+
+        if (preset === 'week') {
+            setDate({
+                from: startOfWeek(today, { weekStartsOn: 1 }),
+                to: endOfWeek(today, { weekStartsOn: 1 })
+            })
+        }
+
+        if (preset === 'month') {
+            setDate({
+                from: startOfMonth(today),
+                to: endOfMonth(today)
+            })
+        }
+
+        setDatePreset(preset)
+        setIsDateFilterOpen(false)
+    }
+
+    function clearDateFilter() {
+        setDate(undefined)
+        setDatePreset(null)
+        setIsDateFilterOpen(false)
+    }
 
     return (
     <main className='mx-auto grid w-full max-w-5xl gap-6 px-4 py-10'>
@@ -202,6 +262,89 @@ export default function Transactions({ onLogTransaction, revision, onEditTransac
                         ))}
                     </SelectContent>
                 </Select>
+                <Popover open={isDateFilterOpen} onOpenChange={setIsDateFilterOpen}>
+                    <PopoverTrigger 
+                    render={
+                        <Button 
+                            variant="outline" 
+                            id="date-picker-range" 
+                            className="justify-start px-2.5 font-normal">
+                        <CalendarIcon data-icon="inline-start" />
+                        {datePreset === 'today' ? (
+                            <span>Today</span>
+                        ) : datePreset === 'week' ? (
+                            <span>This week</span>
+                        ) : datePreset === 'month' ? (
+                            <span>This month</span>
+                        ) : date?.from ? (date.to ? (
+                            <>
+                                {format(date.from, "dd MMM yyyy")} -{" "}
+                                {format(date.to, "dd MMM yyyy")}
+                            </>
+                            ) : (
+                            format(date.from, "dd MMM yyyy")
+                            )
+                        ) : (
+                            <span>All dates</span>
+                        )}</Button>} />
+                    <PopoverContent className="w-auto p-0" align="end">
+                        <div className="grid grid-cols-2 gap-1 border-b p-2">
+                            <Button
+                                type="button"
+                                variant={datePreset === 'today' ? 'secondary' : 'ghost'}
+                                size="sm"
+                                onClick={() => handleDatePreset('today')}
+                            >
+                                Today
+                            </Button>
+                            <Button
+                                type="button"
+                                variant={datePreset === 'week' ? 'secondary' : 'ghost'}
+                                size="sm"
+                                onClick={() => handleDatePreset('week')}
+                            >
+                                This week
+                            </Button>
+                            <Button
+                                type="button"
+                                variant={datePreset === 'month' ? 'secondary' : 'ghost'}
+                                size="sm"
+                                onClick={() => handleDatePreset('month')}
+                            >
+                                This month
+                            </Button>
+                            <Button
+                                type="button"
+                                variant={datePreset === 'custom' ? 'secondary' : 'ghost'}
+                                size="sm"
+                                onClick={() => setDatePreset('custom')}
+                            >
+                                Custom
+                            </Button>
+                        </div>
+                        <Calendar
+                            mode="range"
+                            selected={date}
+                            onSelect={range => {
+                                setDate(range)
+                                setDatePreset(range?.from ? 'custom' : null)
+                            }}
+                        />
+                        {date?.from && (
+                            <div className="border-t p-2">
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className="w-full"
+                                    onClick={clearDateFilter}
+                                >
+                                    Clear dates
+                                </Button>
+                            </div>
+                        )}
+                    </PopoverContent>
+                </Popover>
             </CardHeader>
             <CardContent>
                 {error && <p>error: {error}</p>}
