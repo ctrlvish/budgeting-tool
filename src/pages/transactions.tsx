@@ -350,7 +350,13 @@ export default function Transactions({ onLogTransaction, revision, onEditTransac
                 {error && <p>error: {error}</p>}
                 {isLoading ? <SkeletonTable /> : 
                     transactions.length === 0 ? <EmptyTable onAdd={onLogTransaction}/> :
-                                        <Table>
+                <Table className="min-w-160 table-fixed">
+                    <colgroup>
+                        <col className="w-28" />
+                        <col />
+                        <col className="w-40" />
+                        <col className="w-32" />
+                    </colgroup>
                     <TableHeader>
                         <TableRow>
                             <TableHead>Date</TableHead>
@@ -374,9 +380,11 @@ export default function Transactions({ onLogTransaction, revision, onEditTransac
                                 tabIndex={0}
                                 onClick={() => onEditTransaction(transaction)}>
                                 <TableCell className="font-medium">{formatDate(transaction.date)}</TableCell>
-                                <TableCell>{transaction.description}</TableCell>
-                                <TableCell>
-                                    <p>{category?.name}</p>
+                                <TableCell className="truncate" title={transaction.description}>
+                                    {transaction.description}
+                                </TableCell>
+                                <TableCell className="overflow-hidden">
+                                    <p className="truncate">{category?.name}</p>
                                     <p className="capitalize text-xs text-muted-foreground">{categoryGroup}</p>
                                 </TableCell>
                                 <TableCell className="text-right">{formatMoney(transaction.amountCents)}</TableCell>
