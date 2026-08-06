@@ -162,6 +162,9 @@ export default function BudgetSetup() {
                                 onChange={handleChange}
                                 disabled={isDisabled}
                                 placeholder="50"
+                                aria-required="true"
+                                aria-invalid={!isRatioValid}
+                                aria-describedby={!isRatioValid ? 'budget-ratio-message' : undefined}
                             />
                         </div>
                         <div className="grid gap-2">
@@ -175,6 +178,9 @@ export default function BudgetSetup() {
                                 onChange={handleChange}
                                 disabled={isDisabled}
                                 placeholder="30"
+                                aria-required="true"
+                                aria-invalid={!isRatioValid}
+                                aria-describedby={!isRatioValid ? 'budget-ratio-message' : undefined}
                             />
                         </div>
                         <div className="grid gap-2">
@@ -188,6 +194,9 @@ export default function BudgetSetup() {
                                 onChange={handleChange}
                                 disabled={isDisabled}
                                 placeholder="20"
+                                aria-required="true"
+                                aria-invalid={!isRatioValid}
+                                aria-describedby={!isRatioValid ? 'budget-ratio-message' : undefined}
                             />
                         </div>
                     </div>
@@ -198,7 +207,7 @@ export default function BudgetSetup() {
             <CardFooter className="items-center justify-between gap-3">
                 <div className="min-h-5" aria-live="polite">
                     {!isRatioValid && (
-                        <p className="text-sm font-medium text-destructive">
+                        <p id="budget-ratio-message" className="text-sm font-medium text-destructive">
                             {ratioMessage}
                         </p>
                     )}

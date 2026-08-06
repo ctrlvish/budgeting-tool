@@ -79,7 +79,7 @@ export default function YearlyBreakdown({
     return (
         <Card className="min-w-0">
             <CardHeader>
-                <CardTitle>Yearly overview</CardTitle>
+                <CardTitle>Yearly Overview</CardTitle>
                 <CardDescription>{year}</CardDescription>
                 <CardAction>
                     <PeriodNavigation

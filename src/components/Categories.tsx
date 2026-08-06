@@ -78,6 +78,8 @@ export default function Categories(){
 
     //for deleting category
     const isReferenced = usage !== null && (usage.transactions > 0 || usage.transactionTemplates > 0)
+    const isAddNameInvalid = error === 'Please enter a name'
+    const isEditNameInvalid = editError === 'Please enter a category name'
 
     async function handleCategoryAdd(e : React.SubmitEvent<HTMLFormElement>){
         e.preventDefault()
@@ -251,6 +253,9 @@ export default function Categories(){
                         value={name}
                         onChange={e => setName(e.target.value)}
                         placeholder="e.g. Groceries"
+                        aria-required="true"
+                        aria-invalid={isAddNameInvalid}
+                        aria-describedby={isAddNameInvalid ? 'category-error' : undefined}
                     />
                 </div>
 
@@ -267,6 +272,7 @@ export default function Categories(){
                         <SelectTrigger
                             id="categoryGroup"
                             className="w-full data-[size=default]:h-10 sm:data-[size=default]:h-8"
+                            aria-required="true"
                         >
                             <SelectValue />
                         </SelectTrigger>
@@ -372,10 +378,13 @@ export default function Categories(){
                             id="nameInput"
                             value={editName}
                             onChange={e => setEditName(e.target.value)}
+                            aria-required="true"
+                            aria-invalid={isEditNameInvalid}
+                            aria-describedby={isEditNameInvalid ? 'category-edit-error' : undefined}
                             ></Input>
                     </div>
                     {editError && (
-                        <p className="text-sm text-destructive" role="alert">
+                        <p id="category-edit-error" className="text-sm text-destructive" role="alert">
                             {editError}
                         </p>
                     )}
@@ -435,7 +444,7 @@ export default function Categories(){
             </AlertDialogContent>
         </AlertDialog>
 
-        {error && <p className="mt-4 font-medium text-sm text-destructive" role="alert">{error}</p>}
+        {error && <p id="category-error" className="mt-4 font-medium text-sm text-destructive" role="alert">{error}</p>}
 
         </CardContent>
         </Card>

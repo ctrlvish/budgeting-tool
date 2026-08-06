@@ -31,22 +31,20 @@ function App() {
         <div className="min-h-dvh pb-[calc(4rem+env(safe-area-inset-bottom))] sm:pb-0">
             <AppHeader onLogTransaction={openTransactionDialog} />
 
-            <main>
-                <Routes>
-                    <Route path="/" element={<Dashboard revision={transactionsRevision} />} />
-                    <Route
-                        path="/transactions"
-                        element={
-                            <Transactions
-                                onLogTransaction={openTransactionDialog}
-                                revision={transactionsRevision}
-                                onEditTransaction={openEditTransaction}
-                            />
-                        }
-                    />
-                    <Route path="/settings" element={<Settings />} />
-                </Routes>
-            </main>
+            <Routes>
+                <Route path="/" element={<Dashboard revision={transactionsRevision} />} />
+                <Route
+                    path="/transactions"
+                    element={
+                        <Transactions
+                            onLogTransaction={openTransactionDialog}
+                            revision={transactionsRevision}
+                            onEditTransaction={openEditTransaction}
+                        />
+                    }
+                />
+                <Route path="/settings" element={<Settings />} />
+            </Routes>
 
             <TransactionDialog
                 open={isTransactionDialogOpen}

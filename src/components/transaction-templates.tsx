@@ -140,6 +140,9 @@ export default function TransactionTemplates() {
     }, [])
 
     const isFormDisabled = isLoading || isAdding
+    const isNameInvalid = error === 'Please enter a name'
+    const isAmountInvalid = error === 'Please enter an amount greater than 0'
+    const isCategoryInvalid = error === 'Please choose a category'
 
     return (
         <Card className="w-full min-w-0">
@@ -206,6 +209,9 @@ export default function TransactionTemplates() {
                                 onChange={e => setName(e.target.value)}
                                 disabled={isFormDisabled}
                                 placeholder="e.g. Rent"
+                                aria-required="true"
+                                aria-invalid={isNameInvalid}
+                                aria-describedby={isNameInvalid ? 'transaction-template-error' : undefined}
                             />
                         </div>
                         <div className="grid gap-2">
@@ -227,6 +233,9 @@ export default function TransactionTemplates() {
                                     onChange={e => setAmount(e.target.value)}
                                     disabled={isFormDisabled}
                                     placeholder="0.00"
+                                    aria-required="true"
+                                    aria-invalid={isAmountInvalid}
+                                    aria-describedby={isAmountInvalid ? 'transaction-template-error' : undefined}
                                 />
                             </div>
                         </div>
@@ -243,6 +252,9 @@ export default function TransactionTemplates() {
                                 disabled={isFormDisabled}
                                 id="transactionTemplateCategory"
                                 placeholder="Choose category"
+                                ariaRequired
+                                ariaInvalid={isCategoryInvalid}
+                                ariaDescribedBy={isCategoryInvalid ? 'transaction-template-error' : undefined}
                             />
                         </div>
                     </div>
@@ -251,7 +263,7 @@ export default function TransactionTemplates() {
             <CardFooter className="items-center justify-between gap-3">
                 <div className="min-h-5" aria-live="polite">
                     {error && (
-                        <p className="text-sm font-medium text-destructive" role="alert">
+                        <p id="transaction-template-error" className="text-sm font-medium text-destructive" role="alert">
                             {error}
                         </p>
                     )}

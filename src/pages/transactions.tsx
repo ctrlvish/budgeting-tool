@@ -454,21 +454,24 @@ export default function Transactions({ onLogTransaction, revision, onEditTransac
                             return (
                             <TableRow 
                                 key={transaction.id} 
-                                className="grid cursor-pointer grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-0.5 px-2 py-2.5 first:border-t transition-colors hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none sm:table-row sm:px-0 sm:py-0 sm:first:border-t-0"
-                                tabIndex={0}
+                                className="grid cursor-pointer grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-0.5 px-2 py-2.5 first:border-t transition-colors hover:bg-muted/50 focus-within:bg-muted/50 focus-within:outline-none focus-within:ring-2 focus-within:ring-inset focus-within:ring-ring sm:table-row sm:px-0 sm:py-0 sm:first:border-t-0"
                                 onClick={() => onEditTransaction(transaction)}
-                                onKeyDown={event => {
-                                    if (event.key === 'Enter' || event.key === ' ') {
-                                        event.preventDefault()
-                                        onEditTransaction(transaction)
-                                    }
-                                }}
                             >
                                 <TableCell className="col-start-2 row-start-2 block p-0 text-right text-[11px] font-normal text-muted-foreground sm:table-cell sm:p-2 sm:text-left sm:text-sm sm:font-medium sm:text-foreground">
                                     {formatDate(transaction.date)}
                                 </TableCell>
                                 <TableCell className="col-start-1 row-start-1 block min-w-0 p-0 font-medium sm:table-cell sm:p-2 sm:font-normal" title={transaction.description}>
                                     <p className="truncate">{transaction.description}</p>
+                                    <button
+                                        type="button"
+                                        className="sr-only"
+                                        onClick={event => {
+                                            event.stopPropagation()
+                                            onEditTransaction(transaction)
+                                        }}
+                                    >
+                                        Edit {transaction.description} transaction
+                                    </button>
                                 </TableCell>
                                 <TableCell className="col-start-1 row-start-2 block min-w-0 overflow-hidden p-0 sm:table-cell sm:p-2">
                                     <p className="truncate text-xs text-muted-foreground sm:text-sm sm:text-foreground">

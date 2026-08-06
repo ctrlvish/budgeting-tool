@@ -286,6 +286,11 @@ export default function TransactionDialog({
     }
 
     const isFormDisabled = isLoading || isSaving
+    const isDescriptionInvalid = error === 'Please enter a description'
+    const isAmountInvalid = error === 'Please enter an amount greater than 0'
+    const isDateInvalid = error === 'Please choose a date'
+    const isCategoryInvalid = error === 'Please choose a category'
+        || error === 'Please choose a valid category'
     const transactionTemplateItems = [
         { label: 'Choose template (optional)', value: null },
         ...transactionTemplates.map(template => ({
@@ -352,6 +357,9 @@ export default function TransactionDialog({
                             disabled={isFormDisabled}
                             placeholder="e.g. Weekly groceries"
                             autoFocus
+                            aria-required="true"
+                            aria-invalid={isDescriptionInvalid}
+                            aria-describedby={isDescriptionInvalid ? 'transaction-error' : undefined}
                         />
                     </div>
 
@@ -375,6 +383,9 @@ export default function TransactionDialog({
                                     onChange={e => setAmount(e.target.value)}
                                     disabled={isFormDisabled}
                                     placeholder="0.00"
+                                    aria-required="true"
+                                    aria-invalid={isAmountInvalid}
+                                    aria-describedby={isAmountInvalid ? 'transaction-error' : undefined}
                                 />
                             </div>
                         </div>
@@ -404,6 +415,9 @@ export default function TransactionDialog({
                                     }}
                                     disabled={isFormDisabled}
                                     placeholder="29 July 2026"
+                                    aria-required="true"
+                                    aria-invalid={isDateInvalid}
+                                    aria-describedby={isDateInvalid ? 'transaction-error' : undefined}
                                 />
                                 <InputGroupAddon align="inline-end">
                                     <Popover
@@ -460,6 +474,9 @@ export default function TransactionDialog({
                             }}
                             disabled={isFormDisabled || categories.length === 0}
                             id="transactionCategory"
+                            ariaRequired
+                            ariaInvalid={isCategoryInvalid}
+                            ariaDescribedBy={isCategoryInvalid ? 'transaction-error' : undefined}
                         />
                         {!isLoading && categories.length === 0 && (
                             <p className="text-xs text-muted-foreground">
@@ -469,7 +486,7 @@ export default function TransactionDialog({
                     </div>
 
                     {error && (
-                        <p className="text-sm font-medium text-destructive" role="alert">
+                        <p id="transaction-error" className="text-sm font-medium text-destructive" role="alert">
                             {error}
                         </p>
                     )}

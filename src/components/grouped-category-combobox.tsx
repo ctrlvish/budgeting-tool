@@ -28,6 +28,9 @@ interface GroupedCategoryComboboxProps {
     id? : string
     placeholder? : string
     className? : string
+    ariaDescribedBy? : string
+    ariaInvalid? : boolean
+    ariaRequired? : boolean
 }
 
 export default function GroupedCategoryCombobox({
@@ -37,7 +40,10 @@ export default function GroupedCategoryCombobox({
     disabled = false,
     id,
     placeholder = 'Assign a category',
-    className = 'w-full'
+    className = 'w-full',
+    ariaDescribedBy,
+    ariaInvalid,
+    ariaRequired
 } : GroupedCategoryComboboxProps) {
     const groupedCategories = categoryGroups
         .map(group => ({
@@ -69,6 +75,9 @@ export default function GroupedCategoryCombobox({
                 className={className}
                 placeholder={placeholder}
                 disabled={disabled || categories.length === 0}
+                aria-describedby={ariaDescribedBy}
+                aria-invalid={ariaInvalid}
+                aria-required={ariaRequired}
             />
             <ComboboxContent>
                 <ComboboxEmpty>No categories found.</ComboboxEmpty>
