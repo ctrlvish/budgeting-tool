@@ -282,7 +282,7 @@ export default function Categories(){
 
                 <Button
                     disabled={isAdding}
-                    className="min-w-24 self-end"
+                    className="min-w-24 self-end justify-self-end px-4"
                     type="submit"
                 >
                     {isAdding ? 'Adding...' : 'Add'}

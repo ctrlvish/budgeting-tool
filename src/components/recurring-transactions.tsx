@@ -321,7 +321,11 @@ export default function RecurringTransactions() {
                             {error}
                         </p>
                     )}
-                    <Button type="submit" disabled={isFormDisabled}>
+                    <Button
+                        type="submit"
+                        className="justify-self-end px-4"
+                        disabled={isFormDisabled}
+                    >
                         {isAdding ? 'Adding...' : 'Add recurring transaction'}
                     </Button>
                 </form>

@@ -201,7 +201,11 @@ export default function BudgetSetup() {
 
                     <div className="grid gap-3">
                         {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
-                        <Button type="submit" disabled={isDisabled || !isRatioValid}>
+                        <Button
+                            type="submit"
+                            className="justify-self-end px-4"
+                            disabled={isDisabled || !isRatioValid}
+                        >
                             {isLoading ? 'Loading...' : isSaving ? 'Saving...' : 'Save'}
                         </Button>
                     </div>

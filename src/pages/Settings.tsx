@@ -9,10 +9,9 @@ export default function Settings(){
                 <h1 className='font-heading text-3xl font-semibold tracking-tight'>Settings</h1>
                 <p className='text-sm text-muted-foreground'>Configure your budget, recurring transactions and categories</p>
             </header>
-        
-        <BudgetSetup />
-        <RecurringTransactions />
-        <Categories />
+            <BudgetSetup />
+            <RecurringTransactions />
+            <Categories />
         </main>
     )
 }
