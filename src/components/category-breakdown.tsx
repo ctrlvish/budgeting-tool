@@ -12,9 +12,9 @@ const currencyFormatter = new Intl.NumberFormat('en-AU', {
 })
 
 const bucketBarClasses : Record<Bucket, string> = {
-    needs: 'bg-sky-500/65 dark:bg-sky-400/65',
-    wants: 'bg-amber-700/55 dark:bg-amber-400/55',
-    savings: 'bg-emerald-700/55 dark:bg-emerald-400/55'
+    needs: 'bg-[var(--bucket-needs)]',
+    wants: 'bg-[var(--bucket-wants)]',
+    savings: 'bg-[var(--bucket-savings)]'
 }
 
 interface CategoryRow {
@@ -48,7 +48,7 @@ function formatMoney(amountCents : number) {
     return currencyFormatter.format(amountCents / 100)
 }
 
-export function formatPercentage(percentage : number | null) {
+function formatPercentage(percentage : number | null) {
     return percentage === null
         ? '—'
         : percentage > 0 && percentage < 1
@@ -116,22 +116,26 @@ function AmountBar({amountCents, barClass, name, width} : AmountBarProps) {
 export default function CategoryBreakdown({hasIncome, sections} : CategoryBreakdownProps) {
     if (!hasIncome && sections.length > 0) {
         return (
-            <p className="text-xs text-muted-foreground">
-                Add income to view this month's overview
-            </p>
+            <div className="flex h-64 items-center justify-center text-center">
+                <p className="text-xs text-muted-foreground">
+                    Add income to view this month's overview
+                </p>
+            </div>
         )
     }
 
     if (sections.length === 0) {
         return (
-            <p className="text-xs text-muted-foreground">
-                No activity this month
-            </p>
+            <div className="flex h-64 items-center justify-center text-center">
+                <p className="text-xs text-muted-foreground">
+                    No activity this month
+                </p>
+            </div>
         )
     }
 
     return (
-        <div className="grid max-h-64 gap-4 overflow-y-auto pr-2">
+        <div className="grid h-64 content-start gap-4 overflow-y-auto pr-2">
             {sections.map(section => (
                 <section key={section.id} className="grid gap-2.5">
                     <h3 className="sticky top-0 z-10 bg-card py-1 text-sm font-medium">
