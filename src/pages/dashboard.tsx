@@ -2,6 +2,9 @@ import { useState, useEffect, useMemo } from "react"
 import type { Transaction, Category, BudgetSetting } from '../types'
 import { db } from "@/lib/db"
 import { format } from "date-fns"
+import WhereMoneyWent, {
+    formatPercentage
+} from "@/components/where-money-went"
 import { 
     Card,
     CardHeader,
@@ -201,12 +204,26 @@ export default function Dashboard({revision}: DashboardProps){
 
     const monthLabel = format(selectedMonth, 'MMMM yyyy')
 
-    function formatPercentage(percentage : number | null) {
-        return percentage === null
-            ? '—'
-            : `${Math.round(percentage)}%`
-    }
-
+    const monthlyBucketSections = [
+        {
+            id: 'needs',
+            label: 'Needs',
+            percentage: monthlyNeedsPercentage,
+            rows: monthlyCategoriesByBucket.needs
+        },
+        {
+            id: 'wants',
+            label: 'Wants',
+            percentage: monthlyWantsPercentage,
+            rows: monthlyCategoriesByBucket.wants
+        },
+        {
+            id: 'savings',
+            label: 'Savings',
+            percentage: monthlySavingsPercentage,
+            rows: monthlyCategoriesByBucket.savings
+        }
+    ].filter(section => section.rows.length > 0)
 
 
     return (
@@ -252,11 +269,7 @@ export default function Dashboard({revision}: DashboardProps){
                     )}
 
                 </div>
-                <div className="grid content-start gap-4 border-t pt-6 md:border-l md:border-t-0 md:pl-6 md:pt-0">
-                    <h3 className="font-heading text-sm font-medium">
-                        Where money went
-                    </h3>
-                </div>
+                <WhereMoneyWent sections={monthlyBucketSections} />
             </CardContent>
         </Card>
     </main>)
