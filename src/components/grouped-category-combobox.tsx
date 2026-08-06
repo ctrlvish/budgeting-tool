@@ -27,6 +27,7 @@ interface GroupedCategoryComboboxProps {
     disabled? : boolean
     id? : string
     placeholder? : string
+    className? : string
 }
 
 export default function GroupedCategoryCombobox({
@@ -35,7 +36,8 @@ export default function GroupedCategoryCombobox({
     onValueChange,
     disabled = false,
     id,
-    placeholder = 'Assign a category'
+    placeholder = 'Assign a category',
+    className = 'w-full'
 } : GroupedCategoryComboboxProps) {
     const groupedCategories = categoryGroups
         .map(group => ({
@@ -64,7 +66,7 @@ export default function GroupedCategoryCombobox({
         >
             <ComboboxInput
                 id={id}
-                className="w-full"
+                className={className}
                 placeholder={placeholder}
                 disabled={disabled || categories.length === 0}
             />

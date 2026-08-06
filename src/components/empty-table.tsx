@@ -6,7 +6,7 @@ interface EmptyTableProps {
 
 export default function EmptyTable({onAdd}: EmptyTableProps){
     return (
-    <div className="py-16 text-center">
+    <div className="flex min-h-52 flex-col items-center justify-center text-center">
         <p>wow such empty</p>
         <Button 
             variant="link"

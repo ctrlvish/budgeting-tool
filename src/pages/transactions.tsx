@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
+import { ArrowUpDownIcon, CalendarIcon, Plus, SearchIcon } from "lucide-react"
 import { 
     Card,
     CardHeader,
@@ -23,7 +23,6 @@ import {
     InputGroupInput,
     InputGroupAddon
  } from "@/components/ui/input-group"
-import { SearchIcon } from "lucide-react"
 import {
     Select,
     SelectContent,
@@ -33,6 +32,14 @@ import {
     SelectTrigger,
     SelectValue
 } from "@/components/ui/select"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuLabel,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
+    DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu"
 
 import { Calendar } from "@/components/ui/calendar"
 import {
@@ -40,7 +47,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { CalendarIcon } from "lucide-react"
 import { type DateRange } from "react-day-picker"
 import {
     endOfMonth,
@@ -57,6 +63,7 @@ interface TransactionsProps {
 }
 
 type DatePreset = 'today' | 'week' | 'month' | 'custom' | null
+type SortOption = 'newest' | 'oldest' | 'highest' | 'lowest'
 
 const categoryGroups : CategoryGroup[] = ['income', 'needs', 'wants', 'savings']
 
@@ -65,6 +72,13 @@ const categoryGroupLabels : Record<CategoryGroup, string> = {
     needs: 'Needs',
     wants: 'Wants',
     savings: 'Savings'
+}
+
+const sortOptionLabels : Record<SortOption, string> = {
+    newest: 'Newest first',
+    oldest: 'Oldest first',
+    highest: 'Highest amount',
+    lowest: 'Lowest amount'
 }
 
 const currencyFormatter = new Intl.NumberFormat('en-AU', {
@@ -94,6 +108,7 @@ export default function Transactions({ onLogTransaction, revision, onEditTransac
     const [date, setDate] = useState<DateRange | undefined>(undefined)
     const [datePreset, setDatePreset] = useState<DatePreset>(null)
     const [isDateFilterOpen, setIsDateFilterOpen] = useState(false)
+    const [sortOption, setSortOption] = useState<SortOption>('newest')
 
 
     useEffect(() => {
@@ -138,24 +153,43 @@ export default function Transactions({ onLogTransaction, revision, onEditTransac
         return map
     }, [categories])
 
-    const filteredTransactions = transactions.filter(transaction => {
-        const matchesSearch = transaction.description
-            .toLowerCase()
-            .includes(search.trim().toLowerCase())
-        const matchesCategory = selectedCategoryId === 'all'
-            || transaction.categoryId === selectedCategoryId
+    const filteredTransactions = useMemo(() => {
         const fromDate = date?.from
             ? format(date.from, 'yyyy-MM-dd')
             : undefined
         const toDate = date?.from
             ? format(date.to ?? date.from, 'yyyy-MM-dd')
             : undefined
-        const matchesDate = !fromDate
-            || !toDate
-            || (transaction.date >= fromDate && transaction.date <= toDate)
 
-        return matchesSearch && matchesCategory && matchesDate
-    })
+        const matchingTransactions = transactions.filter(transaction => {
+            const matchesSearch = transaction.description
+                .toLowerCase()
+                .includes(search.trim().toLowerCase())
+            const matchesCategory = selectedCategoryId === 'all'
+                || transaction.categoryId === selectedCategoryId
+            const matchesDate = !fromDate
+                || !toDate
+                || (transaction.date >= fromDate && transaction.date <= toDate)
+
+            return matchesSearch && matchesCategory && matchesDate
+        })
+
+        return matchingTransactions.sort((firstTransaction, secondTransaction) => {
+            if (sortOption === 'newest') {
+                return secondTransaction.date.localeCompare(firstTransaction.date)
+            }
+
+            if (sortOption === 'oldest') {
+                return firstTransaction.date.localeCompare(secondTransaction.date)
+            }
+
+            if (sortOption === 'highest') {
+                return secondTransaction.amountCents - firstTransaction.amountCents
+            }
+
+            return firstTransaction.amountCents - secondTransaction.amountCents
+        })
+    }, [date, search, selectedCategoryId, sortOption, transactions])
 
     const categoryItems = [
         { label: 'All categories', value: 'all' },
@@ -210,22 +244,34 @@ export default function Transactions({ onLogTransaction, revision, onEditTransac
         setIsDateFilterOpen(false)
     }
 
+    const dateFilterLabel = datePreset === 'today'
+        ? 'Today'
+        : datePreset === 'week'
+            ? 'This week'
+            : datePreset === 'month'
+                ? 'This month'
+                : date?.from
+                    ? date.to
+                        ? `${format(date.from, 'dd MMM yyyy')} - ${format(date.to, 'dd MMM yyyy')}`
+                        : format(date.from, 'dd MMM yyyy')
+                    : 'All dates'
+
     return (
-    <main className='mx-auto grid w-full max-w-5xl gap-6 px-4 py-10'>
-        <header className="flex justify-between">
+    <main className='mx-auto grid w-full max-w-5xl gap-4 px-3 py-6 sm:gap-6 sm:px-4 sm:py-10'>
+        <header className="flex items-start justify-between gap-3">
             <div className="space-y-1">
-                <h1 className='font-heading text-3xl font-semibold tracking-tight'>Transactions</h1>
+                <h1 className='font-heading text-2xl font-semibold tracking-tight sm:text-3xl'>Transactions</h1>
                 <p className='text-sm text-muted-foreground'>Log and manage your income and spending here</p>
             </div>
-            <div className="flex">
-                <Button className='self-center' onClick={onLogTransaction}>
+            <div className="flex shrink-0">
+                <Button className='h-10 self-center sm:h-8' onClick={onLogTransaction}>
                     <Plus className="size-4" /> Log
                 </Button>
             </div>
         </header>
-        <Card className="lg:min-h-144">
-            <CardHeader className="flex flex-col gap-3 sm:flex-row">
-                <InputGroup className="sm:flex-1">
+        <Card className="min-w-0 min-h-96 lg:min-h-144">
+            <CardHeader className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 sm:flex sm:flex-row sm:gap-3">
+                <InputGroup className="h-10 sm:h-8 sm:flex-1">
                     <InputGroupAddon><SearchIcon /></InputGroupAddon>
                     <InputGroupInput
                         value={search}
@@ -234,13 +280,48 @@ export default function Transactions({ onLogTransaction, revision, onEditTransac
                         aria-label="Search transactions"
                     />
                 </InputGroup>
+                <DropdownMenu>
+                    <DropdownMenuTrigger
+                        render={
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="size-10 px-0 sm:h-8 sm:w-auto sm:px-2.5"
+                                aria-label={`Sort transactions: ${sortOptionLabels[sortOption]}`}
+                                title={`Sort: ${sortOptionLabels[sortOption]}`}
+                            >
+                                <ArrowUpDownIcon />
+                                <span className="hidden sm:inline">{sortOptionLabels[sortOption]}</span>
+                            </Button>
+                        }
+                    />
+                    <DropdownMenuContent className="w-44" align="end">
+                        <DropdownMenuLabel>Sort by</DropdownMenuLabel>
+                        <DropdownMenuRadioGroup
+                            value={sortOption}
+                            onValueChange={value => setSortOption(value as SortOption)}
+                        >
+                            {(Object.entries(sortOptionLabels) as [SortOption, string][]).map(
+                                ([value, label]) => (
+                                    <DropdownMenuRadioItem
+                                        key={value}
+                                        value={value}
+                                        className="py-2 sm:py-1"
+                                    >
+                                        {label}
+                                    </DropdownMenuRadioItem>
+                                )
+                            )}
+                        </DropdownMenuRadioGroup>
+                    </DropdownMenuContent>
+                </DropdownMenu>
                 <Select
                     items={categoryItems}
                     value={selectedCategoryId}
                     onValueChange={value => setSelectedCategoryId(value ?? 'all')}
                 >
                     <SelectTrigger
-                        className="w-full sm:w-52"
+                        className="w-full data-[size=default]:h-10 sm:w-52 sm:data-[size=default]:h-8"
                         aria-label="Filter by category"
                     >
                         <SelectValue />
@@ -268,26 +349,14 @@ export default function Transactions({ onLogTransaction, revision, onEditTransac
                         <Button 
                             variant="outline" 
                             id="date-picker-range" 
-                            className="justify-start px-2.5 font-normal">
-                        <CalendarIcon data-icon="inline-start" />
-                        {datePreset === 'today' ? (
-                            <span>Today</span>
-                        ) : datePreset === 'week' ? (
-                            <span>This week</span>
-                        ) : datePreset === 'month' ? (
-                            <span>This month</span>
-                        ) : date?.from ? (date.to ? (
-                            <>
-                                {format(date.from, "dd MMM yyyy")} -{" "}
-                                {format(date.to, "dd MMM yyyy")}
-                            </>
-                            ) : (
-                            format(date.from, "dd MMM yyyy")
-                            )
-                        ) : (
-                            <span>All dates</span>
-                        )}</Button>} />
-                    <PopoverContent className="w-auto p-0" align="end">
+                            className="h-10 w-full min-w-0 justify-start px-2.5 font-normal sm:h-8 sm:w-auto"
+                            aria-label="Filter by date"
+                            title={dateFilterLabel}
+                        >
+                            <CalendarIcon className="shrink-0" data-icon="inline-start" />
+                            <span className="truncate">{dateFilterLabel}</span>
+                        </Button>} />
+                    <PopoverContent className="w-auto max-w-[calc(100vw-1.5rem)] p-0" align="end">
                         <div className="grid grid-cols-2 gap-1 border-b p-2">
                             <Button
                                 type="button"
@@ -325,6 +394,7 @@ export default function Transactions({ onLogTransaction, revision, onEditTransac
                         <Calendar
                             mode="range"
                             selected={date}
+                            className="[&_.rdp-month]:gap-2 [&_.rdp-week]:mt-1"
                             onSelect={range => {
                                 setDate(range)
                                 setDatePreset(range?.from ? 'custom' : null)
@@ -346,18 +416,26 @@ export default function Transactions({ onLogTransaction, revision, onEditTransac
                     </PopoverContent>
                 </Popover>
             </CardHeader>
-            <CardContent>
-                {error && <p>error: {error}</p>}
-                {isLoading ? <SkeletonTable /> : 
+            <CardContent className="min-w-0">
+                {error ? (
+                    <div className="flex min-h-52 items-center justify-center text-center">
+                        <p className="text-sm text-destructive" role="alert">{error}</p>
+                    </div>
+                ) : isLoading ? <SkeletonTable /> :
                     transactions.length === 0 ? <EmptyTable onAdd={onLogTransaction}/> :
-                <Table className="min-w-160 table-fixed">
-                    <colgroup>
-                        <col className="w-28" />
+                    filteredTransactions.length === 0 ? (
+                        <div className="flex min-h-52 items-center justify-center text-center">
+                            <p className="text-sm text-muted-foreground">No matching transactions</p>
+                        </div>
+                    ) :
+                <Table className="block table-fixed sm:table">
+                    <colgroup className="hidden sm:table-column-group">
+                        <col className="w-24 md:w-28" />
                         <col />
-                        <col className="w-40" />
-                        <col className="w-32" />
+                        <col className="w-32 md:w-40" />
+                        <col className="w-28 md:w-32" />
                     </colgroup>
-                    <TableHeader>
+                    <TableHeader className="hidden sm:table-header-group">
                         <TableRow>
                             <TableHead>Date</TableHead>
                             <TableHead>Description</TableHead>
@@ -365,7 +443,7 @@ export default function Transactions({ onLogTransaction, revision, onEditTransac
                             <TableHead className="text-right">Amount</TableHead>
                         </TableRow>
                     </TableHeader>
-                    <TableBody>
+                    <TableBody className="block sm:table-row-group">
                         {filteredTransactions.map((transaction) => {
 
                             const category = categoryMap.get(transaction.categoryId)
@@ -376,18 +454,32 @@ export default function Transactions({ onLogTransaction, revision, onEditTransac
                             return (
                             <TableRow 
                                 key={transaction.id} 
-                                className="cursor-pointer transition-colors hover:bg-muted/50" 
+                                className="grid cursor-pointer grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-0.5 px-2 py-2.5 first:border-t transition-colors hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none sm:table-row sm:px-0 sm:py-0 sm:first:border-t-0"
                                 tabIndex={0}
-                                onClick={() => onEditTransaction(transaction)}>
-                                <TableCell className="font-medium">{formatDate(transaction.date)}</TableCell>
-                                <TableCell className="truncate" title={transaction.description}>
-                                    {transaction.description}
+                                onClick={() => onEditTransaction(transaction)}
+                                onKeyDown={event => {
+                                    if (event.key === 'Enter' || event.key === ' ') {
+                                        event.preventDefault()
+                                        onEditTransaction(transaction)
+                                    }
+                                }}
+                            >
+                                <TableCell className="col-start-2 row-start-2 block p-0 text-right text-[11px] font-normal text-muted-foreground sm:table-cell sm:p-2 sm:text-left sm:text-sm sm:font-medium sm:text-foreground">
+                                    {formatDate(transaction.date)}
                                 </TableCell>
-                                <TableCell className="overflow-hidden">
-                                    <p className="truncate">{category?.name}</p>
-                                    <p className="capitalize text-xs text-muted-foreground">{categoryGroup}</p>
+                                <TableCell className="col-start-1 row-start-1 block min-w-0 p-0 font-medium sm:table-cell sm:p-2 sm:font-normal" title={transaction.description}>
+                                    <p className="truncate">{transaction.description}</p>
                                 </TableCell>
-                                <TableCell className="text-right">{formatMoney(transaction.amountCents)}</TableCell>
+                                <TableCell className="col-start-1 row-start-2 block min-w-0 overflow-hidden p-0 sm:table-cell sm:p-2">
+                                    <p className="truncate text-xs text-muted-foreground sm:text-sm sm:text-foreground">
+                                        {category?.name}
+                                        <span className="ml-1 capitalize sm:hidden">· {categoryGroup}</span>
+                                    </p>
+                                    <p className="hidden capitalize text-xs text-muted-foreground sm:block">{categoryGroup}</p>
+                                </TableCell>
+                                <TableCell className="col-start-2 row-start-1 block p-0 text-right font-medium tabular-nums sm:table-cell sm:p-2 sm:font-normal">
+                                    {formatMoney(transaction.amountCents)}
+                                </TableCell>
                             </TableRow>
                         )
                         })}

@@ -301,15 +301,19 @@ export default function TransactionDialog({
                 onOpenChange={handleOpenChange}
                 onOpenChangeComplete={handleOpenChangeComplete}
             >
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>
+            <DialogContent className="max-h-[calc(100dvh-1.5rem)] max-w-[calc(100%-3rem)] gap-5 overflow-y-auto [&_[data-slot=dialog-close]]:size-9 sm:max-h-[calc(100dvh-2rem)] sm:max-w-sm sm:gap-4 sm:**:data-[slot=dialog-close]:size-7">
+                <DialogHeader className="gap-1.5 sm:gap-2">
+                    <DialogTitle className="text-lg sm:text-base">
                         {isEditing ? 'Edit Transaction' : 'Log Transaction'}
                     </DialogTitle>
-                    {!isEditing && <DialogDescription>Add income or an expense to your budget.</DialogDescription>}
+                    {!isEditing && (
+                        <DialogDescription className="text-base leading-snug sm:text-sm">
+                            Add income or an expense to your budget.
+                        </DialogDescription>
+                    )}
                 </DialogHeader>
 
-                <form className="grid gap-4" onSubmit={handleSubmit}>
+                <form className="grid gap-4.5 sm:gap-4" onSubmit={handleSubmit}>
                     {!isEditing && <div className="grid gap-2">
                         <Label htmlFor="transactionTemplate">Template</Label>
                         <Select
@@ -319,7 +323,10 @@ export default function TransactionDialog({
                             disabled={isFormDisabled}
                             id="transactionTemplate"
                         >
-                            <SelectTrigger id="transactionTemplate" className="w-full">
+                            <SelectTrigger
+                                id="transactionTemplate"
+                                className="w-full text-base data-[size=default]:h-10 sm:text-sm sm:data-[size=default]:h-8"
+                            >
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -337,6 +344,7 @@ export default function TransactionDialog({
                     <div className="grid gap-2">
                         <Label htmlFor="transactionDescription">Description</Label>
                         <Input
+                            className="h-10 sm:h-8"
                             id="transactionDescription"
                             type="text"
                             value={description}
@@ -347,7 +355,7 @@ export default function TransactionDialog({
                         />
                     </div>
 
-                    <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="grid grid-cols-[minmax(0,4fr)_minmax(0,6fr)] gap-3 sm:grid-cols-2 sm:gap-4">
                         <div className="grid gap-2">
                             <Label htmlFor="transactionAmount">Amount</Label>
                             <div className="relative">
@@ -358,7 +366,7 @@ export default function TransactionDialog({
                                     $
                                 </span>
                                 <Input
-                                    className="pl-6"
+                                    className="h-10 pl-6 sm:h-8"
                                     id="transactionAmount"
                                     type="number"
                                     min="0.01"
@@ -373,8 +381,9 @@ export default function TransactionDialog({
 
                         <div className="grid gap-2">
                             <Label htmlFor="transactionDate">Date</Label>
-                            <InputGroup>
+                            <InputGroup className="h-10 sm:h-8">
                                 <InputGroupInput
+                                    className="text-sm"
                                     id="transactionDate"
                                     value={dateValue}
                                     onChange={e => {
@@ -442,6 +451,7 @@ export default function TransactionDialog({
                     <div className="grid gap-2">
                         <Label htmlFor="transactionCategory">Category</Label>
                         <GroupedCategoryCombobox
+                            className="h-10 w-full sm:h-8"
                             categories={categories}
                             value={categoryId}
                             onValueChange={selectedCategoryId => {
@@ -464,7 +474,12 @@ export default function TransactionDialog({
                         </p>
                     )}
 
-                    <DialogFooter>
+                    <DialogFooter
+                        className={isEditing
+                            ? "flex-row justify-between sm:justify-end"
+                            : "flex-row justify-end"
+                        }
+                    >
                         {isEditing ? (
                             <Button
                                 type="button"
@@ -474,6 +489,7 @@ export default function TransactionDialog({
                                     setIsDeleteDialogOpen(true)
                                 }}
                                 disabled={isSaving}
+                                className="h-10 px-4 sm:h-8 sm:px-2.5"
                             >
                                 Delete
                             </Button>
@@ -483,11 +499,16 @@ export default function TransactionDialog({
                                 variant="outline"
                                 onClick={() => handleOpenChange(false)}
                                 disabled={isSaving}
+                                className="h-10 px-4 sm:h-8 sm:px-2.5"
                             >
                                 Cancel
                             </Button>
                         )}
-                        <Button type="submit" disabled={isFormDisabled}>
+                        <Button
+                            type="submit"
+                            className="h-10 px-4 sm:h-8 sm:px-2.5"
+                            disabled={isFormDisabled}
+                        >
                             {isSaving ? 'Saving...' : 'Save'}
                         </Button>
                     </DialogFooter>

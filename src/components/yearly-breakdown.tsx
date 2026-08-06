@@ -77,7 +77,7 @@ export default function YearlyBreakdown({
     const hasActivity = data.some(month => month.hasActivity)
 
     return (
-        <Card>
+        <Card className="min-w-0">
             <CardHeader>
                 <CardTitle>Yearly overview</CardTitle>
                 <CardDescription>{year}</CardDescription>
@@ -96,7 +96,7 @@ export default function YearlyBreakdown({
             </CardHeader>
             <CardContent>
                 {!hasIncome ? (
-                    <div className="flex h-64 items-center justify-center text-center">
+                    <div className="flex h-56 items-center justify-center text-center sm:h-64">
                         <p className="text-xs text-muted-foreground">
                             {hasActivity
                                 ? 'Add income to view this year'
@@ -104,77 +104,79 @@ export default function YearlyBreakdown({
                         </p>
                     </div>
                 ) : (
-                    <ChartContainer
-                        config={chartConfig}
-                        className="h-64 w-full aspect-auto"
-                    >
-                        <BarChart
-                            accessibilityLayer
-                            data={data}
-                            margin={{top: 8, right: 4, bottom: 0, left: 4}}
+                    <div className="overflow-x-auto overscroll-x-contain pb-1 [scrollbar-width:thin] sm:overflow-visible sm:pb-0">
+                        <ChartContainer
+                            config={chartConfig}
+                            className="h-56 min-w-[36rem] aspect-auto sm:h-64 sm:min-w-0"
                         >
-                            <CartesianGrid vertical={false} />
-                            <XAxis
-                                dataKey="month"
-                                tickLine={false}
-                                tickMargin={8}
-                                axisLine={false}
-                            />
-                            <YAxis hide domain={['auto', 'auto']} />
-                            <ReferenceLine y={0} />
-                            <ChartTooltip
-                                cursor={false}
-                                content={
-                                    <ChartTooltipContent
-                                        formatter={(value, name, item, index) => (
-                                            <>
-                                                {index === 0 && (
-                                                    <div className="mb-1 flex w-full basis-full justify-between border-b border-border/50 pb-1.5">
-                                                        <span className="text-muted-foreground">
-                                                            Income
-                                                        </span>
-                                                        <span className="font-mono font-medium tabular-nums">
-                                                            {formatMoney(item.payload.incomeCents)}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                                <span
-                                                    className="size-2.5 shrink-0 rounded-[2px]"
-                                                    style={{backgroundColor: item.color}}
-                                                />
-                                                <span className="text-muted-foreground">
-                                                    {chartConfig[name as keyof typeof chartConfig]?.label}
-                                                </span>
-                                                <span className="ml-auto font-mono font-medium tabular-nums">
-                                                    {formatChartPercentage(value)}
-                                                </span>
-                                            </>
-                                        )}
-                                    />
-                                }
-                            />
-                            <ChartLegend content={<ChartLegendContent />} />
-                            <Bar
-                                dataKey="needs"
-                                stackId="allocation"
-                                fill="var(--color-needs)"
-                                maxBarSize={28}
-                            />
-                            <Bar
-                                dataKey="wants"
-                                stackId="allocation"
-                                fill="var(--color-wants)"
-                                maxBarSize={28}
-                            />
-                            <Bar
-                                dataKey="savings"
-                                stackId="allocation"
-                                fill="var(--color-savings)"
-                                maxBarSize={28}
-                                radius={[5, 5, 0, 0]}
-                            />
-                        </BarChart>
-                    </ChartContainer>
+                            <BarChart
+                                accessibilityLayer
+                                data={data}
+                                margin={{top: 8, right: 4, bottom: 0, left: 4}}
+                            >
+                                <CartesianGrid vertical={false} />
+                                <XAxis
+                                    dataKey="month"
+                                    tickLine={false}
+                                    tickMargin={8}
+                                    axisLine={false}
+                                />
+                                <YAxis hide domain={['auto', 'auto']} />
+                                <ReferenceLine y={0} />
+                                <ChartTooltip
+                                    cursor={false}
+                                    content={
+                                        <ChartTooltipContent
+                                            formatter={(value, name, item, index) => (
+                                                <>
+                                                    {index === 0 && (
+                                                        <div className="mb-1 flex w-full basis-full justify-between border-b border-border/50 pb-1.5">
+                                                            <span className="text-muted-foreground">
+                                                                Income
+                                                            </span>
+                                                            <span className="font-mono font-medium tabular-nums">
+                                                                {formatMoney(item.payload.incomeCents)}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                    <span
+                                                        className="size-2.5 shrink-0 rounded-[2px]"
+                                                        style={{backgroundColor: item.color}}
+                                                    />
+                                                    <span className="text-muted-foreground">
+                                                        {chartConfig[name as keyof typeof chartConfig]?.label}
+                                                    </span>
+                                                    <span className="ml-auto font-mono font-medium tabular-nums">
+                                                        {formatChartPercentage(value)}
+                                                    </span>
+                                                </>
+                                            )}
+                                        />
+                                    }
+                                />
+                                <ChartLegend content={<ChartLegendContent />} />
+                                <Bar
+                                    dataKey="needs"
+                                    stackId="allocation"
+                                    fill="var(--color-needs)"
+                                    maxBarSize={28}
+                                />
+                                <Bar
+                                    dataKey="wants"
+                                    stackId="allocation"
+                                    fill="var(--color-wants)"
+                                    maxBarSize={28}
+                                />
+                                <Bar
+                                    dataKey="savings"
+                                    stackId="allocation"
+                                    fill="var(--color-savings)"
+                                    maxBarSize={28}
+                                    radius={[5, 5, 0, 0]}
+                                />
+                            </BarChart>
+                        </ChartContainer>
+                    </div>
                 )}
             </CardContent>
         </Card>

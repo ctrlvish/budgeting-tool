@@ -77,7 +77,7 @@ function AmountBar({amountCents, barClass, name, width} : AmountBarProps) {
                 render={
                     <button
                         type="button"
-                        className="h-3.5 w-full cursor-default overflow-hidden rounded-full bg-muted/70 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
+                        className="relative h-7 w-full cursor-default rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
                         aria-label={`${name}: ${formatMoney(amountCents)}`}
                         onPointerMove={event => {
                             if (event.pointerType === 'mouse') {
@@ -94,10 +94,12 @@ function AmountBar({amountCents, barClass, name, width} : AmountBarProps) {
                         }}
                         onFocus={() => setCursorPosition(null)}
                     >
-                        <span
-                            className={`block h-full rounded-full transition-[width] duration-200 ease-out motion-reduce:transition-none ${barClass}`}
-                            style={{ width: `${width}%` }}
-                        />
+                        <span className="absolute inset-x-0 top-1/2 h-4 -translate-y-1/2 overflow-hidden rounded-full bg-muted/70 sm:h-3.5">
+                            <span
+                                className={`block h-full rounded-full transition-[width] duration-200 ease-out motion-reduce:transition-none ${barClass}`}
+                                style={{ width: `${width}%` }}
+                            />
+                        </span>
                     </button>
                 }
             />
@@ -116,7 +118,7 @@ function AmountBar({amountCents, barClass, name, width} : AmountBarProps) {
 export default function CategoryBreakdown({hasIncome, sections} : CategoryBreakdownProps) {
     if (!hasIncome && sections.length > 0) {
         return (
-            <div className="flex h-64 items-center justify-center text-center">
+            <div className="flex h-56 items-center justify-center text-center sm:h-64">
                 <p className="text-xs text-muted-foreground">
                     Add income to view this month's overview
                 </p>
@@ -126,7 +128,7 @@ export default function CategoryBreakdown({hasIncome, sections} : CategoryBreakd
 
     if (sections.length === 0) {
         return (
-            <div className="flex h-64 items-center justify-center text-center">
+            <div className="flex h-56 items-center justify-center text-center sm:h-64">
                 <p className="text-xs text-muted-foreground">
                     No activity this month
                 </p>
@@ -135,7 +137,7 @@ export default function CategoryBreakdown({hasIncome, sections} : CategoryBreakd
     }
 
     return (
-        <div className="grid h-64 content-start gap-4 overflow-y-auto pr-2">
+        <div className="grid h-56 content-start gap-3 overflow-y-auto overscroll-contain pr-1 sm:h-64 sm:gap-4 sm:pr-2">
             {sections.map(section => (
                 <section key={section.id} className="grid gap-2.5">
                     <h3 className="sticky top-0 z-10 bg-card py-1 text-sm font-medium">

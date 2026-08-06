@@ -23,11 +23,11 @@ export default function PeriodNavigation({
     showReset
 } : PeriodNavigationProps) {
     return (
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5 sm:gap-1">
             {showReset && (
                 <button
                     type="button"
-                    className="mr-1 cursor-pointer text-xs underline underline-offset-4 transition-colors hover:text-muted-foreground"
+                    className="mr-0.5 min-h-9 cursor-pointer px-1 text-xs underline underline-offset-4 transition-colors hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:mr-1 sm:min-h-7"
                     aria-label={resetLabel}
                     onClick={onReset}
                 >
@@ -38,6 +38,7 @@ export default function PeriodNavigation({
                 type="button"
                 variant="ghost"
                 size="icon-sm"
+                className="size-9 sm:size-7"
                 aria-label={previousLabel}
                 onClick={onPrevious}
             >
@@ -47,6 +48,7 @@ export default function PeriodNavigation({
                 type="button"
                 variant="ghost"
                 size="icon-sm"
+                className="size-9 sm:size-7"
                 aria-label={nextLabel}
                 disabled={disableNext}
                 onClick={onNext}
