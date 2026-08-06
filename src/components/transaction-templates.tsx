@@ -1,7 +1,7 @@
 import { db } from '../lib/db'
 import { useState, useEffect } from 'react'
 import { Trash2 } from 'lucide-react'
-import type { RecurringTransaction, Category } from '../types'
+import type { TransactionTemplate, Category } from '../types'
 import GroupedCategoryCombobox from '@/components/grouped-category-combobox'
 import {
     Card,
@@ -30,8 +30,8 @@ function getCategoryGroup(category : Category | undefined) {
     return category.type === 'income' ? 'Income' : category.bucket ?? 'Unknown'
 }
 
-export default function RecurringTransactions() {
-    const [recurringTransactions, setRecurringTransactions] = useState<RecurringTransaction[]>([])
+export default function TransactionTemplates() {
+    const [transactionTemplates, setTransactionTemplates] = useState<TransactionTemplate[]>([])
     const [categories, setCategories] = useState<Category[]>([])
     const [categoryId, setCategoryId] = useState<string | null>(null)
     const [name, setName] = useState('')
@@ -63,7 +63,7 @@ export default function RecurringTransactions() {
             return
         }
 
-        const transaction : RecurringTransaction = {
+        const template : TransactionTemplate = {
             id: crypto.randomUUID(),
             name: trimmedName,
             amountCents,
@@ -74,18 +74,18 @@ export default function RecurringTransactions() {
         setError('')
 
         try {
-            await db.recurringTransactions.add(transaction)
-            setRecurringTransactions(previousTransactions => [
-                ...previousTransactions,
-                transaction
+            await db.transactionTemplates.add(template)
+            setTransactionTemplates(previousTemplates => [
+                ...previousTemplates,
+                template
             ])
             setName('')
             setAmount('')
             setCategoryId(null)
             setError('')
         } catch (error) {
-            console.error('failed to create recurring transaction', error)
-            setError('Could not create recurring transaction')
+            console.error('failed to create transaction template', error)
+            setError('Could not create transaction template')
         } finally {
             setIsAdding(false)
         }
@@ -95,14 +95,14 @@ export default function RecurringTransactions() {
         setDeletingId(id)
 
         try {
-            await db.recurringTransactions.delete(id)
-            setRecurringTransactions(previousTransactions =>
-                previousTransactions.filter(transaction => transaction.id !== id)
+            await db.transactionTemplates.delete(id)
+            setTransactionTemplates(previousTemplates =>
+                previousTemplates.filter(template => template.id !== id)
             )
             setError('')
         } catch (error) {
-            console.error('failed to delete recurring transaction', error)
-            setError('Could not delete recurring transaction')
+            console.error('failed to delete transaction template', error)
+            setError('Could not delete transaction template')
         } finally {
             setDeletingId(null)
         }
@@ -112,20 +112,20 @@ export default function RecurringTransactions() {
         let isActive = true
 
         Promise.all([
-            db.recurringTransactions.toArray(),
+            db.transactionTemplates.toArray(),
             db.categories.toArray()
         ])
-            .then(([transactions, categories]) => {
+            .then(([templates, categories]) => {
                 if (!isActive) return
 
-                setRecurringTransactions(transactions)
+                setTransactionTemplates(templates)
                 setCategories(categories)
             })
             .catch(error => {
-                console.error('failed to load recurring transaction data', error)
+                console.error('failed to load transaction template data', error)
 
                 if (isActive) {
-                    setError('Could not load recurring transactions')
+                    setError('Could not load transaction templates')
                 }
             })
             .finally(() => {
@@ -144,46 +144,46 @@ export default function RecurringTransactions() {
     return (
         <Card className="w-full min-w-0">
             <CardHeader>
-                <CardTitle>Recurring transactions</CardTitle>
+                <CardTitle>Transaction templates</CardTitle>
                 <CardDescription>Save transactions you log often.</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-6">
                 {isLoading ? (
-                    <p className="text-sm text-muted-foreground">Loading recurring transactions...</p>
-                ) : recurringTransactions.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Loading templates...</p>
+                ) : transactionTemplates.length === 0 ? (
                     <p className="rounded-lg border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
-                        No recurring transactions yet.
+                        No templates yet.
                     </p>
                 ) : (
                     <ul className="divide-y rounded-lg border">
-                        {recurringTransactions.map(transaction => {
+                        {transactionTemplates.map(template => {
                             const category = categories.find(
-                                category => category.id === transaction.categoryId
+                                category => category.id === template.categoryId
                             )
 
                             return (
                                 <li
                                     className="flex items-center justify-between gap-3 px-3 py-2.5"
-                                    key={transaction.id}
+                                    key={template.id}
                                 >
                                     <div className="min-w-0">
-                                        <p className="truncate font-medium">{transaction.name}</p>
+                                        <p className="truncate font-medium">{template.name}</p>
                                         <p className="text-xs capitalize text-muted-foreground">
                                             {getCategoryGroup(category)}
                                         </p>
                                     </div>
                                     <div className="flex shrink-0 items-center gap-2">
                                         <span className="font-medium tabular-nums">
-                                            {formatMoney(transaction.amountCents)}
+                                            {formatMoney(template.amountCents)}
                                         </span>
                                         <Button
                                             type="button"
                                             variant="ghost"
                                             size="icon-sm"
                                             className="size-9 sm:size-7"
-                                            onClick={() => handleDelete(transaction.id)}
-                                            disabled={deletingId === transaction.id}
-                                            aria-label={`Delete ${transaction.name}`}
+                                            onClick={() => handleDelete(template.id)}
+                                            disabled={deletingId === template.id}
+                                            aria-label={`Delete ${template.name}`}
                                         >
                                             <Trash2 />
                                         </Button>
@@ -194,13 +194,13 @@ export default function RecurringTransactions() {
                     </ul>
                 )}
 
-                <form id="recurring-transaction-form" className="grid gap-4 border-t pt-5 sm:pt-6" onSubmit={handleAdd}>
+                <form id="transaction-template-form" className="grid gap-4 border-t pt-5 sm:pt-6" onSubmit={handleAdd}>
                     <div className="grid grid-cols-[minmax(0,4fr)_minmax(0,6fr)] gap-3 sm:grid-cols-3 sm:gap-4">
                         <div className="col-span-2 grid gap-2 sm:col-span-1">
-                            <Label htmlFor="recurringTransactionName">Name</Label>
+                            <Label htmlFor="transactionTemplateName">Name</Label>
                             <Input
                                 className="h-10 sm:h-8"
-                                id="recurringTransactionName"
+                                id="transactionTemplateName"
                                 type="text"
                                 value={name}
                                 onChange={e => setName(e.target.value)}
@@ -209,7 +209,7 @@ export default function RecurringTransactions() {
                             />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="recurringTransactionAmount">Amount</Label>
+                            <Label htmlFor="transactionTemplateAmount">Amount</Label>
                             <div className="relative">
                                 <span
                                     className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
@@ -219,7 +219,7 @@ export default function RecurringTransactions() {
                                 </span>
                                 <Input
                                     className="h-10 pl-6 sm:h-8"
-                                    id="recurringTransactionAmount"
+                                    id="transactionTemplateAmount"
                                     type="number"
                                     min="0.01"
                                     step="0.01"
@@ -231,7 +231,7 @@ export default function RecurringTransactions() {
                             </div>
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="recurringTransactionCategory">Category</Label>
+                            <Label htmlFor="transactionTemplateCategory">Category</Label>
                             <GroupedCategoryCombobox
                                 className="h-10 w-full sm:h-8"
                                 categories={categories}
@@ -241,7 +241,7 @@ export default function RecurringTransactions() {
                                     setError('')
                                 }}
                                 disabled={isFormDisabled}
-                                id="recurringTransactionCategory"
+                                id="transactionTemplateCategory"
                                 placeholder="Choose category"
                             />
                         </div>
@@ -258,7 +258,7 @@ export default function RecurringTransactions() {
                 </div>
                 <Button
                     type="submit"
-                    form="recurring-transaction-form"
+                    form="transaction-template-form"
                     variant="quiet"
                     className="h-10 px-4 sm:h-8"
                     disabled={isFormDisabled}

@@ -1,4 +1,4 @@
-import {BudgetSetup, RecurringTransactions, Categories} from '../components'
+import {BudgetSetup, TransactionTemplates, Categories} from '../components'
 
 
 export default function Settings(){
@@ -10,7 +10,7 @@ export default function Settings(){
                 <p className='text-sm text-muted-foreground'>Manage your budget and categories</p>
             </header>
             <BudgetSetup />
-            <RecurringTransactions />
+            <TransactionTemplates />
             <Categories />
         </main>
     )

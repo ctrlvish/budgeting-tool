@@ -56,10 +56,10 @@ export default function Categories(){
     const [selectedCategory, setSelectedCategory] = useState<Category | null>(null)
     const [editName, setEditName] = useState('')
     const [editError, setEditError] = useState('')
-    // to check if transactions or recurring transactions are referencing the category which is being edited
+    // to check if transactions or templates are referencing the category being edited
     const [usage, setUsage] = useState<{
         transactions: number
-        recurringTransactions: number
+        transactionTemplates: number
     } | null>(null)
     const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null)
     const [isDeleting, setIsDeleting] = useState(false)
@@ -77,7 +77,7 @@ export default function Categories(){
     const incomeCategories = categories.filter(category => category.type === 'income')
 
     //for deleting category
-    const isReferenced = usage !== null && (usage.transactions > 0 || usage.recurringTransactions > 0)
+    const isReferenced = usage !== null && (usage.transactions > 0 || usage.transactionTemplates > 0)
 
     async function handleCategoryAdd(e : React.SubmitEvent<HTMLFormElement>){
         e.preventDefault()
@@ -119,12 +119,12 @@ export default function Categories(){
         setEditError('')
         setUsage(null)
 
-        const [recurringTransactions, transactions] = await Promise.all([
-            db.recurringTransactions.where('categoryId').equals(category.id).count(),
+        const [transactionTemplates, transactions] = await Promise.all([
+            db.transactionTemplates.where('categoryId').equals(category.id).count(),
             db.transactions.where('categoryId').equals(category.id).count()
         ])
 
-        setUsage({ recurringTransactions, transactions })
+        setUsage({ transactionTemplates, transactions })
     }
 
     async function handleCategoryEdit(e : React.SubmitEvent<HTMLFormElement>) {
@@ -182,8 +182,8 @@ export default function Categories(){
 
         try{
             //check references from db
-            const [recurringTransactions, transactions] = await Promise.all([
-                db.recurringTransactions
+            const [transactionTemplates, transactions] = await Promise.all([
+                db.transactionTemplates
                     .where('categoryId')
                     .equals(categoryToDelete.id)
                     .count(),
@@ -194,8 +194,8 @@ export default function Categories(){
                     .count()
             ])
             
-            if (recurringTransactions > 0 || transactions > 0) {
-                setUsage({ recurringTransactions, transactions })
+            if (transactionTemplates > 0 || transactions > 0) {
+                setUsage({ transactionTemplates, transactions })
                 setDeleteError('This category is now being used and cannot be deleted')
                 return
             }
@@ -382,7 +382,7 @@ export default function Categories(){
                     {usage !== null && isReferenced && (
                         <p className="text-xs text-muted-foreground">
                             Used by {usage.transactions} transactions and{' '}
-                            {usage.recurringTransactions} recurring transactions.
+                            {usage.transactionTemplates} transaction templates.
                             <br />
                             Reassign these items before deleting.
                         </p>

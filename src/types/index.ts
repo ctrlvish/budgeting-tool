@@ -19,7 +19,7 @@ export interface BudgetSetting {
     savings : number
 }
 
-export interface RecurringTransaction {
+export interface TransactionTemplate {
     id : string
     name : string
     amountCents : number
@@ -32,7 +32,7 @@ export interface Transaction {
     description : string
     categoryId : string
     amountCents : number
-    recurringTransactionId? : string //to derive if its logged
+    transactionTemplateId? : string //to derive if its logged from a template
     type : TransactionType
 
 }

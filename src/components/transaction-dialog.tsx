@@ -3,7 +3,7 @@ import { CalendarIcon } from "lucide-react"
 import type { 
     Category, 
     Transaction, 
-    RecurringTransaction 
+    TransactionTemplate
 } from "@/types"
 import { db } from "@/lib/db"
 import { Button } from "@/components/ui/button"
@@ -108,8 +108,8 @@ export default function TransactionDialog({
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
     const [isDeleting, setIsDeleting] = useState(false)
     const [deleteError, setDeleteError] = useState('')
-    const [recurringTransactions, setRecurringTransactions] = useState<RecurringTransaction[]>([])
-    const [recurringTransactionId, setRecurringTransactionId] =
+    const [transactionTemplates, setTransactionTemplates] = useState<TransactionTemplate[]>([])
+    const [transactionTemplateId, setTransactionTemplateId] =
     useState<string | null>(null)
 
     // logic to control if edit dialog is shown or create dialog is shown
@@ -122,13 +122,13 @@ export default function TransactionDialog({
         let isActive = true
 
         Promise.all([
-            db.recurringTransactions.toArray(),
+            db.transactionTemplates.toArray(),
             db.categories.toArray()
         ])
-            .then(([transactions, categories]) => {
+            .then(([templates, categories]) => {
                 if (!isActive) return
 
-                setRecurringTransactions(transactions)
+                setTransactionTemplates(templates)
                 setCategories(categories)
 
                 if (transaction) {
@@ -140,14 +140,14 @@ export default function TransactionDialog({
                     setDateValue(formatDisplayDate(parsedDate))
                     setCalendarMonth(parsedDate)
                     setCategoryId(transaction.categoryId)
-                    setRecurringTransactionId(transaction.recurringTransactionId ?? null)
+                    setTransactionTemplateId(transaction.transactionTemplateId ?? null)
                 }
             })
             .catch(error => {
-                console.error('failed to load recurring transaction data', error)
+                console.error('failed to load transaction template data', error)
 
                 if (isActive) {
-                    setError('Could not load recurring transactions')
+                    setError('Could not load transaction templates')
                 }
             })
             .finally(() => {
@@ -172,7 +172,7 @@ export default function TransactionDialog({
         setIsDatePickerOpen(false)
         setCategoryId(null)
         setError('')
-        setRecurringTransactionId(null)
+        setTransactionTemplateId(null)
     }
 
     function handleOpenChange(nextOpen : boolean) {
@@ -187,16 +187,16 @@ export default function TransactionDialog({
         }
     }
 
-    function handleRecurringTransactionChange(value : string | null){
-        setRecurringTransactionId(value)
+    function handleTransactionTemplateChange(value : string | null){
+        setTransactionTemplateId(value)
         if (value === null) return
         
-        const foundTransaction = recurringTransactions.find(transaction => value === transaction.id)
-        if (!foundTransaction) return
+        const foundTemplate = transactionTemplates.find(template => value === template.id)
+        if (!foundTemplate) return
         
-        setDescription(foundTransaction.name)
-        setAmount((foundTransaction.amountCents / 100).toFixed(2))
-        setCategoryId(foundTransaction.categoryId)
+        setDescription(foundTemplate.name)
+        setAmount((foundTemplate.amountCents / 100).toFixed(2))
+        setCategoryId(foundTemplate.categoryId)
     }
 
     async function handleSubmit(e : React.SubmitEvent<HTMLFormElement>) {
@@ -239,7 +239,7 @@ export default function TransactionDialog({
             categoryId,
             amountCents,
             type: selectedCategory.type,
-            recurringTransactionId: recurringTransactionId ?? undefined
+            transactionTemplateId: transactionTemplateId ?? undefined
         }
 
 
@@ -286,11 +286,11 @@ export default function TransactionDialog({
     }
 
     const isFormDisabled = isLoading || isSaving
-    const recurringTransactionItems = [
+    const transactionTemplateItems = [
         { label: 'Choose template (optional)', value: null },
-        ...recurringTransactions.map(transaction => ({
-            label: transaction.name,
-            value: transaction.id
+        ...transactionTemplates.map(template => ({
+            label: template.name,
+            value: template.id
         }))
     ]
 
@@ -317,9 +317,9 @@ export default function TransactionDialog({
                     {!isEditing && <div className="grid gap-2">
                         <Label htmlFor="transactionTemplate">Template</Label>
                         <Select
-                            items={recurringTransactionItems}
-                            value={recurringTransactionId}
-                            onValueChange={handleRecurringTransactionChange}
+                            items={transactionTemplateItems}
+                            value={transactionTemplateId}
+                            onValueChange={handleTransactionTemplateChange}
                             disabled={isFormDisabled}
                             id="transactionTemplate"
                         >
@@ -332,7 +332,7 @@ export default function TransactionDialog({
                             <SelectContent>
                                 <SelectGroup>
                                     <SelectLabel>Templates</SelectLabel>
-                                    {recurringTransactionItems.map(item => (
+                                    {transactionTemplateItems.map(item => (
                                         <SelectItem key={item.value} value={item.value}>
                                             {item.label}
                                         </SelectItem>
