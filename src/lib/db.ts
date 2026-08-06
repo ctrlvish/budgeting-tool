@@ -51,12 +51,6 @@ const defaultCategories : Category[] = [
         bucket : 'wants'
     },
     {
-        id : 'self-care',
-        name : 'Self-care',
-        type: 'expense',
-        bucket : 'wants'
-    },
-    {
         id : 'eating-out',
         name : 'Eating out',
         type: 'expense',
@@ -87,27 +81,6 @@ const defaultCategories : Category[] = [
     }
 ]
 
-const defaultTransactionTemplates : TransactionTemplate[] = [
-    {
-        id : 'rent',
-        name : 'Rent',
-        amountCents : 150000,
-        categoryId : 'rent',
-    },
-    {
-        id : 'salary',
-        name : 'Salary',
-        amountCents : 420000,
-        categoryId : 'salary'
-    },
-    {
-        id : 'netflix',
-        name : 'Netflix',
-        amountCents : 1700,
-        categoryId : 'subscriptions'
-    }
-]
-
 export class BudgetDatabase extends Dexie {
     categories! : Table<Category>
     budgetSettings! : Table<BudgetSetting>
@@ -125,7 +98,6 @@ export class BudgetDatabase extends Dexie {
 
         this.on('populate', async () => {
             await this.categories.bulkAdd(defaultCategories)
-            await this.transactionTemplates.bulkAdd(defaultTransactionTemplates)
         })
     }
 }
