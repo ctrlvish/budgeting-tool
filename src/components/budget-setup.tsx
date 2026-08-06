@@ -120,13 +120,13 @@ export default function BudgetSetup() {
         : `${Math.abs(100 - total)}% over allocation`
 
     return (
-        <Card className="w-full">
+        <Card className="w-full min-w-0">
             <CardHeader>
-                <CardTitle className="">Budget Setup</CardTitle>
-                <CardDescription>Set your savings baseline and allocation targets.</CardDescription>
+                <CardTitle>Budget setup</CardTitle>
+                <CardDescription>Set savings and targets.</CardDescription>
             </CardHeader>
             <CardContent>
-                <form id="budget-settings-form" className="grid gap-6" onSubmit={handleSubmit}>
+                <form id="budget-settings-form" className="grid gap-5 sm:gap-6" onSubmit={handleSubmit}>
                     <div className="grid gap-2">
                         <Label htmlFor='startingSavingsBalanceInput'>Starting savings balance</Label>
                         <div className="relative">
@@ -137,7 +137,7 @@ export default function BudgetSetup() {
                                 $
                             </span>
                             <Input
-                                className="pl-6"
+                                className="h-10 pl-6 sm:h-8"
                                 type='number'
                                 step='0.01'
                                 id="startingSavingsBalanceInput"
@@ -150,10 +150,11 @@ export default function BudgetSetup() {
                         </div>
                     </div>
 
-                    <div className="grid gap-3 sm:grid-cols-3">
+                    <div className="grid grid-cols-3 gap-2 sm:gap-3">
                         <div className="grid gap-2">
                             <Label htmlFor='needsInput'>Needs (%)</Label>
                             <Input
+                                className="h-10 sm:h-8"
                                 type='number'
                                 id="needsInput"
                                 name="needs"
@@ -166,6 +167,7 @@ export default function BudgetSetup() {
                         <div className="grid gap-2">
                             <Label htmlFor='wantsInput'>Wants (%)</Label>
                             <Input
+                                className="h-10 sm:h-8"
                                 type='number'
                                 id="wantsInput"
                                 name="wants"
@@ -178,6 +180,7 @@ export default function BudgetSetup() {
                         <div className="grid gap-2">
                             <Label htmlFor='savingsInput'>Savings (%)</Label>
                             <Input
+                                className="h-10 sm:h-8"
                                 type='number'
                                 id="savingsInput"
                                 name="savings"
@@ -192,7 +195,7 @@ export default function BudgetSetup() {
                     {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
                 </form>
             </CardContent>
-            <CardFooter className="justify-between gap-4">
+            <CardFooter className="items-center justify-between gap-3">
                 <div className="min-h-5" aria-live="polite">
                     {!isRatioValid && (
                         <p className="text-sm font-medium text-destructive">
@@ -204,7 +207,7 @@ export default function BudgetSetup() {
                     type="submit"
                     form="budget-settings-form"
                     variant="quiet"
-                    className="px-4"
+                    className="h-10 px-4 sm:h-8"
                     disabled={isDisabled || !isRatioValid}
                 >
                     {isLoading ? 'Loading...' : isSaving ? 'Saving...' : 'Save'}

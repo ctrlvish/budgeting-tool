@@ -142,10 +142,10 @@ export default function RecurringTransactions() {
     const isFormDisabled = isLoading || isAdding
 
     return (
-        <Card className="w-full">
+        <Card className="w-full min-w-0">
             <CardHeader>
                 <CardTitle>Recurring transactions</CardTitle>
-                <CardDescription>Create templates for income and expenses you log often.</CardDescription>
+                <CardDescription>Save transactions you log often.</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-6">
                 {isLoading ? (
@@ -163,7 +163,7 @@ export default function RecurringTransactions() {
 
                             return (
                                 <li
-                                    className="flex items-center justify-between gap-4 px-3 py-2.5"
+                                    className="flex items-center justify-between gap-3 px-3 py-2.5"
                                     key={transaction.id}
                                 >
                                     <div className="min-w-0">
@@ -180,6 +180,7 @@ export default function RecurringTransactions() {
                                             type="button"
                                             variant="ghost"
                                             size="icon-sm"
+                                            className="size-9 sm:size-7"
                                             onClick={() => handleDelete(transaction.id)}
                                             disabled={deletingId === transaction.id}
                                             aria-label={`Delete ${transaction.name}`}
@@ -193,11 +194,12 @@ export default function RecurringTransactions() {
                     </ul>
                 )}
 
-                <form id="recurring-transaction-form" className="grid gap-4 border-t pt-6" onSubmit={handleAdd}>
-                    <div className="grid gap-4 sm:grid-cols-3">
-                        <div className="grid gap-2">
+                <form id="recurring-transaction-form" className="grid gap-4 border-t pt-5 sm:pt-6" onSubmit={handleAdd}>
+                    <div className="grid grid-cols-[minmax(0,4fr)_minmax(0,6fr)] gap-3 sm:grid-cols-3 sm:gap-4">
+                        <div className="col-span-2 grid gap-2 sm:col-span-1">
                             <Label htmlFor="recurringTransactionName">Name</Label>
                             <Input
+                                className="h-10 sm:h-8"
                                 id="recurringTransactionName"
                                 type="text"
                                 value={name}
@@ -216,7 +218,7 @@ export default function RecurringTransactions() {
                                     $
                                 </span>
                                 <Input
-                                    className="pl-6"
+                                    className="h-10 pl-6 sm:h-8"
                                     id="recurringTransactionAmount"
                                     type="number"
                                     min="0.01"
@@ -231,6 +233,7 @@ export default function RecurringTransactions() {
                         <div className="grid gap-2">
                             <Label htmlFor="recurringTransactionCategory">Category</Label>
                             <GroupedCategoryCombobox
+                                className="h-10 w-full sm:h-8"
                                 categories={categories}
                                 value={categoryId}
                                 onValueChange={selectedCategoryId => {
@@ -245,7 +248,7 @@ export default function RecurringTransactions() {
                     </div>
                 </form>
             </CardContent>
-            <CardFooter className="justify-between gap-4">
+            <CardFooter className="items-center justify-between gap-3">
                 <div className="min-h-5" aria-live="polite">
                     {error && (
                         <p className="text-sm font-medium text-destructive" role="alert">
@@ -257,10 +260,10 @@ export default function RecurringTransactions() {
                     type="submit"
                     form="recurring-transaction-form"
                     variant="quiet"
-                    className="px-4"
+                    className="h-10 px-4 sm:h-8"
                     disabled={isFormDisabled}
                 >
-                    {isAdding ? 'Adding...' : 'Add recurring transaction'}
+                    {isAdding ? 'Adding...' : 'Add template'}
                 </Button>
             </CardFooter>
         </Card>

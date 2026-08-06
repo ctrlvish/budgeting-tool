@@ -41,7 +41,7 @@ import {
 
 
 const categoryChipStyles = `
-    rounded-md bg-muted/50 px-2 py-1 text-xs text-muted-foreground
+    max-w-full truncate rounded-md bg-muted/50 px-2 py-1 text-xs text-muted-foreground
     hover:bg-muted hover:text-foreground hover:cursor-pointer
 `
 
@@ -233,19 +233,20 @@ export default function Categories(){
                 
     }, [])
     return (
-        <Card className="w-full">
+        <Card className="w-full min-w-0">
         <CardHeader>
             <CardTitle>Categories</CardTitle>
-            <CardDescription>Configure income sources and expense categories.</CardDescription>
+            <CardDescription>Organise income and spending.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="min-w-0">
             <form
                 onSubmit={handleCategoryAdd}
-                className="grid gap-4 sm:grid-cols-[1fr_1fr_auto]"
+                className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 sm:grid-cols-[1fr_1fr_auto] sm:gap-4"
             >
-                <div className="grid gap-2">
+                <div className="col-span-2 grid gap-2 sm:col-span-1">
                     <Label htmlFor="categoryName">Name</Label>
                     <Input
+                        className="h-10 sm:h-8"
                         id="categoryName"
                         value={name}
                         onChange={e => setName(e.target.value)}
@@ -263,7 +264,10 @@ export default function Categories(){
                             if (value) setCategoryGroup(value)
                         }}
                     >
-                        <SelectTrigger id="categoryGroup" className="w-full">
+                        <SelectTrigger
+                            id="categoryGroup"
+                            className="w-full data-[size=default]:h-10 sm:data-[size=default]:h-8"
+                        >
                             <SelectValue />
                         </SelectTrigger>
 
@@ -283,15 +287,15 @@ export default function Categories(){
                 <Button
                     disabled={isAdding}
                     variant="quiet"
-                    className="min-w-24 self-end justify-self-end px-4"
+                    className="h-10 min-w-20 self-end justify-self-end px-4 sm:h-8 sm:min-w-24"
                     type="submit"
                 >
                     {isAdding ? 'Adding...' : 'Add'}
                 </Button>
             </form>
 
-        <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            <div>
+        <div className="mt-5 grid grid-cols-2 gap-4 sm:mt-6 sm:gap-6 lg:grid-cols-4">
+            <div className="min-w-0">
                 <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                     Income ({incomeCategories.length})
                 </h3>
@@ -305,7 +309,7 @@ export default function Categories(){
                             </button></li>)}
                 </ul>
             </div>
-            <div>
+            <div className="min-w-0">
                 <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                     Needs ({needsCategories.length})
                 </h3>
@@ -320,7 +324,7 @@ export default function Categories(){
                             </button></li>)}
                 </ul>
             </div>
-            <div>
+            <div className="min-w-0">
                 <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                     Wants ({wantsCategories.length})
                 </h3>
@@ -334,7 +338,7 @@ export default function Categories(){
                             </button></li>)}
                 </ul>
             </div>
-            <div>
+            <div className="min-w-0">
                 <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                     Savings ({savingsCategories.length})
                 </h3>
@@ -358,12 +362,13 @@ export default function Categories(){
                 setEditError('')
             }
         }}>
-            <DialogContent>
+            <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-sm">
                 <form className="grid gap-4" onSubmit={handleCategoryEdit}>
-                    <DialogTitle> Edit {selectedCategory?.name}</DialogTitle>
+                    <DialogTitle className="text-lg sm:text-base">Edit {selectedCategory?.name}</DialogTitle>
                     <div className="grid gap-2">
                         <Label htmlFor="nameInput">Rename category</Label>
                         <Input
+                            className="h-10 sm:h-8"
                             id="nameInput"
                             value={editName}
                             onChange={e => setEditName(e.target.value)}
@@ -382,11 +387,15 @@ export default function Categories(){
                             Reassign these items before deleting.
                         </p>
                     )}
-                    <div className="grid grid-cols-2 gap-4">
-                        <Button type="submit"
+                    <div className="flex items-center justify-between gap-3 sm:justify-end">
+                        <Button
+                            type="submit"
+                            className="h-10 px-4 sm:h-8 sm:px-2.5"
                             variant="quiet"
                             disabled={isEditing}>{isEditing ? 'Saving...' : 'Save'}</Button>
-                        <Button type="button" 
+                        <Button
+                            type="button"
+                            className="h-10 px-4 sm:h-8 sm:px-2.5"
                             variant='destructive'
                             onClick={openDeleteConfirmation}
                             disabled={usage === null || isReferenced}>Delete</Button>
@@ -401,7 +410,7 @@ export default function Categories(){
                     setCategoryToDelete(null)
                 }
         }}>
-            <AlertDialogContent>
+            <AlertDialogContent className="data-[size=default]:max-w-[calc(100%-2rem)] sm:data-[size=default]:max-w-sm">
                 <AlertDialogHeader>
                     <AlertDialogTitle>Delete category?</AlertDialogTitle>
                     <AlertDialogDescription>“{categoryToDelete?.name}” will be permanently deleted.</AlertDialogDescription>
@@ -411,12 +420,13 @@ export default function Categories(){
                     </p>
                 )}
                 </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogFooter className="flex-row justify-end">
+                    <AlertDialogCancel className="h-10 px-4 sm:h-8 sm:px-2.5">Cancel</AlertDialogCancel>
 
                     <AlertDialogAction
                         disabled={isDeleting || isReferenced}
                         variant="destructive"
+                        className="h-10 px-4 sm:h-8 sm:px-2.5"
                         onClick={handleCategoryDelete}
                     >
                         {isDeleting ? 'Deleting...' : 'Delete'}
