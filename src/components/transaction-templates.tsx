@@ -145,7 +145,7 @@ export default function TransactionTemplates() {
         <Card className="w-full min-w-0">
             <CardHeader>
                 <CardTitle>Transaction templates</CardTitle>
-                <CardDescription>Save transactions you log often.</CardDescription>
+                <CardDescription>Save transactions you log often</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-6">
                 {isLoading ? (

@@ -123,7 +123,7 @@ export default function BudgetSetup() {
         <Card className="w-full min-w-0">
             <CardHeader>
                 <CardTitle>Budget setup</CardTitle>
-                <CardDescription>Set savings and targets.</CardDescription>
+                <CardDescription>Set savings and targets</CardDescription>
             </CardHeader>
             <CardContent>
                 <form id="budget-settings-form" className="grid gap-5 sm:gap-6" onSubmit={handleSubmit}>

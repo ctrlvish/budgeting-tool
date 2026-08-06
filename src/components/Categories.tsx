@@ -236,7 +236,7 @@ export default function Categories(){
         <Card className="w-full min-w-0">
         <CardHeader>
             <CardTitle>Categories</CardTitle>
-            <CardDescription>Organise income and spending.</CardDescription>
+            <CardDescription>Organise income and spending</CardDescription>
         </CardHeader>
         <CardContent className="min-w-0">
             <form
