@@ -389,16 +389,16 @@ export default function Categories(){
                     )}
                     <div className="flex items-center justify-between gap-3 sm:justify-end">
                         <Button
-                            type="submit"
-                            className="h-10 px-4 sm:h-8 sm:px-2.5"
-                            variant="quiet"
-                            disabled={isEditing}>{isEditing ? 'Saving...' : 'Save'}</Button>
-                        <Button
                             type="button"
                             className="h-10 px-4 sm:h-8 sm:px-2.5"
                             variant='destructive'
                             onClick={openDeleteConfirmation}
                             disabled={usage === null || isReferenced}>Delete</Button>
+                        <Button
+                            type="submit"
+                            className="h-10 px-4 sm:h-8 sm:px-2.5"
+                            variant="quiet"
+                            disabled={isEditing}>{isEditing ? 'Saving...' : 'Save'}</Button>
                     </div>
                 </form>
             </DialogContent>
