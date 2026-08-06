@@ -28,7 +28,7 @@ function App() {
     }
 
     return (
-        <div>
+        <div className="min-h-dvh pb-[calc(4rem+env(safe-area-inset-bottom))] sm:pb-0">
             <AppHeader onLogTransaction={openTransactionDialog} />
 
             <main>
