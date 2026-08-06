@@ -1,8 +1,12 @@
 import { useState, useEffect, useMemo } from "react"
-import type { Transaction, Category, BudgetSetting } from '../types'
+import type { Transaction, Category } from '../types'
 import { db } from "@/lib/db"
 import { addMonths, format, isSameMonth, subMonths } from "date-fns"
 import CategoryBreakdown from "@/components/category-breakdown"
+import {
+    DashboardError,
+    DashboardLoading
+} from "@/components/dashboard-state"
 import PeriodNavigation from "@/components/period-navigation"
 import YearlyBreakdown from "@/components/yearly-breakdown"
 import { getYearlyBreakdown } from "@/lib/yearly-breakdown"
@@ -25,9 +29,9 @@ export default function Dashboard({revision}: DashboardProps){
 
     const [transactions, setTransactions] = useState<Transaction[]>([])
     const [categories, setCategories] = useState<Category[]>([])
-    const [budgetSettings, setBudgetSettings] = useState<BudgetSetting | null>(null)
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState('')
+    const [loadAttempt, setLoadAttempt] = useState(0)
     const [selectedMonth, setSelectedMonth] = useState(() => new Date())
     const [selectedYear, setSelectedYear] = useState(() => new Date().getFullYear())
     const monthKey = `${selectedMonth.getFullYear()}-${String(selectedMonth.getMonth() + 1).padStart(2, "0")}`
@@ -36,17 +40,16 @@ export default function Dashboard({revision}: DashboardProps){
 
         let isActive = true
 
-        Promise.all([
+        new Promise(resolve => setTimeout(resolve, 2500))
+    .then(() => Promise.all([
             db.transactions.toArray(),
-            db.categories.toArray(),
-            db.budgetSettings.toArray()
-        ])
-            .then(([transactions, categories, budgetSettings]) => {
+            db.categories.toArray()
+        ]))
+            .then(([transactions, categories]) => {
                 if (!isActive) return
 
                 setTransactions(transactions)
                 setCategories(categories)
-                setBudgetSettings(budgetSettings[0] ?? null)
                 setError('')
             })
         
@@ -64,7 +67,13 @@ export default function Dashboard({revision}: DashboardProps){
         return () => {
             isActive = false
         }
-    }, [revision])
+    }, [revision, loadAttempt])
+
+    function handleRetry() {
+        setIsLoading(true)
+        setError('')
+        setLoadAttempt(attempt => attempt + 1)
+    }
 
 
     const monthFilteredTransactions = useMemo(() => {
@@ -239,41 +248,49 @@ export default function Dashboard({revision}: DashboardProps){
             <h1 className='font-heading text-3xl font-semibold tracking-tight'>Dashboard</h1>
             <p className='text-sm text-muted-foreground'>Your budget at a glance</p>
         </header>
-        <Card>
-            <CardHeader>
-                <CardTitle>Monthly Overview</CardTitle>
-                <CardDescription>{monthLabel}</CardDescription>
-                <CardAction>
-                    <PeriodNavigation
-                        disableNext={isCurrentMonth}
-                        nextLabel="Next month"
-                        previousLabel="Previous month"
-                        onNext={() => {
-                            setSelectedMonth(month => addMonths(month, 1))
-                        }}
-                        onPrevious={() => {
-                            setSelectedMonth(month => subMonths(month, 1))
-                        }}
-                        onReset={() => setSelectedMonth(new Date())}
-                        resetLabel="Reset to current month"
-                        showReset={!isCurrentMonth}
-                    />
-                </CardAction>
-            </CardHeader>
-            <CardContent>
-                <CategoryBreakdown
-                    hasIncome={monthlyIncomeCents > 0}
-                    sections={monthlyBucketSections}
+        {isLoading ? (
+            <DashboardLoading />
+        ) : error ? (
+            <DashboardError onRetry={handleRetry} />
+        ) : (
+            <>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Monthly Overview</CardTitle>
+                        <CardDescription>{monthLabel}</CardDescription>
+                        <CardAction>
+                            <PeriodNavigation
+                                disableNext={isCurrentMonth}
+                                nextLabel="Next month"
+                                previousLabel="Previous month"
+                                onNext={() => {
+                                    setSelectedMonth(month => addMonths(month, 1))
+                                }}
+                                onPrevious={() => {
+                                    setSelectedMonth(month => subMonths(month, 1))
+                                }}
+                                onReset={() => setSelectedMonth(new Date())}
+                                resetLabel="Reset to current month"
+                                showReset={!isCurrentMonth}
+                            />
+                        </CardAction>
+                    </CardHeader>
+                    <CardContent>
+                        <CategoryBreakdown
+                            hasIncome={monthlyIncomeCents > 0}
+                            sections={monthlyBucketSections}
+                        />
+                    </CardContent>
+                </Card>
+                <YearlyBreakdown
+                    data={yearlyData}
+                    disableNext={selectedYear >= currentYear}
+                    year={selectedYear}
+                    onNext={() => setSelectedYear(year => year + 1)}
+                    onPrevious={() => setSelectedYear(year => year - 1)}
+                    onReset={() => setSelectedYear(currentYear)}
                 />
-            </CardContent>
-        </Card>
-        <YearlyBreakdown
-            data={yearlyData}
-            disableNext={selectedYear >= currentYear}
-            year={selectedYear}
-            onNext={() => setSelectedYear(year => year + 1)}
-            onPrevious={() => setSelectedYear(year => year - 1)}
-            onReset={() => setSelectedYear(currentYear)}
-        />
+            </>
+        )}
     </main>)
 }

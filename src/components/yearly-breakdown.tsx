@@ -96,11 +96,13 @@ export default function YearlyBreakdown({
             </CardHeader>
             <CardContent>
                 {!hasIncome ? (
-                    <p className="text-xs text-muted-foreground">
-                        {hasActivity
-                            ? 'Add income to view this year'
-                            : 'No activity this year'}
-                    </p>
+                    <div className="flex h-64 items-center justify-center text-center">
+                        <p className="text-xs text-muted-foreground">
+                            {hasActivity
+                                ? 'Add income to view this year'
+                                : 'No activity this year'}
+                        </p>
+                    </div>
                 ) : (
                     <ChartContainer
                         config={chartConfig}
