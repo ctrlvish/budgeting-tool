@@ -40,11 +40,10 @@ export default function Dashboard({revision}: DashboardProps){
 
         let isActive = true
 
-        new Promise(resolve => setTimeout(resolve, 2500))
-    .then(() => Promise.all([
+        Promise.all([
             db.transactions.toArray(),
             db.categories.toArray()
-        ]))
+        ])
             .then(([transactions, categories]) => {
                 if (!isActive) return
 
