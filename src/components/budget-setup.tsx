@@ -5,6 +5,7 @@ import {
     Card, 
     CardHeader,
     CardContent,
+    CardFooter,
     CardDescription,
     CardTitle
 } from "./ui/card"
@@ -114,12 +115,9 @@ export default function BudgetSetup() {
 
     const isRatioValid = total === 100
 
-    const ratioMessage =
-        total === 100
-            ? '100% allocated'
-            : total < 100
-                ? `${100 - total}% left to allocate`
-                : `${Math.abs(100 - total)}% over allocation`
+    const ratioMessage = total < 100
+        ? `${100 - total}% left to allocate`
+        : `${Math.abs(100 - total)}% over allocation`
 
     return (
         <Card className="w-full">
@@ -128,7 +126,7 @@ export default function BudgetSetup() {
                 <CardDescription>Set your savings baseline and allocation targets.</CardDescription>
             </CardHeader>
             <CardContent>
-                <form className="grid gap-6" onSubmit={handleSubmit}>
+                <form id="budget-settings-form" className="grid gap-6" onSubmit={handleSubmit}>
                     <div className="grid gap-2">
                         <Label htmlFor='startingSavingsBalanceInput'>Starting savings balance</Label>
                         <div className="relative">
@@ -152,65 +150,65 @@ export default function BudgetSetup() {
                         </div>
                     </div>
 
-                    <div className="grid gap-3">
-                        <div className="grid gap-3 sm:grid-cols-3">
-                            <div className="grid gap-2">
-                                <Label htmlFor='needsInput'>Needs (%)</Label>
-                                <Input
-                                    type='number'
-                                    id="needsInput"
-                                    name="needs"
-                                    value={formData.needs}
-                                    onChange={handleChange}
-                                    disabled={isDisabled}
-                                    placeholder="50"
-                                />
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor='wantsInput'>Wants (%)</Label>
-                                <Input
-                                    type='number'
-                                    id="wantsInput"
-                                    name="wants"
-                                    value={formData.wants}
-                                    onChange={handleChange}
-                                    disabled={isDisabled}
-                                    placeholder="30"
-                                />
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor='savingsInput'>Savings (%)</Label>
-                                <Input
-                                    type='number'
-                                    id="savingsInput"
-                                    name="savings"
-                                    value={formData.savings}
-                                    onChange={handleChange}
-                                    disabled={isDisabled}
-                                    placeholder="20"
-                                />
-                            </div>
+                    <div className="grid gap-3 sm:grid-cols-3">
+                        <div className="grid gap-2">
+                            <Label htmlFor='needsInput'>Needs (%)</Label>
+                            <Input
+                                type='number'
+                                id="needsInput"
+                                name="needs"
+                                value={formData.needs}
+                                onChange={handleChange}
+                                disabled={isDisabled}
+                                placeholder="50"
+                            />
                         </div>
-                        <p
-                            className={`text-sm font-medium ${isRatioValid ? 'text-green-600' : 'text-destructive'}`}
-                            aria-live="polite"
-                        >
-                            {ratioMessage}
-                        </p>
+                        <div className="grid gap-2">
+                            <Label htmlFor='wantsInput'>Wants (%)</Label>
+                            <Input
+                                type='number'
+                                id="wantsInput"
+                                name="wants"
+                                value={formData.wants}
+                                onChange={handleChange}
+                                disabled={isDisabled}
+                                placeholder="30"
+                            />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor='savingsInput'>Savings (%)</Label>
+                            <Input
+                                type='number'
+                                id="savingsInput"
+                                name="savings"
+                                value={formData.savings}
+                                onChange={handleChange}
+                                disabled={isDisabled}
+                                placeholder="20"
+                            />
+                        </div>
                     </div>
 
-                    <div className="grid gap-3">
-                        {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
-                        <Button
-                            type="submit"
-                            className="justify-self-end px-4"
-                            disabled={isDisabled || !isRatioValid}
-                        >
-                            {isLoading ? 'Loading...' : isSaving ? 'Saving...' : 'Save'}
-                        </Button>
-                    </div>
+                    {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
                 </form>
             </CardContent>
+            <CardFooter className="justify-between gap-4">
+                <div className="min-h-5" aria-live="polite">
+                    {!isRatioValid && (
+                        <p className="text-sm font-medium text-destructive">
+                            {ratioMessage}
+                        </p>
+                    )}
+                </div>
+                <Button
+                    type="submit"
+                    form="budget-settings-form"
+                    className="px-4"
+                    disabled={isDisabled || !isRatioValid}
+                >
+                    {isLoading ? 'Loading...' : isSaving ? 'Saving...' : 'Save'}
+                </Button>
+            </CardFooter>
         </Card>
     )
 }
