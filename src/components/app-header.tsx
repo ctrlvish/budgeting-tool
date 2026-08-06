@@ -10,13 +10,16 @@ const navigationLinkStyles = `
     dark:font-normal
 `
 
-const mobileNavigationLinkStyles = `
-    flex min-h-14 items-center justify-center px-2
-    font-heading text-sm font-medium text-foreground
-    transition-colors duration-150 hover:text-muted-foreground
-    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset
-    focus-visible:ring-ring dark:font-normal
-`
+function mobileNavigationLinkStyles({isActive} : {isActive : boolean}) {
+    return `
+        flex min-h-14 items-center justify-center px-2
+        font-heading text-sm text-foreground
+        transition-colors duration-150 hover:text-muted-foreground
+        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset
+        focus-visible:ring-ring
+        ${isActive ? 'font-semibold' : 'font-normal'}
+    `
+}
 
 interface AppHeaderProps {
     onLogTransaction : () => void
