@@ -270,8 +270,8 @@ export default function Transactions({ onLogTransaction, revision, onEditTransac
             </div>
         </header>
         <Card className="min-w-0 min-h-96 lg:min-h-144">
-            <CardHeader className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 sm:flex sm:flex-row sm:gap-3">
-                <InputGroup className="h-10 sm:h-8 sm:flex-1">
+            <CardHeader className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-2 sm:flex sm:flex-row sm:gap-3">
+                <InputGroup className="col-span-3 h-10 sm:h-8 sm:flex-1">
                     <InputGroupAddon><SearchIcon /></InputGroupAddon>
                     <InputGroupInput
                         value={search}
@@ -280,41 +280,6 @@ export default function Transactions({ onLogTransaction, revision, onEditTransac
                         aria-label="Search transactions"
                     />
                 </InputGroup>
-                <DropdownMenu>
-                    <DropdownMenuTrigger
-                        render={
-                            <Button
-                                type="button"
-                                variant="outline"
-                                className="size-10 px-0 sm:h-8 sm:w-auto sm:px-2.5"
-                                aria-label={`Sort transactions: ${sortOptionLabels[sortOption]}`}
-                                title={`Sort: ${sortOptionLabels[sortOption]}`}
-                            >
-                                <ArrowUpDownIcon />
-                                <span className="hidden sm:inline">{sortOptionLabels[sortOption]}</span>
-                            </Button>
-                        }
-                    />
-                    <DropdownMenuContent className="w-44" align="end">
-                        <DropdownMenuLabel>Sort by</DropdownMenuLabel>
-                        <DropdownMenuRadioGroup
-                            value={sortOption}
-                            onValueChange={value => setSortOption(value as SortOption)}
-                        >
-                            {(Object.entries(sortOptionLabels) as [SortOption, string][]).map(
-                                ([value, label]) => (
-                                    <DropdownMenuRadioItem
-                                        key={value}
-                                        value={value}
-                                        className="py-2 sm:py-1"
-                                    >
-                                        {label}
-                                    </DropdownMenuRadioItem>
-                                )
-                            )}
-                        </DropdownMenuRadioGroup>
-                    </DropdownMenuContent>
-                </DropdownMenu>
                 <Select
                     items={categoryItems}
                     value={selectedCategoryId}
@@ -409,12 +374,47 @@ export default function Transactions({ onLogTransaction, revision, onEditTransac
                                     className="w-full"
                                     onClick={clearDateFilter}
                                 >
-                                    Clear dates
+                                    Clear filter
                                 </Button>
                             </div>
                         )}
                     </PopoverContent>
                 </Popover>
+                <DropdownMenu>
+                    <DropdownMenuTrigger
+                        render={
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="size-10 px-0 sm:size-8"
+                                aria-label={`Sort transactions: ${sortOptionLabels[sortOption]}`}
+                                title={`Sort: ${sortOptionLabels[sortOption]}`}
+                            >
+                                <ArrowUpDownIcon />
+                            </Button>
+                        }
+                    />
+                    <DropdownMenuContent className="w-44" align="end">
+                        <DropdownMenuRadioGroup
+                            value={sortOption}
+                            onValueChange={value => setSortOption(value as SortOption)}
+                        >
+                            <DropdownMenuLabel>Sort by</DropdownMenuLabel>
+                            {(Object.entries(sortOptionLabels) as [SortOption, string][]).map(
+                                ([value, label]) => (
+                                    <DropdownMenuRadioItem
+                                        key={value}
+                                        value={value}
+                                        className="py-2 sm:py-1"
+                                        closeOnClick
+                                    >
+                                        {label}
+                                    </DropdownMenuRadioItem>
+                                )
+                            )}
+                        </DropdownMenuRadioGroup>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </CardHeader>
             <CardContent className="min-w-0">
                 {error ? (
