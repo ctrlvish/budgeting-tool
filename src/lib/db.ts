@@ -1,5 +1,5 @@
 import Dexie, {type Table} from 'dexie'
-import type {Category, BudgetSetting, RecurringTransaction, Transaction} from '../types'
+import type {Category, BudgetSetting, TransactionTemplate, Transaction} from '../types'
 
 const defaultCategories : Category[] = [
     {
@@ -87,7 +87,7 @@ const defaultCategories : Category[] = [
     }
 ]
 
-const defaultRecurringTransactions : RecurringTransaction[] = [
+const defaultTransactionTemplates : TransactionTemplate[] = [
     {
         id : 'rent',
         name : 'Rent',
@@ -108,111 +108,24 @@ const defaultRecurringTransactions : RecurringTransaction[] = [
     }
 ]
 
-type LegacyBudgetSetting = Omit<BudgetSetting, 'startingSavingsBalanceCents'> & {
-    startingSavingsBalance? : number
-    startingSavingsBalanceCents? : number
-}
-
 export class BudgetDatabase extends Dexie {
     categories! : Table<Category>
     budgetSettings! : Table<BudgetSetting>
-    recurringTransactions! : Table<RecurringTransaction>
+    transactionTemplates! : Table<TransactionTemplate>
     transactions! : Table<Transaction>
 
     constructor() {
-        super('budget-db')
+        super('budgeting-tool-db')
         this.version(1).stores({
-            categories : 'id, bucket',
-            budgetSettings : '++autoId',
-            recurringExpenses : 'id, categoryId',
-            transactions : 'id, date, categoryId, recurringExpenseId'
-        })
-
-        this.version(2).stores({
             categories : 'id, type, bucket',
             budgetSettings : '++autoId',
-            recurringExpenses : 'id, categoryId',
-            recurringTransactions : 'id, categoryId',
-            transactions : 'id, type, date, categoryId, recurringExpenseId, recurringTransactionId'
-        }).upgrade(async schemaTransaction => {
-            const categories = schemaTransaction.table<Category>('categories')
-            const transactions = schemaTransaction.table<{
-                categoryId : string
-                type? : Transaction['type']
-                recurringExpenseId? : string
-                recurringTransactionId? : string
-            }>('transactions')
-            const previousRecurringTransactions = await schemaTransaction
-                .table<RecurringTransaction>('recurringExpenses')
-                .toArray()
-
-            if (previousRecurringTransactions.length > 0) {
-                await schemaTransaction
-                    .table<RecurringTransaction>('recurringTransactions')
-                    .bulkPut(previousRecurringTransactions)
-            }
-
-            await categories.toCollection().modify(category => {
-                if (category.id === 'salary' || category.id === 'tax-returns') {
-                    category.type = 'income'
-                    delete category.bucket
-                } else {
-                    category.type = 'expense'
-                }
-            })
-
-            const incomeCategoryIds = new Set(
-                (await categories.toArray())
-                    .filter(category => category.type === 'income')
-                    .map(category => category.id)
-            )
-
-            await transactions.toCollection().modify(transaction => {
-                transaction.type = incomeCategoryIds.has(transaction.categoryId)
-                    ? 'income'
-                    : 'expense'
-
-                if (transaction.recurringExpenseId) {
-                    transaction.recurringTransactionId = transaction.recurringExpenseId
-                    delete transaction.recurringExpenseId
-                }
-            })
-        })
-
-        this.version(3).stores({
-            categories : 'id, type, bucket',
-            budgetSettings : '++autoId',
-            recurringExpenses : null,
-            recurringTransactions : 'id, categoryId',
-            transactions : 'id, type, date, categoryId, recurringTransactionId'
-        })
-
-        this.version(4).stores({
-            categories : 'id, type, bucket',
-            budgetSettings : '++autoId',
-            recurringTransactions : 'id, categoryId',
-            transactions : 'id, type, date, categoryId, recurringTransactionId'
-        }).upgrade(schemaTransaction => {
-            const budgetSettings = schemaTransaction
-                .table<LegacyBudgetSetting>('budgetSettings')
-
-            return budgetSettings.toCollection().modify(settings => {
-                if (
-                    typeof settings.startingSavingsBalance === 'number'
-                    && typeof settings.startingSavingsBalanceCents !== 'number'
-                ) {
-                    settings.startingSavingsBalanceCents = Math.round(
-                        settings.startingSavingsBalance * 100
-                    )
-                }
-
-                delete settings.startingSavingsBalance
-            })
+            transactionTemplates : 'id, categoryId',
+            transactions : 'id, type, date, categoryId, transactionTemplateId'
         })
 
         this.on('populate', async () => {
             await this.categories.bulkAdd(defaultCategories)
-            await this.recurringTransactions.bulkAdd(defaultRecurringTransactions)
+            await this.transactionTemplates.bulkAdd(defaultTransactionTemplates)
         })
     }
 }
