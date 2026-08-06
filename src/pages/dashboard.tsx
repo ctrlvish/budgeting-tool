@@ -2,9 +2,10 @@ import { useState, useEffect, useMemo } from "react"
 import type { Transaction, Category, BudgetSetting } from '../types'
 import { db } from "@/lib/db"
 import { addMonths, format, isSameMonth, subMonths } from "date-fns"
-import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 import CategoryBreakdown from "@/components/category-breakdown"
-import { Button } from "@/components/ui/button"
+import PeriodNavigation from "@/components/period-navigation"
+import YearlyBreakdown from "@/components/yearly-breakdown"
+import { getYearlyBreakdown } from "@/lib/yearly-breakdown"
 import { 
     Card,
     CardAction,
@@ -28,6 +29,7 @@ export default function Dashboard({revision}: DashboardProps){
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState('')
     const [selectedMonth, setSelectedMonth] = useState(() => new Date())
+    const [selectedYear, setSelectedYear] = useState(() => new Date().getFullYear())
     const monthKey = `${selectedMonth.getFullYear()}-${String(selectedMonth.getMonth() + 1).padStart(2, "0")}`
 
     useEffect(() => {
@@ -203,6 +205,11 @@ export default function Dashboard({revision}: DashboardProps){
 
     const monthLabel = format(selectedMonth, 'MMMM yyyy')
     const isCurrentMonth = isSameMonth(selectedMonth, new Date())
+    const currentYear = new Date().getFullYear()
+
+    const yearlyData = useMemo(() => {
+        return getYearlyBreakdown(transactions, categoryMap, selectedYear)
+    }, [transactions, categoryMap, selectedYear])
 
     const monthlyBucketSections = [
         {
@@ -236,30 +243,21 @@ export default function Dashboard({revision}: DashboardProps){
             <CardHeader>
                 <CardTitle>Monthly Overview</CardTitle>
                 <CardDescription>{monthLabel}</CardDescription>
-                <CardAction className="flex gap-1">
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        aria-label="Previous month"
-                        onClick={() => {
-                            setSelectedMonth(month => subMonths(month, 1))
-                        }}
-                    >
-                        <ChevronLeftIcon />
-                    </Button>
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        aria-label="Next month"
-                        disabled={isCurrentMonth}
-                        onClick={() => {
+                <CardAction>
+                    <PeriodNavigation
+                        disableNext={isCurrentMonth}
+                        nextLabel="Next month"
+                        previousLabel="Previous month"
+                        onNext={() => {
                             setSelectedMonth(month => addMonths(month, 1))
                         }}
-                    >
-                        <ChevronRightIcon />
-                    </Button>
+                        onPrevious={() => {
+                            setSelectedMonth(month => subMonths(month, 1))
+                        }}
+                        onReset={() => setSelectedMonth(new Date())}
+                        resetLabel="Reset to current month"
+                        showReset={!isCurrentMonth}
+                    />
                 </CardAction>
             </CardHeader>
             <CardContent>
@@ -269,5 +267,13 @@ export default function Dashboard({revision}: DashboardProps){
                 />
             </CardContent>
         </Card>
+        <YearlyBreakdown
+            data={yearlyData}
+            disableNext={selectedYear >= currentYear}
+            year={selectedYear}
+            onNext={() => setSelectedYear(year => year + 1)}
+            onPrevious={() => setSelectedYear(year => year - 1)}
+            onReset={() => setSelectedYear(currentYear)}
+        />
     </main>)
 }
