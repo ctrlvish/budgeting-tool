@@ -2,9 +2,7 @@ import { useState, useEffect, useMemo } from "react"
 import type { Transaction, Category, BudgetSetting } from '../types'
 import { db } from "@/lib/db"
 import { format } from "date-fns"
-import WhereMoneyWent, {
-    formatPercentage
-} from "@/components/where-money-went"
+import CategoryBreakdown from "@/components/category-breakdown"
 import { 
     Card,
     CardHeader,
@@ -121,8 +119,6 @@ export default function Dashboard({revision}: DashboardProps){
 
     const monthlySavingsCents = monthlyExplicitSavingsCents + leftoverCents
     
-    const hasMonthlyIncome = monthlyIncomeCents > 0
-
     function calculatePercentage(amountCents: number, incomeCents: number) {
         if (incomeCents <= 0) return null
 
@@ -237,39 +233,8 @@ export default function Dashboard({revision}: DashboardProps){
                 <CardTitle>Monthly Overview</CardTitle>
                 <CardDescription>{monthLabel}</CardDescription>
             </CardHeader>
-            <CardContent className="grid items-start gap-8 md:grid-cols-[2fr_3fr]">
-                <div className="grid content-start gap-4">
-                    <h3 className="font-heading text-sm font-medium">
-                        Distribution
-                    </h3>
-
-                    {!hasMonthlyIncome ? (
-                        <p className="text-sm text-muted-foreground">Log income...</p>
-                    ) : (
-                        <div className="grid gap-3">
-                            <div className="flex items-center justify-between">
-                                <p className="text-sm text-muted-foreground">Needs</p>
-                                <p className="text-sm font-medium tabular-nums">
-                                    {formatPercentage(monthlyNeedsPercentage)}
-                                </p>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <p className="text-sm text-muted-foreground">Wants</p>
-                                <p className="text-sm font-medium tabular-nums">
-                                    {formatPercentage(monthlyWantsPercentage)}
-                                </p>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <p className="text-sm text-muted-foreground">Savings</p>
-                                <p className="text-sm font-medium tabular-nums">
-                                    {formatPercentage(monthlySavingsPercentage)}
-                                </p>
-                            </div>
-                        </div>
-                    )}
-
-                </div>
-                <WhereMoneyWent sections={monthlyBucketSections} />
+            <CardContent>
+                <CategoryBreakdown sections={monthlyBucketSections} />
             </CardContent>
         </Card>
     </main>)

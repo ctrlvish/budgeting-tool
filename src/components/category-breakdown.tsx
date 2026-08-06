@@ -32,7 +32,7 @@ interface BucketSection {
     rows : CategoryRow[]
 }
 
-interface WhereMoneyWentProps {
+interface CategoryBreakdownProps {
     sections : BucketSection[]
 }
 
@@ -76,7 +76,7 @@ function AmountBar({amountCents, barClass, name, width} : AmountBarProps) {
                 render={
                     <button
                         type="button"
-                        className="h-2 w-full cursor-default overflow-hidden rounded-full bg-muted/70 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
+                        className="h-2.5 w-full cursor-default overflow-hidden rounded-full bg-muted/70 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
                         aria-label={`${name}: ${formatMoney(amountCents)}`}
                         onPointerMove={event => {
                             if (event.pointerType === 'mouse') {
@@ -112,48 +112,43 @@ function AmountBar({amountCents, barClass, name, width} : AmountBarProps) {
     )
 }
 
-export default function WhereMoneyWent({sections} : WhereMoneyWentProps) {
+export default function CategoryBreakdown({sections} : CategoryBreakdownProps) {
     return (
-        <div className="grid content-start gap-4 border-t pt-6 md:border-l md:border-t-0 md:pl-6 md:pt-0">
-            <h3 className="font-heading text-sm font-medium">
-                Where money went
-            </h3>
-            <div className="grid max-h-64 gap-5 overflow-y-auto pr-2">
-                {sections.map(section => (
-                    <section key={section.id} className="grid gap-3">
-                        <h4 className="sticky top-0 z-10 bg-card py-1 text-sm font-medium">
-                            {section.label}
-                            <span className="ml-1 text-muted-foreground">
-                                ({formatPercentage(section.percentage)})
-                            </span>
-                        </h4>
-                        <div className="grid gap-3">
-                            {section.rows.map(row => {
-                                const barWidth = row.percentage === null
-                                    ? 0
-                                    : Math.min(Math.abs(row.percentage), 100)
+        <div className="grid max-h-64 gap-5 overflow-y-auto pr-2">
+            {sections.map(section => (
+                <section key={section.id} className="grid gap-3">
+                    <h3 className="sticky top-0 z-10 bg-card py-1 text-sm font-medium">
+                        {section.label}
+                        <span className="ml-1 text-muted-foreground">
+                            ({formatPercentage(section.percentage)})
+                        </span>
+                    </h3>
+                    <div className="grid gap-3">
+                        {section.rows.map(row => {
+                            const barWidth = row.percentage === null
+                                ? 0
+                                : Math.min(Math.abs(row.percentage), 100)
 
-                                return (
-                                    <div key={row.id} className="grid gap-1.5">
-                                        <p className="text-sm">
-                                            {row.name}
-                                            <span className="ml-1 text-xs tabular-nums text-muted-foreground">
-                                                {formatPercentage(row.percentage)}
-                                            </span>
-                                        </p>
-                                        <AmountBar
-                                            amountCents={row.amountCents}
-                                            barClass={bucketBarClasses[row.bucket]}
-                                            name={row.name}
-                                            width={barWidth}
-                                        />
-                                    </div>
-                                )
-                            })}
-                        </div>
-                    </section>
-                ))}
-            </div>
+                            return (
+                                <div key={row.id} className="grid gap-1.5">
+                                    <p className="text-sm">
+                                        {row.name}
+                                        <span className="ml-1 text-xs tabular-nums text-muted-foreground">
+                                            {formatPercentage(row.percentage)}
+                                        </span>
+                                    </p>
+                                    <AmountBar
+                                        amountCents={row.amountCents}
+                                        barClass={bucketBarClasses[row.bucket]}
+                                        name={row.name}
+                                        width={barWidth}
+                                    />
+                                </div>
+                            )
+                        })}
+                    </div>
+                </section>
+            ))}
         </div>
     )
 }
