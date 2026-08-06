@@ -256,6 +256,7 @@ export default function RecurringTransactions() {
                 <Button
                     type="submit"
                     form="recurring-transaction-form"
+                    variant="quiet"
                     className="px-4"
                     disabled={isFormDisabled}
                 >

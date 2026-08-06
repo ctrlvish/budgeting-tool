@@ -282,6 +282,7 @@ export default function Categories(){
 
                 <Button
                     disabled={isAdding}
+                    variant="quiet"
                     className="min-w-24 self-end justify-self-end px-4"
                     type="submit"
                 >
@@ -383,6 +384,7 @@ export default function Categories(){
                     )}
                     <div className="grid grid-cols-2 gap-4">
                         <Button type="submit"
+                            variant="quiet"
                             disabled={isEditing}>{isEditing ? 'Saving...' : 'Save'}</Button>
                         <Button type="button" 
                             variant='destructive'

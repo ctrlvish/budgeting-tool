@@ -203,6 +203,7 @@ export default function BudgetSetup() {
                 <Button
                     type="submit"
                     form="budget-settings-form"
+                    variant="quiet"
                     className="px-4"
                     disabled={isDisabled || !isRatioValid}
                 >
