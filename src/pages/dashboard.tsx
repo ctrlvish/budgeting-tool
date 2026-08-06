@@ -1,10 +1,13 @@
 import { useState, useEffect, useMemo } from "react"
 import type { Transaction, Category, BudgetSetting } from '../types'
 import { db } from "@/lib/db"
-import { format } from "date-fns"
+import { addMonths, format, isSameMonth, subMonths } from "date-fns"
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 import CategoryBreakdown from "@/components/category-breakdown"
+import { Button } from "@/components/ui/button"
 import { 
     Card,
+    CardAction,
     CardHeader,
     CardTitle,
     CardDescription,
@@ -199,6 +202,7 @@ export default function Dashboard({revision}: DashboardProps){
     }
 
     const monthLabel = format(selectedMonth, 'MMMM yyyy')
+    const isCurrentMonth = isSameMonth(selectedMonth, new Date())
 
     const monthlyBucketSections = [
         {
@@ -232,9 +236,37 @@ export default function Dashboard({revision}: DashboardProps){
             <CardHeader>
                 <CardTitle>Monthly Overview</CardTitle>
                 <CardDescription>{monthLabel}</CardDescription>
+                <CardAction className="flex gap-1">
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label="Previous month"
+                        onClick={() => {
+                            setSelectedMonth(month => subMonths(month, 1))
+                        }}
+                    >
+                        <ChevronLeftIcon />
+                    </Button>
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label="Next month"
+                        disabled={isCurrentMonth}
+                        onClick={() => {
+                            setSelectedMonth(month => addMonths(month, 1))
+                        }}
+                    >
+                        <ChevronRightIcon />
+                    </Button>
+                </CardAction>
             </CardHeader>
             <CardContent>
-                <CategoryBreakdown sections={monthlyBucketSections} />
+                <CategoryBreakdown
+                    hasIncome={monthlyIncomeCents > 0}
+                    sections={monthlyBucketSections}
+                />
             </CardContent>
         </Card>
     </main>)

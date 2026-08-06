@@ -33,6 +33,7 @@ interface BucketSection {
 }
 
 interface CategoryBreakdownProps {
+    hasIncome : boolean
     sections : BucketSection[]
 }
 
@@ -76,7 +77,7 @@ function AmountBar({amountCents, barClass, name, width} : AmountBarProps) {
                 render={
                     <button
                         type="button"
-                        className="h-2.5 w-full cursor-default overflow-hidden rounded-full bg-muted/70 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
+                        className="h-3.5 w-full cursor-default overflow-hidden rounded-full bg-muted/70 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
                         aria-label={`${name}: ${formatMoney(amountCents)}`}
                         onPointerMove={event => {
                             if (event.pointerType === 'mouse') {
@@ -112,25 +113,41 @@ function AmountBar({amountCents, barClass, name, width} : AmountBarProps) {
     )
 }
 
-export default function CategoryBreakdown({sections} : CategoryBreakdownProps) {
+export default function CategoryBreakdown({hasIncome, sections} : CategoryBreakdownProps) {
+    if (!hasIncome && sections.length > 0) {
+        return (
+            <p className="text-xs text-muted-foreground">
+                Add income to view this month's overview
+            </p>
+        )
+    }
+
+    if (sections.length === 0) {
+        return (
+            <p className="text-xs text-muted-foreground">
+                No activity this month
+            </p>
+        )
+    }
+
     return (
-        <div className="grid max-h-64 gap-5 overflow-y-auto pr-2">
+        <div className="grid max-h-64 gap-4 overflow-y-auto pr-2">
             {sections.map(section => (
-                <section key={section.id} className="grid gap-3">
+                <section key={section.id} className="grid gap-2.5">
                     <h3 className="sticky top-0 z-10 bg-card py-1 text-sm font-medium">
                         {section.label}
                         <span className="ml-1 text-muted-foreground">
                             ({formatPercentage(section.percentage)})
                         </span>
                     </h3>
-                    <div className="grid gap-3">
+                    <div className="grid gap-2.5">
                         {section.rows.map(row => {
                             const barWidth = row.percentage === null
                                 ? 0
                                 : Math.min(Math.abs(row.percentage), 100)
 
                             return (
-                                <div key={row.id} className="grid gap-1.5">
+                                <div key={row.id} className="grid gap-1">
                                     <p className="text-sm">
                                         {row.name}
                                         <span className="ml-1 text-xs tabular-nums text-muted-foreground">
