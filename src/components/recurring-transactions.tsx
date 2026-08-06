@@ -1,33 +1,19 @@
 import { db } from '../lib/db'
 import { useState, useEffect } from 'react'
 import { Trash2 } from 'lucide-react'
-import type { RecurringTransaction, CategoryGroup, Category } from '../types'
+import type { RecurringTransaction, Category } from '../types'
+import GroupedCategoryCombobox from '@/components/grouped-category-combobox'
 import {
     Card,
     CardHeader,
     CardContent,
+    CardFooter,
     CardDescription,
     CardTitle
 } from './ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
-import {
-    Select,
-    SelectContent,
-    SelectGroup,
-    SelectItem,
-    SelectLabel,
-    SelectTrigger,
-    SelectValue
-} from '@/components/ui/select'
-
-const categoryGroups : CategoryGroup[] = ['income', 'needs', 'wants', 'savings']
-
-const categoryGroupItems = categoryGroups.map(group => ({
-    label: group.charAt(0).toUpperCase() + group.slice(1),
-    value: group
-}))
 
 const currencyFormatter = new Intl.NumberFormat('en-AU', {
     style: 'currency',
@@ -46,7 +32,6 @@ function getCategoryGroup(category : Category | undefined) {
 
 export default function RecurringTransactions() {
     const [recurringTransactions, setRecurringTransactions] = useState<RecurringTransaction[]>([])
-    const [categoryGroup, setCategoryGroup] = useState<CategoryGroup>('needs')
     const [categories, setCategories] = useState<Category[]>([])
     const [categoryId, setCategoryId] = useState<string | null>(null)
     const [name, setName] = useState('')
@@ -55,14 +40,6 @@ export default function RecurringTransactions() {
     const [isLoading, setIsLoading] = useState(true)
     const [isAdding, setIsAdding] = useState(false)
     const [deletingId, setDeletingId] = useState<string | null>(null)
-
-    const filteredCategories = categories.filter(category => {
-        if (categoryGroup === 'income') {
-            return category.type === 'income'
-        }
-
-        return category.type === 'expense' && category.bucket === categoryGroup
-    })
 
     async function handleAdd(e : React.SubmitEvent<HTMLFormElement>) {
         e.preventDefault()
@@ -114,13 +91,6 @@ export default function RecurringTransactions() {
         }
     }
 
-    function handleGroupChange(value : CategoryGroup | null) {
-        if (!value) return
-
-        setCategoryGroup(value)
-        setCategoryId(null)
-    }
-
     async function handleDelete(id : string) {
         setDeletingId(id)
 
@@ -170,13 +140,6 @@ export default function RecurringTransactions() {
     }, [])
 
     const isFormDisabled = isLoading || isAdding
-    const categoryItems = [
-        { label: 'Choose category', value: null },
-        ...filteredCategories.map(category => ({
-            label: category.name,
-            value: category.id
-        }))
-    ]
 
     return (
         <Card className="w-full">
@@ -230,8 +193,8 @@ export default function RecurringTransactions() {
                     </ul>
                 )}
 
-                <form className="grid gap-4 border-t pt-6" onSubmit={handleAdd}>
-                    <div className="grid gap-4 sm:grid-cols-2">
+                <form id="recurring-transaction-form" className="grid gap-4 border-t pt-6" onSubmit={handleAdd}>
+                    <div className="grid gap-4 sm:grid-cols-3">
                         <div className="grid gap-2">
                             <Label htmlFor="recurringTransactionName">Name</Label>
                             <Input
@@ -265,71 +228,40 @@ export default function RecurringTransactions() {
                                 />
                             </div>
                         </div>
-                    </div>
-
-                    <div className="grid gap-4 sm:grid-cols-2">
-                        <div className="grid gap-2">
-                            <Label htmlFor="recurringTransactionGroup">Group</Label>
-                            <Select
-                                items={categoryGroupItems}
-                                value={categoryGroup}
-                                onValueChange={handleGroupChange}
-                                disabled={isFormDisabled}
-                            >
-                                <SelectTrigger id="recurringTransactionGroup" className="w-full">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectGroup>
-                                        <SelectLabel>Groups</SelectLabel>
-                                        {categoryGroupItems.map(item => (
-                                            <SelectItem key={item.value} value={item.value}>
-                                                {item.label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectGroup>
-                                </SelectContent>
-                            </Select>
-                        </div>
                         <div className="grid gap-2">
                             <Label htmlFor="recurringTransactionCategory">Category</Label>
-                            <Select
-                                items={categoryItems}
+                            <GroupedCategoryCombobox
+                                categories={categories}
                                 value={categoryId}
-                                onValueChange={setCategoryId}
-                                disabled={isFormDisabled || filteredCategories.length === 0}
-                            >
-                                <SelectTrigger id="recurringTransactionCategory" className="w-full">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectGroup>
-                                        <SelectLabel>Categories</SelectLabel>
-                                        {categoryItems.map(item => (
-                                            <SelectItem key={item.value ?? 'placeholder'} value={item.value}>
-                                                {item.label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectGroup>
-                                </SelectContent>
-                            </Select>
+                                onValueChange={selectedCategoryId => {
+                                    setCategoryId(selectedCategoryId)
+                                    setError('')
+                                }}
+                                disabled={isFormDisabled}
+                                id="recurringTransactionCategory"
+                                placeholder="Choose category"
+                            />
                         </div>
                     </div>
-
+                </form>
+            </CardContent>
+            <CardFooter className="justify-between gap-4">
+                <div className="min-h-5" aria-live="polite">
                     {error && (
                         <p className="text-sm font-medium text-destructive" role="alert">
                             {error}
                         </p>
                     )}
-                    <Button
-                        type="submit"
-                        className="justify-self-end px-4"
-                        disabled={isFormDisabled}
-                    >
-                        {isAdding ? 'Adding...' : 'Add recurring transaction'}
-                    </Button>
-                </form>
-            </CardContent>
+                </div>
+                <Button
+                    type="submit"
+                    form="recurring-transaction-form"
+                    className="px-4"
+                    disabled={isFormDisabled}
+                >
+                    {isAdding ? 'Adding...' : 'Add recurring transaction'}
+                </Button>
+            </CardFooter>
         </Card>
     )
 }

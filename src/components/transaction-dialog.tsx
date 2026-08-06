@@ -2,7 +2,6 @@ import { useEffect, useState } from "react"
 import { CalendarIcon } from "lucide-react"
 import type { 
     Category, 
-    CategoryGroup, 
     Transaction, 
     RecurringTransaction 
 } from "@/types"
@@ -35,23 +34,12 @@ import {
     InputGroupInput
 } from "@/components/ui/input-group"
 import { Label } from "@/components/ui/label"
+import GroupedCategoryCombobox from '@/components/grouped-category-combobox'
 import {
     Popover,
     PopoverContent,
     PopoverTrigger
 } from "@/components/ui/popover"
-import {
-    Combobox,
-    ComboboxCollection,
-    ComboboxContent,
-    ComboboxEmpty,
-    ComboboxGroup,
-    ComboboxInput,
-    ComboboxItem,
-    ComboboxLabel,
-    ComboboxList
-} from "@/components/ui/combobox"
-
 import { 
     Select,
     SelectContent,
@@ -61,15 +49,6 @@ import {
     SelectTrigger,
     SelectValue
  } from "./ui/select"
-
-const categoryGroups : CategoryGroup[] = ['income', 'needs', 'wants', 'savings']
-
-const categoryGroupLabels : Record<CategoryGroup, string> = {
-    income: 'Income',
-    needs: 'Needs',
-    wants: 'Wants',
-    savings: 'Savings'
-}
 
 function formatDisplayDate(date : Date | undefined) {
     if (!date) return ''
@@ -315,20 +294,6 @@ export default function TransactionDialog({
         }))
     ]
 
-    const groupedCategories = categoryGroups
-        .map(group => ({
-            group,
-            label: categoryGroupLabels[group],
-            items: categories.filter(category => {
-                if (group === 'income') {
-                    return category.type === 'income'
-                }
-
-                return category.type === 'expense' && category.bucket === group
-            })
-        }))
-        .filter(group => group.items.length > 0)
-
     return (
         <>
             <Dialog
@@ -476,43 +441,16 @@ export default function TransactionDialog({
 
                     <div className="grid gap-2">
                         <Label htmlFor="transactionCategory">Category</Label>
-                        <Combobox
-                            items={groupedCategories}
-                            value={categories.find(category => category.id === categoryId) ?? null}
-                            onValueChange={category => {
-                                setCategoryId(category?.id ?? null)
+                        <GroupedCategoryCombobox
+                            categories={categories}
+                            value={categoryId}
+                            onValueChange={selectedCategoryId => {
+                                setCategoryId(selectedCategoryId)
                                 setError('')
                             }}
-                            itemToStringLabel={category => category.name}
-                            itemToStringValue={category => category.id}
-                            isItemEqualToValue={(category, value) => category.id === value.id}
                             disabled={isFormDisabled || categories.length === 0}
-                            autoHighlight
-                        >
-                            <ComboboxInput
-                                id="transactionCategory"
-                                className="w-full"
-                                placeholder="Assign a category"
-                                disabled={isFormDisabled || categories.length === 0}
-                            />
-                            <ComboboxContent>
-                                <ComboboxEmpty>No categories found.</ComboboxEmpty>
-                                <ComboboxList>
-                                    {(group : (typeof groupedCategories)[number]) => (
-                                        <ComboboxGroup key={group.group} items={group.items}>
-                                            <ComboboxLabel>{group.label}</ComboboxLabel>
-                                            <ComboboxCollection>
-                                                {(category : Category) => (
-                                                    <ComboboxItem key={category.id} value={category}>
-                                                        {category.name}
-                                                    </ComboboxItem>
-                                                )}
-                                            </ComboboxCollection>
-                                        </ComboboxGroup>
-                                    )}
-                                </ComboboxList>
-                            </ComboboxContent>
-                        </Combobox>
+                            id="transactionCategory"
+                        />
                         {!isLoading && categories.length === 0 && (
                             <p className="text-xs text-muted-foreground">
                                 Add a category in Settings first.
