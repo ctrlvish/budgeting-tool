@@ -293,7 +293,7 @@ export default function Dashboard({revision}: DashboardProps){
                                         type="button"
                                         variant="ghost"
                                         size="icon-sm"
-                                        className="size-9 sm:size-7"
+                                        className="size-9 !bg-transparent hover:!bg-transparent hover:text-muted-foreground sm:size-7 dark:!bg-transparent dark:hover:!bg-transparent"
                                         aria-label="Expand monthly overview"
                                         onClick={() => setIsMonthlyOverviewExpanded(true)}
                                     >

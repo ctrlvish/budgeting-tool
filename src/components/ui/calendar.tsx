@@ -54,12 +54,12 @@ function Calendar({
         ),
         button_previous: cn(
           buttonVariants({ variant: buttonVariant }),
-          "size-(--cell-size) p-0 select-none aria-disabled:opacity-50",
+          "size-(--cell-size) !bg-transparent p-0 select-none hover:!bg-transparent hover:text-muted-foreground aria-disabled:opacity-50 dark:!bg-transparent dark:hover:!bg-transparent",
           defaultClassNames.button_previous
         ),
         button_next: cn(
           buttonVariants({ variant: buttonVariant }),
-          "size-(--cell-size) p-0 select-none aria-disabled:opacity-50",
+          "size-(--cell-size) !bg-transparent p-0 select-none hover:!bg-transparent hover:text-muted-foreground aria-disabled:opacity-50 dark:!bg-transparent dark:hover:!bg-transparent",
           defaultClassNames.button_next
         ),
         month_caption: cn(

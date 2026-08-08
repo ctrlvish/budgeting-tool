@@ -38,7 +38,7 @@ export default function PeriodNavigation({
                 type="button"
                 variant="ghost"
                 size="icon-sm"
-                className="size-9 sm:size-7"
+                className="size-9 !bg-transparent hover:!bg-transparent hover:text-muted-foreground sm:size-7 dark:!bg-transparent dark:hover:!bg-transparent"
                 aria-label={previousLabel}
                 onClick={onPrevious}
             >
@@ -48,7 +48,7 @@ export default function PeriodNavigation({
                 type="button"
                 variant="ghost"
                 size="icon-sm"
-                className="size-9 sm:size-7"
+                className="size-9 !bg-transparent hover:!bg-transparent hover:text-muted-foreground sm:size-7 dark:!bg-transparent dark:hover:!bg-transparent"
                 aria-label={nextLabel}
                 disabled={disableNext}
                 onClick={onNext}

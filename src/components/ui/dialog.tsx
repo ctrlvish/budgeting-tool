@@ -63,7 +63,7 @@ function DialogContent({
             render={
               <Button
                 variant="ghost"
-                className="absolute top-2 right-2"
+                className="absolute top-2 right-2 !bg-transparent hover:!bg-transparent hover:text-muted-foreground dark:!bg-transparent dark:hover:!bg-transparent"
                 size="icon-sm"
               />
             }
