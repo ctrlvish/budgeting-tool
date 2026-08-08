@@ -1,6 +1,6 @@
 import { Button } from "./ui/button"
 import { NavLink } from "react-router"
-import { Plus } from "lucide-react"
+import { House, List, Plus, Settings } from "lucide-react"
 import { ModeToggle } from "./mode-toggle"
 
 const navigationLinkStyles = `
@@ -13,11 +13,10 @@ const navigationLinkStyles = `
 function mobileNavigationLinkStyles({isActive} : {isActive : boolean}) {
     return `
         flex min-h-14 items-center justify-center px-2
-        font-heading text-sm text-foreground
         transition-colors duration-150 hover:text-muted-foreground
         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset
         focus-visible:ring-ring
-        ${isActive ? 'font-semibold' : 'font-normal'}
+        ${isActive ? 'text-foreground' : 'text-muted-foreground'}
     `
 }
 
@@ -45,21 +44,17 @@ export default function AppHeader({ onLogTransaction } : AppHeaderProps) {
                         <NavLink to='/transactions' className={navigationLinkStyles}>
                             transactions
                         </NavLink>
-                        <NavLink to='/settings' className={navigationLinkStyles}>
-                            settings
-                        </NavLink>
                     </nav>
                     <div className="flex items-center gap-1 justify-self-end">
                         <ModeToggle />
-                        <Button
-                            type='button'
-                            size="icon"
-                            className="size-10 sm:size-8"
-                            onClick={onLogTransaction}
-                            aria-label="Add transaction"
+                        <NavLink
+                            to="/settings"
+                            className="flex size-10 items-center justify-center rounded-full bg-transparent text-foreground transition-opacity duration-150 hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:size-8"
+                            aria-label="Settings"
                         >
-                            <Plus className="size-4" />
-                        </Button>
+                            <Settings className="size-5" />
+                            <span className="sr-only">Settings</span>
+                        </NavLink>
                     </div>
                 </div>
             </header>
@@ -70,13 +65,21 @@ export default function AppHeader({ onLogTransaction } : AppHeaderProps) {
             >
                 <div className="mx-auto grid h-16 max-w-md grid-cols-3 px-2">
                     <NavLink to='/' className={mobileNavigationLinkStyles} end>
-                        dashboard
+                        <House className="size-6" />
+                        <span className="sr-only">Dashboard</span>
                     </NavLink>
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        className="h-full w-full rounded-none bg-transparent text-foreground hover:bg-transparent hover:text-muted-foreground"
+                        onClick={onLogTransaction}
+                        aria-label="Log transaction"
+                    >
+                        <Plus className="size-6" />
+                    </Button>
                     <NavLink to='/transactions' className={mobileNavigationLinkStyles}>
-                        transactions
-                    </NavLink>
-                    <NavLink to='/settings' className={mobileNavigationLinkStyles}>
-                        settings
+                        <List className="size-6" />
+                        <span className="sr-only">Transactions</span>
                     </NavLink>
                 </div>
             </nav>

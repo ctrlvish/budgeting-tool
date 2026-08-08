@@ -292,7 +292,7 @@ export default function Categories(){
 
                 <Button
                     disabled={isAdding}
-                    variant="quiet"
+                    variant="outline"
                     className="h-10 min-w-20 self-end justify-self-end px-4 sm:h-8 sm:min-w-24"
                     type="submit"
                 >
@@ -406,7 +406,7 @@ export default function Categories(){
                         <Button
                             type="submit"
                             className="h-10 px-4 sm:h-8 sm:px-2.5"
-                            variant="quiet"
+                            variant="outline"
                             disabled={isEditing}>{isEditing ? 'Saving...' : 'Save'}</Button>
                     </div>
                 </form>

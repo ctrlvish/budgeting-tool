@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react"
 import type { Transaction, Category } from '../types'
 import { db } from "@/lib/db"
 import { addMonths, format, isSameMonth, subMonths } from "date-fns"
+import { Maximize2Icon } from "lucide-react"
 import CategoryBreakdown from "@/components/category-breakdown"
 import {
     DashboardError,
@@ -10,6 +11,14 @@ import {
 import PeriodNavigation from "@/components/period-navigation"
 import YearlyBreakdown from "@/components/yearly-breakdown"
 import { getYearlyBreakdown } from "@/lib/yearly-breakdown"
+import { Button } from "@/components/ui/button"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle
+} from "@/components/ui/dialog"
 import { 
     Card,
     CardAction,
@@ -34,6 +43,7 @@ export default function Dashboard({revision}: DashboardProps){
     const [loadAttempt, setLoadAttempt] = useState(0)
     const [selectedMonth, setSelectedMonth] = useState(() => new Date())
     const [selectedYear, setSelectedYear] = useState(() => new Date().getFullYear())
+    const [isMonthlyOverviewExpanded, setIsMonthlyOverviewExpanded] = useState(false)
     const monthKey = `${selectedMonth.getFullYear()}-${String(selectedMonth.getMonth() + 1).padStart(2, "0")}`
 
     useEffect(() => {
@@ -240,6 +250,11 @@ export default function Dashboard({revision}: DashboardProps){
         }
     ].filter(section => section.rows.length > 0)
 
+    function handleYearlyMonthSelect(monthIndex : number) {
+        setSelectedMonth(new Date(selectedYear, monthIndex, 1))
+        setIsMonthlyOverviewExpanded(true)
+    }
+
 
     return (
     <main className='mx-auto grid w-full max-w-4xl gap-4 px-3 py-6 sm:gap-6 sm:px-4 sm:py-10'>
@@ -253,34 +268,48 @@ export default function Dashboard({revision}: DashboardProps){
             <DashboardError onRetry={handleRetry} />
         ) : (
             <>
-                <Card className="min-w-0">
-                    <CardHeader>
-                        <CardTitle>Monthly Overview</CardTitle>
-                        <CardDescription>{monthLabel}</CardDescription>
-                        <CardAction>
-                            <PeriodNavigation
-                                disableNext={isCurrentMonth}
-                                nextLabel="Next month"
-                                previousLabel="Previous month"
-                                onNext={() => {
-                                    setSelectedMonth(month => addMonths(month, 1))
-                                }}
-                                onPrevious={() => {
-                                    setSelectedMonth(month => subMonths(month, 1))
-                                }}
-                                onReset={() => setSelectedMonth(new Date())}
-                                resetLabel="Reset to current month"
-                                showReset={!isCurrentMonth}
+                <div>
+                    <Card className="min-w-0">
+                        <CardHeader className={isMonthlyOverviewExpanded ? "invisible" : undefined}>
+                            <CardTitle>Monthly Overview</CardTitle>
+                            <CardDescription>{monthLabel}</CardDescription>
+                            <CardAction>
+                                <div className="flex items-center gap-0.5 sm:gap-1">
+                                    <PeriodNavigation
+                                        disableNext={isCurrentMonth}
+                                        nextLabel="Next month"
+                                        previousLabel="Previous month"
+                                        onNext={() => {
+                                            setSelectedMonth(month => addMonths(month, 1))
+                                        }}
+                                        onPrevious={() => {
+                                            setSelectedMonth(month => subMonths(month, 1))
+                                        }}
+                                        onReset={() => setSelectedMonth(new Date())}
+                                        resetLabel="Reset to current month"
+                                        showReset={!isCurrentMonth}
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon-sm"
+                                        className="size-9 sm:size-7"
+                                        aria-label="Expand monthly overview"
+                                        onClick={() => setIsMonthlyOverviewExpanded(true)}
+                                    >
+                                        <Maximize2Icon />
+                                    </Button>
+                                </div>
+                            </CardAction>
+                        </CardHeader>
+                        <CardContent className={isMonthlyOverviewExpanded ? "invisible" : undefined}>
+                            <CategoryBreakdown
+                                hasIncome={monthlyIncomeCents > 0}
+                                sections={monthlyBucketSections}
                             />
-                        </CardAction>
-                    </CardHeader>
-                    <CardContent>
-                        <CategoryBreakdown
-                            hasIncome={monthlyIncomeCents > 0}
-                            sections={monthlyBucketSections}
-                        />
-                    </CardContent>
-                </Card>
+                        </CardContent>
+                    </Card>
+                </div>
                 <YearlyBreakdown
                     data={yearlyData}
                     disableNext={selectedYear >= currentYear}
@@ -288,7 +317,46 @@ export default function Dashboard({revision}: DashboardProps){
                     onNext={() => setSelectedYear(year => year + 1)}
                     onPrevious={() => setSelectedYear(year => year - 1)}
                     onReset={() => setSelectedYear(currentYear)}
+                    onMonthSelect={handleYearlyMonthSelect}
                 />
+                <Dialog
+                    open={isMonthlyOverviewExpanded}
+                    onOpenChange={setIsMonthlyOverviewExpanded}
+                >
+                    <DialogContent className="grid h-3/4 w-10/12 grid-rows-[auto_minmax(0,1fr)] gap-0 p-0 sm:max-h-160 sm:max-w-xl">
+                        <DialogHeader className="border-b p-4 sm:p-6">
+                            <DialogTitle className="pr-8 text-lg">
+                                Monthly Overview
+                            </DialogTitle>
+                            <div className="flex items-center justify-between gap-3">
+                                <DialogDescription>
+                                    {monthLabel}
+                                </DialogDescription>
+                                <PeriodNavigation
+                                    disableNext={isCurrentMonth}
+                                    nextLabel="Next month"
+                                    previousLabel="Previous month"
+                                    onNext={() => {
+                                        setSelectedMonth(month => addMonths(month, 1))
+                                    }}
+                                    onPrevious={() => {
+                                        setSelectedMonth(month => subMonths(month, 1))
+                                    }}
+                                    onReset={() => setSelectedMonth(new Date())}
+                                    resetLabel="Reset to current month"
+                                    showReset={!isCurrentMonth}
+                                />
+                            </div>
+                        </DialogHeader>
+                        <div className="min-h-0 p-4 sm:p-6">
+                            <CategoryBreakdown
+                                expanded
+                                hasIncome={monthlyIncomeCents > 0}
+                                sections={monthlyBucketSections}
+                            />
+                        </div>
+                    </DialogContent>
+                </Dialog>
             </>
         )}
     </main>)

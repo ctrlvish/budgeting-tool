@@ -257,14 +257,18 @@ export default function Transactions({ onLogTransaction, revision, onEditTransac
                     : 'All dates'
 
     return (
-    <main className='mx-auto grid w-full max-w-5xl gap-4 px-3 py-6 sm:gap-6 sm:px-4 sm:py-10'>
+    <main className='mx-auto grid w-full max-w-4xl gap-4 px-3 py-6 sm:gap-6 sm:px-4 sm:py-10'>
         <header className="flex items-start justify-between gap-3">
             <div className="space-y-1">
                 <h1 className='font-heading text-2xl font-semibold tracking-tight sm:text-3xl'>Transactions</h1>
                 <p className='text-sm text-muted-foreground'>Log and manage your income and spending here</p>
             </div>
-            <div className="flex shrink-0">
-                <Button className='h-10 self-center sm:h-8' onClick={onLogTransaction}>
+            <div className="hidden shrink-0 sm:flex">
+                <Button
+                    variant="secondary"
+                    className='h-8 self-center px-4'
+                    onClick={onLogTransaction}
+                >
                     <Plus className="size-4" /> Log
                 </Button>
             </div>
@@ -314,7 +318,8 @@ export default function Transactions({ onLogTransaction, revision, onEditTransac
                         <Button 
                             variant="outline" 
                             id="date-picker-range" 
-                            className="h-10 w-full min-w-0 justify-start px-2.5 font-normal sm:h-8 sm:w-auto"
+                            data-input-control
+                            className="h-10 w-full min-w-0 justify-start rounded-lg pr-2.5 pl-3.5 font-normal sm:h-8 sm:w-auto"
                             aria-label="Filter by date"
                             title={dateFilterLabel}
                         >
@@ -386,7 +391,8 @@ export default function Transactions({ onLogTransaction, revision, onEditTransac
                             <Button
                                 type="button"
                                 variant="outline"
-                                className="size-10 px-0 sm:size-8"
+                                data-input-control
+                                className="size-10 rounded-lg px-0 sm:size-8"
                                 aria-label={`Sort transactions: ${sortOptionLabels[sortOption]}`}
                                 title={`Sort: ${sortOptionLabels[sortOption]}`}
                             >

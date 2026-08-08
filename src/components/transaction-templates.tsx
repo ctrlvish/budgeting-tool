@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { Trash2 } from 'lucide-react'
 import type { TransactionTemplate, Category } from '../types'
 import GroupedCategoryCombobox from '@/components/grouped-category-combobox'
+import { MAX_TRANSACTION_AMOUNT_CENTS } from '@/lib/money'
 import {
     Card,
     CardHeader,
@@ -55,6 +56,11 @@ export default function TransactionTemplates() {
 
         if (!amount || !Number.isFinite(amountNumber) || amountNumber <= 0) {
             setError('Please enter an amount greater than 0')
+            return
+        }
+
+        if (amountCents > MAX_TRANSACTION_AMOUNT_CENTS) {
+            setError('Amount cannot exceed $50,000,000')
             return
         }
 
@@ -142,6 +148,7 @@ export default function TransactionTemplates() {
     const isFormDisabled = isLoading || isAdding
     const isNameInvalid = error === 'Please enter a name'
     const isAmountInvalid = error === 'Please enter an amount greater than 0'
+        || error === 'Amount cannot exceed $50,000,000'
     const isCategoryInvalid = error === 'Please choose a category'
 
     return (
@@ -181,9 +188,9 @@ export default function TransactionTemplates() {
                                         </span>
                                         <Button
                                             type="button"
-                                            variant="ghost"
+                                            variant="destructive"
                                             size="icon-sm"
-                                            className="size-9 sm:size-7"
+                                            className="size-9 !bg-transparent hover:!bg-transparent sm:size-7 dark:!bg-transparent dark:hover:!bg-transparent"
                                             onClick={() => handleDelete(template.id)}
                                             disabled={deletingId === template.id}
                                             aria-label={`Delete ${template.name}`}
@@ -228,6 +235,7 @@ export default function TransactionTemplates() {
                                     id="transactionTemplateAmount"
                                     type="number"
                                     min="0.01"
+                                    max="50000000"
                                     step="0.01"
                                     value={amount}
                                     onChange={e => setAmount(e.target.value)}
@@ -271,7 +279,7 @@ export default function TransactionTemplates() {
                 <Button
                     type="submit"
                     form="transaction-template-form"
-                    variant="quiet"
+                    variant="outline"
                     className="h-10 px-4 sm:h-8"
                     disabled={isFormDisabled}
                 >

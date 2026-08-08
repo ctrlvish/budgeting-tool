@@ -52,6 +52,7 @@ interface YearlyBreakdownProps {
     onNext : () => void
     onPrevious : () => void
     onReset : () => void
+    onMonthSelect : (monthIndex : number) => void
 }
 
 function formatChartPercentage(value : unknown) {
@@ -71,10 +72,32 @@ export default function YearlyBreakdown({
     year,
     onNext,
     onPrevious,
-    onReset
+    onReset,
+    onMonthSelect
 } : YearlyBreakdownProps) {
     const hasIncome = data.some(month => month.hasIncome)
     const hasActivity = data.some(month => month.hasActivity)
+    const chartData = data.map(month => ({
+        ...month,
+        actualSavings: month.savings,
+        savings: Math.max(month.savings ?? 0, 0)
+    }))
+    const chartDomain = chartData.reduce<[number, number]>((domain, month) => {
+        const positiveTotal = (month.needs ?? 0)
+            + (month.wants ?? 0)
+            + month.savings
+
+        return [
+            0,
+            Math.min(Math.max(domain[1], positiveTotal), 150)
+        ]
+    }, [0, 100])
+
+    function handleMonthClick(monthIndex : number) {
+        if (window.matchMedia('(min-width: 640px)').matches) return
+
+        onMonthSelect(monthIndex)
+    }
 
     return (
         <Card className="min-w-0">
@@ -104,29 +127,35 @@ export default function YearlyBreakdown({
                         </p>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto overscroll-x-contain pb-1 [scrollbar-width:thin] sm:overflow-visible sm:pb-0">
+                    <div className="min-w-0 overflow-x-auto overscroll-x-contain pb-1 [scrollbar-width:thin]">
                         <ChartContainer
                             config={chartConfig}
-                            className="h-56 min-w-[36rem] aspect-auto sm:h-64 sm:min-w-0"
+                            className="h-52 w-full min-w-[16.5rem] aspect-auto [-webkit-tap-highlight-color:transparent] [&_.recharts-bar-rectangle]:cursor-pointer [&_.recharts-layer]:!outline-none [&_.recharts-rectangle]:!outline-none [&_.recharts-surface]:!outline-none sm:h-64 sm:[&_.recharts-bar-rectangle]:cursor-default"
                         >
                             <BarChart
                                 accessibilityLayer
-                                data={data}
+                                data={chartData}
                                 margin={{top: 8, right: 4, bottom: 0, left: 4}}
                             >
                                 <CartesianGrid vertical={false} />
                                 <XAxis
                                     dataKey="month"
+                                    interval={0}
                                     tickLine={false}
                                     tickMargin={8}
                                     axisLine={false}
                                 />
-                                <YAxis hide domain={['auto', 'auto']} />
+                                <YAxis
+                                    hide
+                                    domain={chartDomain}
+                                    allowDataOverflow
+                                />
                                 <ReferenceLine y={0} />
                                 <ChartTooltip
                                     cursor={false}
                                     content={
                                         <ChartTooltipContent
+                                            className="!hidden sm:!grid"
                                             formatter={(value, name, item, index) => (
                                                 <>
                                                     {index === 0 && (
@@ -147,7 +176,11 @@ export default function YearlyBreakdown({
                                                         {chartConfig[name as keyof typeof chartConfig]?.label}
                                                     </span>
                                                     <span className="ml-auto font-mono font-medium tabular-nums">
-                                                        {formatChartPercentage(value)}
+                                                        {formatChartPercentage(
+                                                            name === 'savings'
+                                                                ? item.payload.actualSavings
+                                                                : value
+                                                        )}
                                                     </span>
                                                 </>
                                             )}
@@ -160,22 +193,36 @@ export default function YearlyBreakdown({
                                     stackId="allocation"
                                     fill="var(--color-needs)"
                                     maxBarSize={28}
+                                    onClick={bar => handleMonthClick(bar.originalDataIndex)}
                                 />
                                 <Bar
                                     dataKey="wants"
                                     stackId="allocation"
                                     fill="var(--color-wants)"
                                     maxBarSize={28}
+                                    onClick={bar => handleMonthClick(bar.originalDataIndex)}
                                 />
                                 <Bar
                                     dataKey="savings"
                                     stackId="allocation"
                                     fill="var(--color-savings)"
                                     maxBarSize={28}
-                                    radius={[5, 5, 0, 0]}
+                                    onClick={bar => handleMonthClick(bar.originalDataIndex)}
                                 />
                             </BarChart>
                         </ChartContainer>
+                        <div className="sm:hidden">
+                            {data.map((month, index) => month.hasIncome && (
+                                <button
+                                    type="button"
+                                    className="sr-only focus:not-sr-only focus:fixed focus:left-1/2 focus:top-20 focus:z-50 focus:-translate-x-1/2 focus:rounded-lg focus:bg-popover focus:px-3 focus:py-2 focus:text-sm focus:shadow-md focus:ring-2 focus:ring-ring"
+                                    key={month.month}
+                                    onClick={() => onMonthSelect(index)}
+                                >
+                                    View {month.month} {year} monthly overview
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 )}
             </CardContent>

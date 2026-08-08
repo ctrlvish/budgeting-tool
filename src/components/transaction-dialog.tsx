@@ -6,6 +6,7 @@ import type {
     TransactionTemplate
 } from "@/types"
 import { db } from "@/lib/db"
+import { MAX_TRANSACTION_AMOUNT_CENTS } from "@/lib/money"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import {
@@ -216,6 +217,11 @@ export default function TransactionDialog({
             return
         }
 
+        if (amountCents > MAX_TRANSACTION_AMOUNT_CENTS) {
+            setError('Amount cannot exceed $50,000,000')
+            return
+        }
+
         if (!date) {
             setError('Please choose a date')
             return
@@ -288,6 +294,7 @@ export default function TransactionDialog({
     const isFormDisabled = isLoading || isSaving
     const isDescriptionInvalid = error === 'Please enter a description'
     const isAmountInvalid = error === 'Please enter an amount greater than 0'
+        || error === 'Amount cannot exceed $50,000,000'
     const isDateInvalid = error === 'Please choose a date'
     const isCategoryInvalid = error === 'Please choose a category'
         || error === 'Please choose a valid category'
@@ -378,6 +385,7 @@ export default function TransactionDialog({
                                     id="transactionAmount"
                                     type="number"
                                     min="0.01"
+                                    max="50000000"
                                     step="0.01"
                                     value={amount}
                                     onChange={e => setAmount(e.target.value)}
@@ -493,8 +501,8 @@ export default function TransactionDialog({
 
                     <DialogFooter
                         className={isEditing
-                            ? "flex-row justify-between sm:justify-end"
-                            : "flex-row justify-end"
+                            ? "flex-row justify-between bg-popover sm:justify-end"
+                            : "flex-row justify-end bg-popover"
                         }
                     >
                         {isEditing ? (

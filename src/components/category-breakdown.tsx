@@ -1,10 +1,5 @@
-import { useState } from "react"
 import type { Bucket } from "@/types"
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger
-} from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
 
 const currencyFormatter = new Intl.NumberFormat('en-AU', {
     style: 'currency',
@@ -33,15 +28,9 @@ interface BucketSection {
 }
 
 interface CategoryBreakdownProps {
+    expanded? : boolean
     hasIncome : boolean
     sections : BucketSection[]
-}
-
-interface AmountBarProps {
-    amountCents : number
-    barClass : string
-    name : string
-    width : number
 }
 
 function formatMoney(amountCents : number) {
@@ -56,69 +45,17 @@ function formatPercentage(percentage : number | null) {
             : `${Math.round(percentage)}%`
 }
 
-function AmountBar({amountCents, barClass, name, width} : AmountBarProps) {
-    const [cursorPosition, setCursorPosition] = useState<{x : number, y : number} | null>(null)
-    const cursorAnchor = cursorPosition
-        ? {
-            getBoundingClientRect: () => new DOMRect(
-                cursorPosition.x,
-                cursorPosition.y,
-                0,
-                0
-            )
-        }
-        : undefined
-
-    return (
-        <Popover>
-            <PopoverTrigger
-                openOnHover
-                delay={150}
-                render={
-                    <button
-                        type="button"
-                        className="relative h-7 w-full cursor-default rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card"
-                        aria-label={`${name}: ${formatMoney(amountCents)}`}
-                        onPointerMove={event => {
-                            if (event.pointerType === 'mouse') {
-                                setCursorPosition({
-                                    x: event.clientX,
-                                    y: event.clientY
-                                })
-                            }
-                        }}
-                        onPointerDown={event => {
-                            if (event.pointerType !== 'mouse') {
-                                setCursorPosition(null)
-                            }
-                        }}
-                        onFocus={() => setCursorPosition(null)}
-                    >
-                        <span className="absolute inset-x-0 top-1/2 h-4 -translate-y-1/2 overflow-hidden rounded-full bg-muted/70 sm:h-3.5">
-                            <span
-                                className={`block h-full rounded-full transition-[width] duration-200 ease-out motion-reduce:transition-none ${barClass}`}
-                                style={{ width: `${width}%` }}
-                            />
-                        </span>
-                    </button>
-                }
-            />
-            <PopoverContent
-                anchor={cursorAnchor}
-                positionMethod={cursorAnchor ? 'fixed' : 'absolute'}
-                side="top"
-                className="w-auto px-3 py-1.5 text-xs"
-            >
-                {formatMoney(amountCents)}
-            </PopoverContent>
-        </Popover>
-    )
-}
-
-export default function CategoryBreakdown({hasIncome, sections} : CategoryBreakdownProps) {
+export default function CategoryBreakdown({
+    expanded = false,
+    hasIncome,
+    sections
+} : CategoryBreakdownProps) {
     if (!hasIncome && sections.length > 0) {
         return (
-            <div className="flex h-56 items-center justify-center text-center sm:h-64">
+            <div className={cn(
+                "flex items-center justify-center text-center",
+                expanded ? "h-full min-h-56" : "h-56 sm:h-64"
+            )}>
                 <p className="text-xs text-muted-foreground">
                     Add income to view this month's overview
                 </p>
@@ -128,7 +65,10 @@ export default function CategoryBreakdown({hasIncome, sections} : CategoryBreakd
 
     if (sections.length === 0) {
         return (
-            <div className="flex h-56 items-center justify-center text-center sm:h-64">
+            <div className={cn(
+                "flex items-center justify-center text-center",
+                expanded ? "h-full min-h-56" : "h-56 sm:h-64"
+            )}>
                 <p className="text-xs text-muted-foreground">
                     No activity this month
                 </p>
@@ -137,7 +77,10 @@ export default function CategoryBreakdown({hasIncome, sections} : CategoryBreakd
     }
 
     return (
-        <div className="grid h-56 content-start gap-3 overflow-y-auto overscroll-contain pr-1 sm:h-64 sm:gap-4 sm:pr-2">
+        <div className={cn(
+            "grid content-start gap-3 overflow-y-auto overscroll-contain pr-1 sm:gap-4 sm:pr-2",
+            expanded ? "h-full min-h-0" : "h-56 sm:h-64"
+        )}>
             {sections.map(section => (
                 <section key={section.id} className="grid gap-2.5">
                     <h3 className="sticky top-0 z-10 bg-card py-1 text-sm font-medium">
@@ -154,18 +97,21 @@ export default function CategoryBreakdown({hasIncome, sections} : CategoryBreakd
 
                             return (
                                 <div key={row.id} className="grid gap-1">
-                                    <p className="text-sm">
+                                    <p className="flex items-baseline gap-1.5 text-sm">
                                         {row.name}
-                                        <span className="ml-1 text-xs tabular-nums text-muted-foreground">
+                                        <span className="text-xs tabular-nums text-muted-foreground">
+                                            {formatMoney(row.amountCents)}
+                                        </span>
+                                        <span className="text-xs tabular-nums text-muted-foreground">
                                             {formatPercentage(row.percentage)}
                                         </span>
                                     </p>
-                                    <AmountBar
-                                        amountCents={row.amountCents}
-                                        barClass={bucketBarClasses[row.bucket]}
-                                        name={row.name}
-                                        width={barWidth}
-                                    />
+                                    <div className="h-4 overflow-hidden rounded-full bg-muted/70 sm:h-3.5">
+                                        <div
+                                            className={`h-full rounded-full transition-[width] duration-200 ease-out motion-reduce:transition-none ${bucketBarClasses[row.bucket]}`}
+                                            style={{ width: `${barWidth}%` }}
+                                        />
+                                    </div>
                                 </div>
                             )
                         })}
