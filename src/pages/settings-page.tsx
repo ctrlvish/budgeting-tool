@@ -1,4 +1,4 @@
-import {BudgetSetup, TransactionTemplates, Categories} from '../components'
+import { BudgetSetup, TransactionTemplates, Categories } from '../components'
 
 
 export default function Settings(){

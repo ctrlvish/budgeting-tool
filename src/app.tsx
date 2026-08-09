@@ -4,7 +4,7 @@ import TransactionDialog from './components/transaction-dialog'
 import { Route, Routes } from 'react-router'
 import Dashboard from './pages/dashboard'
 import Transactions from './pages/transactions'
-import Settings from './pages/settings'
+import Settings from './pages/settings-page'
 import type { Transaction } from './types'
 
 function App() {

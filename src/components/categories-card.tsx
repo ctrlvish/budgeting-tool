@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import {db} from '../lib/db'
+import { db } from '../lib/db'
 import type { Category } from "../types"
 import { 
     Card, 
