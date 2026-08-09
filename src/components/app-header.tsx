@@ -71,7 +71,7 @@ export default function AppHeader({ onLogTransaction } : AppHeaderProps) {
                     <Button
                         type="button"
                         variant="ghost"
-                        className="h-full w-full rounded-none bg-transparent text-foreground hover:bg-transparent hover:text-muted-foreground"
+                        className="h-full w-full rounded-none bg-transparent text-foreground hover:bg-transparent hover:text-muted-foreground dark:hover:bg-transparent"
                         onClick={onLogTransaction}
                         aria-label="Log transaction"
                     >
