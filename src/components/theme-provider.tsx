@@ -35,17 +35,19 @@ export function ThemeProvider({
 
     root.classList.remove("light", "dark")
 
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
+    const appliedTheme = theme === "system"
+      ? window.matchMedia("(prefers-color-scheme: dark)")
         .matches
         ? "dark"
         : "light"
+      : theme
 
-      root.classList.add(systemTheme)
-      return
-    }
+    root.classList.add(appliedTheme)
 
-    root.classList.add(theme)
+    const themeColor = appliedTheme === "dark" ? "#161311" : "#f3f2ef"
+    window.document
+      .querySelector<HTMLMetaElement>('meta[name="theme-color"]')
+      ?.setAttribute("content", themeColor)
   }, [theme])
 
   const value = {
