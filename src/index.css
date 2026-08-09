@@ -30,9 +30,9 @@
     --chart-3: oklch(0.444 0.011 73.639);
     --chart-4: oklch(0.374 0.01 67.558);
     --chart-5: oklch(0.268 0.007 34.298);
-    --bucket-needs: oklch(0.78 0.085 240 / 85%);
-    --bucket-wants: color-mix(in oklab, var(--color-amber-700) 55%, transparent);
-    --bucket-savings: color-mix(in oklab, var(--color-emerald-700) 55%, transparent);
+    --bucket-needs: oklch(0.73 0.11 240 / 90%);
+    --bucket-wants: color-mix(in oklab, var(--color-amber-700) 65%, transparent);
+    --bucket-savings: color-mix(in oklab, var(--color-emerald-700) 65%, transparent);
     --radius: 0.625rem;
     --sidebar: oklch(0.93 0.004 85);
     --sidebar-foreground: oklch(0.32 0.008 65);
