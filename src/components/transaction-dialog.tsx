@@ -534,7 +534,7 @@ export default function TransactionDialog({
                             className="h-10 px-4 sm:h-8 sm:px-2.5"
                             disabled={isFormDisabled}
                         >
-                            {isSaving ? 'Saving...' : 'Save'}
+                            Save
                         </Button>
                     </DialogFooter>
                 </form>

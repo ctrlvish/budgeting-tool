@@ -219,7 +219,7 @@ export default function BudgetSetup() {
                     className="h-10 px-4 sm:h-8"
                     disabled={isDisabled || !isRatioValid}
                 >
-                    {isLoading ? 'Loading...' : isSaving ? 'Saving...' : 'Save'}
+                    {isLoading ? 'Loading...' : 'Save'}
                 </Button>
             </CardFooter>
         </Card>
