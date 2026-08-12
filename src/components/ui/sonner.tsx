@@ -62,7 +62,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
           title: "!text-sm !font-medium",
           description: "!text-sm",
           content: "!flex-none",
-          icon: "!m-0 !size-4",
+          icon: "!m-0 !size-4 [&>svg]:!m-0",
         },
       }}
       {...props}
