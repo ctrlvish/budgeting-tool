@@ -11,6 +11,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
 import { 
     Select,
     SelectContent,
@@ -63,7 +64,6 @@ export default function Categories(){
     } | null>(null)
     const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null)
     const [isDeleting, setIsDeleting] = useState(false)
-    const [deleteError, setDeleteError] = useState('')
     const categoryGroups : CategoryGroup[] = ['income', 'needs', 'wants', 'savings']
     
     const categoryGroupItems = categoryGroups.map(group => ({
@@ -81,6 +81,16 @@ export default function Categories(){
     const isAddNameInvalid = error === 'Please enter a name'
     const isEditNameInvalid = editError === 'Please enter a category name'
 
+    function showAddError(message : string) {
+        setError(message)
+        toast.error(message)
+    }
+
+    function showEditError(message : string) {
+        setEditError(message)
+        toast.error(message)
+    }
+
     async function handleCategoryAdd(e : React.SubmitEvent<HTMLFormElement>){
         e.preventDefault()
 
@@ -94,7 +104,7 @@ export default function Categories(){
         }
 
         if (!trimmedName) {
-            setError('Please enter a name')
+            showAddError('Please enter a name')
             return
         }
 
@@ -106,9 +116,10 @@ export default function Categories(){
             setCategories(previousCategories => [...previousCategories, category])
             setName('')
             setError('')
+            toast.success('Category added')
         } catch (error) {
             console.error('failed to create category', error)
-            setError('Could not create category')
+            showAddError('Couldn’t add category')
         } finally {
             setIsAdding(false)
         }
@@ -137,7 +148,7 @@ export default function Categories(){
         const trimmedName = editName.trim()
 
         if (!trimmedName) {
-            setEditError('Please enter a category name')
+            showEditError('Please enter a category name')
             return
         }
 
@@ -158,10 +169,11 @@ export default function Categories(){
             ))
 
             setSelectedCategory(null)
+            toast.success('Category renamed')
         }
         catch(error) {
             console.error('failed to rename category', error)
-            setEditError('Could not rename category')
+            showEditError('Couldn’t rename category')
         }
         finally{
             setIsEditing(false)
@@ -170,7 +182,6 @@ export default function Categories(){
 
     function openDeleteConfirmation() {
         if (!selectedCategory || usage === null || isReferenced) return
-        setDeleteError('')
         setCategoryToDelete(selectedCategory)
     }
 
@@ -180,7 +191,6 @@ export default function Categories(){
 
 
         setIsDeleting(true)
-        setDeleteError('')
 
         try{
             //check references from db
@@ -198,7 +208,7 @@ export default function Categories(){
             
             if (transactionTemplates > 0 || transactions > 0) {
                 setUsage({ transactionTemplates, transactions })
-                setDeleteError('This category is now being used and cannot be deleted')
+                toast.error('This category is now being used and cannot be deleted')
                 return
             }
 
@@ -213,10 +223,11 @@ export default function Categories(){
 
             //close dialogs if successful
             setCategoryToDelete(null)
-            setSelectedCategory(null)   
+            setSelectedCategory(null)
+            toast.success('Category deleted')
         }catch(error) {
             console.error('failed to delete category', error)
-            setDeleteError('Could not delete category')
+            toast.error('Couldn’t delete category')
         }finally{
             setIsDeleting(false)
         }
@@ -230,7 +241,7 @@ export default function Categories(){
             .then(category => setCategories(category))
             .catch(error => {
                 console.error(error)
-                setError('Could not load categories')
+                toast.error('Couldn’t load categories')
             })
                 
     }, [])
@@ -296,9 +307,11 @@ export default function Categories(){
                     className="h-10 min-w-20 self-end justify-self-end px-4 sm:h-8 sm:min-w-24"
                     type="submit"
                 >
-                    {isAdding ? 'Adding...' : 'Add'}
+                    Add
                 </Button>
             </form>
+
+            {error && <p id="category-error" className="sr-only" role="alert">{error}</p>}
 
         <div className="mt-5 grid grid-cols-2 gap-4 sm:mt-6 sm:gap-6 lg:grid-cols-4">
             <div className="min-w-0">
@@ -384,7 +397,7 @@ export default function Categories(){
                             ></Input>
                     </div>
                     {editError && (
-                        <p id="category-edit-error" className="text-sm text-destructive" role="alert">
+                        <p id="category-edit-error" className="sr-only" role="alert">
                             {editError}
                         </p>
                     )}
@@ -407,7 +420,7 @@ export default function Categories(){
                             type="submit"
                             className="h-10 px-4 sm:h-8 sm:px-2.5"
                             variant="outline"
-                            disabled={isEditing}>{isEditing ? 'Saving...' : 'Save'}</Button>
+                            disabled={isEditing}>Save</Button>
                     </div>
                 </form>
             </DialogContent>
@@ -423,11 +436,6 @@ export default function Categories(){
                 <AlertDialogHeader>
                     <AlertDialogTitle>Delete category?</AlertDialogTitle>
                     <AlertDialogDescription>“{categoryToDelete?.name}” will be permanently deleted.</AlertDialogDescription>
-                {deleteError && (
-                    <p className="text-sm text-destructive font-medium">
-                        {deleteError}
-                    </p>
-                )}
                 </AlertDialogHeader>
                 <AlertDialogFooter className="flex-row justify-end">
                     <AlertDialogCancel className="h-10 px-4 sm:h-8 sm:px-2.5">Cancel</AlertDialogCancel>
@@ -438,13 +446,11 @@ export default function Categories(){
                         className="h-10 px-4 sm:h-8 sm:px-2.5"
                         onClick={handleCategoryDelete}
                     >
-                        {isDeleting ? 'Deleting...' : 'Delete'}
+                        Delete
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
-
-        {error && <p id="category-error" className="mt-4 font-medium text-sm text-destructive" role="alert">{error}</p>}
 
         </CardContent>
         </Card>

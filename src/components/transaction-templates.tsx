@@ -15,6 +15,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
 
 const currencyFormatter = new Intl.NumberFormat('en-AU', {
     style: 'currency',
@@ -42,6 +43,11 @@ export default function TransactionTemplates() {
     const [isAdding, setIsAdding] = useState(false)
     const [deletingId, setDeletingId] = useState<string | null>(null)
 
+    function showError(message : string) {
+        setError(message)
+        toast.error(message)
+    }
+
     async function handleAdd(e : React.SubmitEvent<HTMLFormElement>) {
         e.preventDefault()
 
@@ -50,22 +56,22 @@ export default function TransactionTemplates() {
         const amountCents = Math.round(amountNumber * 100)
 
         if (!trimmedName) {
-            setError('Please enter a name')
+            showError('Please enter a name')
             return
         }
 
         if (!amount || !Number.isFinite(amountNumber) || amountNumber <= 0) {
-            setError('Please enter an amount greater than 0')
+            showError('Please enter an amount greater than 0')
             return
         }
 
         if (amountCents > MAX_TRANSACTION_AMOUNT_CENTS) {
-            setError('Amount cannot exceed $50,000,000')
+            showError('Amount cannot exceed $50,000,000')
             return
         }
 
         if (!categoryId) {
-            setError('Please choose a category')
+            showError('Please choose a category')
             return
         }
 
@@ -89,9 +95,10 @@ export default function TransactionTemplates() {
             setAmount('')
             setCategoryId(null)
             setError('')
+            toast.success('Template added')
         } catch (error) {
             console.error('failed to create transaction template', error)
-            setError('Could not create transaction template')
+            showError('Couldn’t add template')
         } finally {
             setIsAdding(false)
         }
@@ -106,9 +113,10 @@ export default function TransactionTemplates() {
                 previousTemplates.filter(template => template.id !== id)
             )
             setError('')
+            toast.success('Template deleted')
         } catch (error) {
             console.error('failed to delete transaction template', error)
-            setError('Could not delete transaction template')
+            showError('Couldn’t delete template')
         } finally {
             setDeletingId(null)
         }
@@ -131,7 +139,7 @@ export default function TransactionTemplates() {
                 console.error('failed to load transaction template data', error)
 
                 if (isActive) {
-                    setError('Could not load transaction templates')
+                    showError('Couldn’t load transaction templates')
                 }
             })
             .finally(() => {
@@ -268,10 +276,10 @@ export default function TransactionTemplates() {
                     </div>
                 </form>
             </CardContent>
-            <CardFooter className="items-center justify-between gap-3">
-                <div className="min-h-5" aria-live="polite">
+            <CardFooter className="justify-end">
+                <div className="sr-only" aria-live="polite">
                     {error && (
-                        <p id="transaction-template-error" className="text-sm font-medium text-destructive" role="alert">
+                        <p id="transaction-template-error" role="alert">
                             {error}
                         </p>
                     )}
@@ -283,7 +291,7 @@ export default function TransactionTemplates() {
                     className="h-10 px-4 sm:h-8"
                     disabled={isFormDisabled}
                 >
-                    {isAdding ? 'Adding...' : 'Add template'}
+                    Add template
                 </Button>
             </CardFooter>
         </Card>

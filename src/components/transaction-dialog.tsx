@@ -50,6 +50,7 @@ import {
     SelectTrigger,
     SelectValue
  } from "./ui/select"
+import { toast } from "sonner"
 
 function formatDisplayDate(date : Date | undefined) {
     if (!date) return ''
@@ -108,13 +109,17 @@ export default function TransactionDialog({
     const [isSaving, setIsSaving] = useState(false)
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
     const [isDeleting, setIsDeleting] = useState(false)
-    const [deleteError, setDeleteError] = useState('')
     const [transactionTemplates, setTransactionTemplates] = useState<TransactionTemplate[]>([])
     const [transactionTemplateId, setTransactionTemplateId] =
     useState<string | null>(null)
 
     // logic to control if edit dialog is shown or create dialog is shown
     const isEditing = transaction !== null
+
+    function showError(message : string) {
+        setError(message)
+        toast.error(message)
+    }
 
 
     useEffect(() => {
@@ -148,7 +153,7 @@ export default function TransactionDialog({
                 console.error('failed to load transaction template data', error)
 
                 if (isActive) {
-                    setError('Could not load transaction templates')
+                    showError('Couldn’t load transaction templates')
                 }
             })
             .finally(() => {
@@ -208,34 +213,34 @@ export default function TransactionDialog({
         const amountCents = Math.round(amountNumber * 100)
 
         if (!trimmedDescription) {
-            setError('Please enter a description')
+            showError('Please enter a description')
             return
         }
 
         if (!amount || !Number.isFinite(amountNumber) || amountNumber <= 0) {
-            setError('Please enter an amount greater than 0')
+            showError('Please enter an amount greater than 0')
             return
         }
 
         if (amountCents > MAX_TRANSACTION_AMOUNT_CENTS) {
-            setError('Amount cannot exceed $50,000,000')
+            showError('Amount cannot exceed $50,000,000')
             return
         }
 
         if (!date) {
-            setError('Please choose a date')
+            showError('Please choose a date')
             return
         }
 
         if (!categoryId) {
-            setError('Please choose a category')
+            showError('Please choose a category')
             return
         }
 
         const selectedCategory = categories.find(category => category.id === categoryId)
 
         if (!selectedCategory) {
-            setError('Please choose a valid category')
+            showError('Please choose a valid category')
             return
         }
 
@@ -261,12 +266,13 @@ export default function TransactionDialog({
 
             onCreated()
             onOpenChange(false)
+            toast.success(isEditing ? 'Transaction updated' : 'Transaction added')
         } catch (error) {
             console.error(
                 isEditing ? 'failed to edit transaction' : 'failed to create transaction',
                 error
             )
-            setError('Could not save transaction')
+            showError('Couldn’t save transaction')
         } finally {
             setIsSaving(false)
         }
@@ -276,16 +282,16 @@ export default function TransactionDialog({
         if (!transaction) return
 
         setIsDeleting(true)
-        setDeleteError('')
 
         try {
             await db.transactions.delete(transaction.id)
             onCreated()
             setIsDeleteDialogOpen(false)
             onOpenChange(false)
+            toast.success('Transaction deleted')
         } catch (error) {
             console.error('failed to delete transaction', error)
-            setDeleteError('Could not delete transaction')
+            toast.error('Couldn’t delete transaction')
         } finally {
             setIsDeleting(false)
         }
@@ -494,7 +500,7 @@ export default function TransactionDialog({
                     </div>
 
                     {error && (
-                        <p id="transaction-error" className="text-sm font-medium text-destructive" role="alert">
+                        <p id="transaction-error" className="sr-only" role="alert">
                             {error}
                         </p>
                     )}
@@ -510,7 +516,6 @@ export default function TransactionDialog({
                                 type="button"
                                 variant="destructive"
                                 onClick={() => {
-                                    setDeleteError('')
                                     setIsDeleteDialogOpen(true)
                                 }}
                                 disabled={isSaving}
@@ -547,10 +552,6 @@ export default function TransactionDialog({
                     if (!nextOpen && isDeleting) return
 
                     setIsDeleteDialogOpen(nextOpen)
-
-                    if (!nextOpen) {
-                        setDeleteError('')
-                    }
                 }}
             >
                 <AlertDialogContent>
@@ -559,11 +560,6 @@ export default function TransactionDialog({
                         <AlertDialogDescription>
                             “{transaction?.description}” will be permanently deleted.
                         </AlertDialogDescription>
-                        {deleteError && (
-                            <p className="text-sm font-medium text-destructive" role="alert">
-                                {deleteError}
-                            </p>
-                        )}
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
@@ -572,7 +568,7 @@ export default function TransactionDialog({
                             disabled={isDeleting}
                             onClick={handleTransactionDelete}
                         >
-                            {isDeleting ? 'Deleting...' : 'Delete'}
+                            Delete
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

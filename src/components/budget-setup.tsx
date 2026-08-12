@@ -12,6 +12,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
 
 type BudgetSettingsFormData = {
     startingSavingsBalance: string,
@@ -49,7 +50,6 @@ export default function BudgetSetup() {
     const [formData, setFormData] = useState<BudgetSettingsFormData>(defaultSettings)
     const [isLoading, setIsLoading] = useState(true)
     const [isSaving, setIsSaving] = useState(false)
-    const [error, setError] = useState('')
 
     useEffect(() => {
         let isActive = true
@@ -64,7 +64,7 @@ export default function BudgetSetup() {
                 console.error('Failed to load budget settings', error)
 
                 if (isActive) {
-                    setError('Could not load budget settings')
+                    toast.error('Couldn’t load budget settings')
                 }
             })
             .finally(() => {
@@ -90,17 +90,23 @@ export default function BudgetSetup() {
 
     const handleSubmit = async (e : React.SubmitEvent<HTMLFormElement>) => {
         e.preventDefault()
+
+        if (!isRatioValid) {
+            toast.error('Budget targets must total 100%')
+            return
+        }
+
         setIsSaving(true)
-        setError('')
 
         try {
             const settings = formDataToBudgetSettings(formData)
 
             await db.budgetSettings.clear()
             await db.budgetSettings.add(settings)
+            toast.success('Budget settings saved')
         } catch (error) {
             console.error('Failed to save budget settings', error)
-            setError('Could not save budget settings')
+            toast.error('Couldn’t save budget settings')
         } finally {
             setIsSaving(false)
         }
@@ -201,7 +207,6 @@ export default function BudgetSetup() {
                         </div>
                     </div>
 
-                    {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
                 </form>
             </CardContent>
             <CardFooter className="items-center justify-between gap-3">
@@ -217,9 +222,9 @@ export default function BudgetSetup() {
                     form="budget-settings-form"
                     variant="outline"
                     className="h-10 px-4 sm:h-8"
-                    disabled={isDisabled || !isRatioValid}
+                    disabled={isDisabled}
                 >
-                    {isLoading ? 'Loading...' : 'Save'}
+                    Save
                 </Button>
             </CardFooter>
         </Card>
