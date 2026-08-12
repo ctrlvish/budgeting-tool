@@ -5,6 +5,7 @@ import './index.css'
 import App from './app.tsx'
 import { ThemeProvider } from './components/theme-provider.tsx';
 import { Toaster } from './components/ui/sonner.tsx'
+import PwaUpdatePrompt from './components/pwa-update-prompt.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <BrowserRouter>
@@ -20,6 +21,7 @@ createRoot(document.getElementById('root')!).render(
             left: 16,
             right: 16,
         }}/>
+        <PwaUpdatePrompt />
         <App />
       </StrictMode>
     </ThemeProvider>
