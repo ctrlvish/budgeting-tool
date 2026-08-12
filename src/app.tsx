@@ -39,10 +39,10 @@ function App() {
                 : 'inset(0 100% 0 0)'
 
     return (
-        <div className="min-h-dvh pb-[calc(4rem+env(safe-area-inset-bottom))] sm:pb-0">
+        <div className="flex h-dvh flex-col overflow-hidden">
             <AppHeader onLogTransaction={openTransactionDialog} />
-            <div className="relative isolate overflow-x-clip">
-                <AnimatePresence mode="popLayout" initial={false}>
+            <div className="relative isolate min-h-0 flex-1 overflow-hidden">
+                <AnimatePresence mode="sync" initial={false}>
                     <PageTransition
                         key={location.pathname}
                         initialClipPath={initialClipPath}

@@ -15,7 +15,7 @@ const PageTransition = forwardRef<HTMLDivElement, PageTransitionProps>(
         return (
             <motion.div
                 ref={ref}
-                className={`relative min-h-[calc(100dvh-3.5rem)] bg-background ${
+                className={`absolute inset-0 overflow-y-auto bg-background pb-[calc(4rem+env(safe-area-inset-bottom))] sm:pb-0 ${
                     isPresent
                         ? 'z-20'
                         : 'pointer-events-none z-10'
