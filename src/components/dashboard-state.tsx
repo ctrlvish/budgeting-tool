@@ -37,6 +37,15 @@ function LoadingHeader() {
 export function DashboardLoading() {
     return (
         <>
+            <Card size="sm" aria-busy="true" aria-label="Loading savings balance">
+                <CardContent className="flex items-end justify-between gap-4">
+                    <div className="grid gap-2">
+                        <Skeleton className="h-3 w-28" />
+                        <Skeleton className="h-9 w-40" />
+                    </div>
+                    <Skeleton className="h-8 w-32" />
+                </CardContent>
+            </Card>
             <Card aria-busy="true" aria-label="Loading monthly overview">
                 <LoadingHeader />
                 <CardContent className="grid h-56 content-start gap-4 pt-2 sm:h-64 sm:gap-5">

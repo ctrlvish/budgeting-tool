@@ -66,6 +66,22 @@ function formatMoney(amountCents : number) {
     return currencyFormatter.format(amountCents / 100)
 }
 
+function calculatePercentage(amountCents : number, incomeCents : number) {
+    if (incomeCents <= 0) return null
+
+    return (amountCents / incomeCents) * 100
+}
+
+function getBucketAmountCents(
+    month : YearlyMonthBreakdown,
+    bucket : keyof typeof chartConfig
+) {
+    if (bucket === 'needs') return month.needsCents
+    if (bucket === 'wants') return month.wantsCents
+
+    return month.savingsCents
+}
+
 export default function YearlyBreakdown({
     data,
     disableNext,
@@ -77,11 +93,19 @@ export default function YearlyBreakdown({
 } : YearlyBreakdownProps) {
     const hasIncome = data.some(month => month.hasIncome)
     const hasActivity = data.some(month => month.hasActivity)
-    const chartData = data.map(month => ({
-        ...month,
-        actualSavings: month.savings,
-        savings: Math.max(month.savings ?? 0, 0)
-    }))
+    const chartData = data.map(month => {
+        const needs = calculatePercentage(month.needsCents, month.incomeCents)
+        const wants = calculatePercentage(month.wantsCents, month.incomeCents)
+        const savings = calculatePercentage(month.savingsCents, month.incomeCents)
+
+        return {
+            ...month,
+            needs,
+            wants,
+            actualSavings: savings,
+            savings: Math.max(savings ?? 0, 0)
+        }
+    })
     const chartDomain = chartData.reduce<[number, number]>((domain, month) => {
         const positiveTotal = (month.needs ?? 0)
             + (month.wants ?? 0)
@@ -155,35 +179,44 @@ export default function YearlyBreakdown({
                                     cursor={false}
                                     content={
                                         <ChartTooltipContent
-                                            className="!hidden sm:!grid"
-                                            formatter={(value, name, item, index) => (
-                                                <>
-                                                    {index === 0 && (
-                                                        <div className="mb-1 flex w-full basis-full justify-between border-b border-border/50 pb-1.5">
-                                                            <span className="text-muted-foreground">
-                                                                Income
-                                                            </span>
-                                                            <span className="font-mono font-medium tabular-nums">
-                                                                {formatMoney(item.payload.incomeCents)}
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                    <span
-                                                        className="size-2.5 shrink-0 rounded-[2px]"
-                                                        style={{backgroundColor: item.color}}
-                                                    />
-                                                    <span className="text-muted-foreground">
-                                                        {chartConfig[name as keyof typeof chartConfig]?.label}
-                                                    </span>
-                                                    <span className="ml-auto font-mono font-medium tabular-nums">
-                                                        {formatChartPercentage(
-                                                            name === 'savings'
-                                                                ? item.payload.actualSavings
-                                                                : value
+                                            className="!hidden min-w-60 sm:!grid"
+                                            formatter={(value, name, item, index) => {
+                                                const bucket = name as keyof typeof chartConfig
+                                                const amountCents = getBucketAmountCents(
+                                                    item.payload,
+                                                    bucket
+                                                )
+                                                const percentage = bucket === 'savings'
+                                                    ? item.payload.actualSavings
+                                                    : value
+
+                                                return (
+                                                    <>
+                                                        {index === 0 && (
+                                                            <div className="mb-1 flex w-full basis-full justify-between border-b border-border/50 pb-1.5">
+                                                                <span>Income:</span>
+                                                                <span className="ml-auto font-mono font-medium tabular-nums">
+                                                                    {formatMoney(item.payload.incomeCents)}
+                                                                </span>
+                                                            </div>
                                                         )}
-                                                    </span>
-                                                </>
-                                            )}
+                                                        <span
+                                                            className="size-2.5 shrink-0 rounded-[2px]"
+                                                            style={{backgroundColor: item.color}}
+                                                        />
+                                                        <span>
+                                                            {chartConfig[bucket]?.label}
+                                                            {' '}
+                                                            <span className="text-muted-foreground">
+                                                                ({formatChartPercentage(percentage)})
+                                                            </span>
+                                                        </span>
+                                                        <span className="ml-auto font-mono font-medium tabular-nums">
+                                                            {formatMoney(amountCents)}
+                                                        </span>
+                                                    </>
+                                                )
+                                            }}
                                         />
                                     }
                                 />

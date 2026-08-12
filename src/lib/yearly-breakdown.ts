@@ -25,9 +25,9 @@ interface MonthTotals {
 export interface YearlyMonthBreakdown {
     month : string
     incomeCents : number
-    needs : number | null
-    wants : number | null
-    savings : number | null
+    needsCents : number
+    wantsCents : number
+    savingsCents : number
     hasActivity : boolean
     hasIncome : boolean
 }
@@ -80,26 +80,20 @@ export function getYearlyBreakdown(
             return {
                 month: monthLabels[index],
                 incomeCents: month.incomeCents,
-                needs: null,
-                wants: null,
-                savings: null,
+                needsCents: month.needsCents,
+                wantsCents: month.wantsCents,
+                savingsCents: month.incomeCents - month.needsCents - month.wantsCents,
                 hasActivity: month.hasActivity,
                 hasIncome: false
             }
         }
 
-        const toPercentage = (amountCents : number) => (
-            amountCents / month.incomeCents
-        ) * 100
-
         return {
             month: monthLabels[index],
             incomeCents: month.incomeCents,
-            needs: toPercentage(month.needsCents),
-            wants: toPercentage(month.wantsCents),
-            savings: toPercentage(
-                month.incomeCents - month.needsCents - month.wantsCents
-            ),
+            needsCents: month.needsCents,
+            wantsCents: month.wantsCents,
+            savingsCents: month.incomeCents - month.needsCents - month.wantsCents,
             hasActivity: month.hasActivity,
             hasIncome: true
         }

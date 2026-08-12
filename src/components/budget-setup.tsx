@@ -154,6 +154,9 @@ export default function BudgetSetup() {
                                 placeholder="0.00"
                             />
                         </div>
+                        <p className="text-xs leading-relaxed text-muted-foreground">
+                            What you had before you began logging. This is the baseline for your savings balance.
+                        </p>
                     </div>
 
                     <div className="grid grid-cols-3 gap-2 sm:gap-3">

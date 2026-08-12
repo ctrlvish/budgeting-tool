@@ -30,14 +30,70 @@ import {
 
 interface DashboardProps {
     revision : number
+    onLogTransaction : () => void
+}
 
+interface MonthlyIncomeDescriptionProps {
+    incomeCents : number
+    monthLabel : string
+    onLogIncome : () => void
+}
+
+const currencyFormatter = new Intl.NumberFormat('en-AU', {
+    style: 'currency',
+    currency: 'AUD'
+})
+
+function formatMoney(amountCents : number) {
+    return currencyFormatter.format(amountCents / 100)
+}
+
+function formatSignedMoney(amountCents : number) {
+    const absoluteAmount = formatMoney(Math.abs(amountCents))
+
+    if (amountCents === 0) return absoluteAmount
+
+    return `${amountCents > 0 ? '+' : '-'}${absoluteAmount}`
+}
+
+function MonthlyIncomeDescription({
+    incomeCents,
+    monthLabel,
+    onLogIncome
+} : MonthlyIncomeDescriptionProps) {
+    return (
+        <>
+            <span>{monthLabel}</span>
+            <span aria-hidden="true">·</span>
+            {incomeCents > 0 ? (
+                <span>
+                    Income{' '}
+                    <span className="font-mono font-medium tabular-nums text-foreground/70">
+                        {formatMoney(incomeCents)}
+                    </span>
+                </span>
+            ) : (
+                <button
+                    type="button"
+                    className="cursor-pointer bg-transparent! text-xs underline underline-offset-4 transition-colors hover:bg-transparent! hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    onClick={onLogIncome}
+                >
+                    Log income
+                </button>
+            )}
+        </>
+    )
 }
 
 
-export default function Dashboard({revision}: DashboardProps){
+export default function Dashboard({
+    revision,
+    onLogTransaction
+} : DashboardProps){
 
     const [transactions, setTransactions] = useState<Transaction[]>([])
     const [categories, setCategories] = useState<Category[]>([])
+    const [startingSavingsBalanceCents, setStartingSavingsBalanceCents] = useState(0)
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState('')
     const [loadAttempt, setLoadAttempt] = useState(0)
@@ -52,13 +108,17 @@ export default function Dashboard({revision}: DashboardProps){
 
         Promise.all([
             db.transactions.toArray(),
-            db.categories.toArray()
+            db.categories.toArray(),
+            db.budgetSettings.toArray()
         ])
-            .then(([transactions, categories]) => {
+            .then(([transactions, categories, budgetSettings]) => {
                 if (!isActive) return
 
                 setTransactions(transactions)
                 setCategories(categories)
+                setStartingSavingsBalanceCents(
+                    budgetSettings[0]?.startingSavingsBalanceCents ?? 0
+                )
                 setError('')
             })
         
@@ -106,6 +166,24 @@ export default function Dashboard({revision}: DashboardProps){
 
         return map
     }, [categories])
+
+    const savingsChangeCents = useMemo(() => {
+        return transactions.reduce((total, transaction) => {
+            if (transaction.type === 'income') {
+                return total + transaction.amountCents
+            }
+
+            const bucket = categoryMap.get(transaction.categoryId)?.bucket
+
+            if (bucket === 'needs' || bucket === 'wants') {
+                return total - transaction.amountCents
+            }
+
+            return total
+        }, 0)
+    }, [transactions, categoryMap])
+
+    const currentSavingsBalanceCents = startingSavingsBalanceCents + savingsChangeCents
 
 
     const monthlyNeedsCents = useMemo(() => {
@@ -255,6 +333,11 @@ export default function Dashboard({revision}: DashboardProps){
         setIsMonthlyOverviewExpanded(true)
     }
 
+    function handleLogIncome() {
+        setIsMonthlyOverviewExpanded(false)
+        onLogTransaction()
+    }
+
 
     return (
     <main className='mx-auto grid w-full max-w-4xl gap-4 px-3 py-6 sm:gap-6 sm:px-4 sm:py-10'>
@@ -268,11 +351,47 @@ export default function Dashboard({revision}: DashboardProps){
             <DashboardError onRetry={handleRetry} />
         ) : (
             <>
+                <Card className='gap-1' aria-label="Total Savings">
+                    <CardHeader>
+                        <CardTitle>Total Savings</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                            <p className={`font-heading text-3xl tracking-tight tabular-nums ${
+                                currentSavingsBalanceCents < 0
+                                    ? 'text-destructive'
+                                    : 'text-foreground'
+                            }`}>
+                                {formatMoney(currentSavingsBalanceCents)}
+                            </p>
+                        </div>
+                        <div className="grid gap-0.5 text-xs text-muted-foreground/85 sm:text-right">
+                            <p>
+                                Started at{' '}
+                                <span className="tabular-nums text-foreground/65">
+                                    {formatMoney(startingSavingsBalanceCents)}
+                                </span>
+                            </p>
+                            <p>
+                                <span className="tabular-nums text-foreground/65">
+                                    {formatSignedMoney(savingsChangeCents)}
+                                </span>
+                                {' '}from logged savings
+                            </p>
+                        </div>
+                    </CardContent>
+                </Card>
                 <div>
                     <Card className="min-w-0">
                         <CardHeader className={isMonthlyOverviewExpanded ? "invisible" : undefined}>
                             <CardTitle>Monthly Overview</CardTitle>
-                            <CardDescription>{monthLabel}</CardDescription>
+                            <CardDescription className="flex flex-wrap items-baseline gap-x-1.5">
+                                <MonthlyIncomeDescription
+                                    incomeCents={monthlyIncomeCents}
+                                    monthLabel={monthLabel}
+                                    onLogIncome={handleLogIncome}
+                                />
+                            </CardDescription>
                             <CardAction>
                                 <div className="flex items-center gap-0.5 sm:gap-1">
                                     <PeriodNavigation
@@ -329,8 +448,12 @@ export default function Dashboard({revision}: DashboardProps){
                                 Monthly Overview
                             </DialogTitle>
                             <div className="flex items-center justify-between gap-3">
-                                <DialogDescription>
-                                    {monthLabel}
+                                <DialogDescription className="flex flex-wrap items-baseline gap-x-1.5">
+                                    <MonthlyIncomeDescription
+                                        incomeCents={monthlyIncomeCents}
+                                        monthLabel={monthLabel}
+                                        onLogIncome={handleLogIncome}
+                                    />
                                 </DialogDescription>
                                 <PeriodNavigation
                                     disableNext={isCurrentMonth}

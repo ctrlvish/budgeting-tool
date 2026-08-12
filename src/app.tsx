@@ -48,7 +48,15 @@ function App() {
                         initialClipPath={initialClipPath}
                     >
                         <Routes location={location}>
-                            <Route path="/" element={<Dashboard revision={transactionsRevision} />} />
+                            <Route
+                                path="/"
+                                element={
+                                    <Dashboard
+                                        revision={transactionsRevision}
+                                        onLogTransaction={openTransactionDialog}
+                                    />
+                                }
+                            />
                             <Route
                                 path="/transactions"
                                 element={
