@@ -1,4 +1,4 @@
-import { BudgetSetup, TransactionTemplates, Categories } from '../components'
+import { BudgetSetup, TransactionTemplates, Categories, AccountSettings } from '../components'
 
 
 export default function Settings(){
@@ -9,6 +9,7 @@ export default function Settings(){
                 <h1 className='font-heading text-2xl font-semibold tracking-tight sm:text-3xl'>Settings</h1>
                 <p className='text-sm text-muted-foreground'>Manage your budget and categories</p>
             </header>
+            <AccountSettings />
             <BudgetSetup />
             <TransactionTemplates />
             <Categories />
