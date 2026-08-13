@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import type { BudgetSetting } from '../types'
 import { db } from '../lib/db'
 import { 
@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
+import { useLiveQuery } from 'dexie-react-hooks'
 
 type BudgetSettingsFormData = {
     startingSavingsBalance: string,
@@ -48,42 +49,27 @@ function formDataToBudgetSettings(formData : BudgetSettingsFormData) : BudgetSet
 }
 
 export default function BudgetSetup() {
-    const [formData, setFormData] = useState<BudgetSettingsFormData>(defaultSettings)
-    const [isLoading, setIsLoading] = useState(true)
+    const [formDraft, setFormDraft] = useState<BudgetSettingsFormData | null>(null)
     const [isSaving, setIsSaving] = useState(false)
 
-    useEffect(() => {
-        let isActive = true
+    const savedSettings = useLiveQuery(
+        () => db.budgetSettings.get('#budget-settings'),
+        [],
+        null
+    )
+    const formData =
+        formDraft ??
+        (savedSettings
+            ? budgetSettingsToFormData(savedSettings)
+            : defaultSettings)
 
-        db.budgetSettings.get('#budget-settings')
-            .then(settings => {
-                if (isActive && settings) {
-                    setFormData(budgetSettingsToFormData(settings))
-                }
-            })
-            .catch(error => {
-                console.error('Failed to load budget settings', error)
-
-                if (isActive) {
-                    toast.error('Couldn’t load budget settings')
-                }
-            })
-            .finally(() => {
-                if (isActive) {
-                    setIsLoading(false)
-                }
-            })
-
-        return () => {
-            isActive = false
-        }
-    }, [])
+    const isLoading = savedSettings === null
 
     const handleChange = (e : React.ChangeEvent<HTMLInputElement>) => {
         const {name, value} = e.target
 
-        setFormData((prevData) => ({
-            ...prevData,
+        setFormDraft((prevDraft) => ({
+            ...(prevDraft ?? formData),
             [name] : value
         }))
 
