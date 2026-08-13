@@ -1,5 +1,6 @@
 import Dexie, {type Table} from 'dexie'
 import type {Category, BudgetSetting, TransactionTemplate, Transaction} from '../types'
+import dexieCloud from 'dexie-cloud-addon'
 
 const defaultCategories : Category[] = [
     {
@@ -88,12 +89,18 @@ export class BudgetDatabase extends Dexie {
     transactions! : Table<Transaction>
 
     constructor() {
-        super('budgeting-tool-db')
+        super('budgeting-tool-db', {
+            addons: [dexieCloud]
+        })
         this.version(1).stores({
             categories : 'id, type, bucket',
             budgetSettings : 'id',
             transactionTemplates : 'id, categoryId',
             transactions : 'id, type, date, categoryId, transactionTemplateId'
+        })
+        this.cloud.configure({
+            databaseUrl: import.meta.env.VITE_DEXIE_CLOUD_URL,
+            requireAuth: true
         })
 
         this.on('populate', () => {
