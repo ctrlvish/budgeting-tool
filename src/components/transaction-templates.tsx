@@ -1,5 +1,5 @@
 import { db } from '../lib/db'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Trash2 } from 'lucide-react'
 import type { TransactionTemplate, Category } from '../types'
 import GroupedCategoryCombobox from '@/components/grouped-category-combobox'
@@ -16,11 +16,15 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
+import { useLiveQuery } from 'dexie-react-hooks'
 
 const currencyFormatter = new Intl.NumberFormat('en-AU', {
     style: 'currency',
     currency: 'AUD'
 })
+
+const emptyTemplates : TransactionTemplate[] = []
+const emptyCategories : Category[] = []
 
 function formatMoney(amountCents : number) {
     return currencyFormatter.format(amountCents / 100)
@@ -33,15 +37,29 @@ function getCategoryGroup(category : Category | undefined) {
 }
 
 export default function TransactionTemplates() {
-    const [transactionTemplates, setTransactionTemplates] = useState<TransactionTemplate[]>([])
-    const [categories, setCategories] = useState<Category[]>([])
     const [categoryId, setCategoryId] = useState<string | null>(null)
     const [name, setName] = useState('')
     const [amount, setAmount] = useState('')
     const [error, setError] = useState('')
-    const [isLoading, setIsLoading] = useState(true)
     const [isAdding, setIsAdding] = useState(false)
     const [deletingId, setDeletingId] = useState<string | null>(null)
+
+    const liveData = useLiveQuery(async () => {
+        const [transactionTemplates, categories] = await Promise.all([
+            db.transactionTemplates.toArray(),
+            db.categories.toArray()
+        ])
+
+        return {
+            transactionTemplates,
+            categories
+        }
+    }, [], null)
+
+const transactionTemplates =
+    liveData?.transactionTemplates ?? emptyTemplates
+const categories = liveData?.categories ?? emptyCategories
+const isLoading = liveData === null
 
     function showError(message : string) {
         setError(message)
@@ -87,10 +105,6 @@ export default function TransactionTemplates() {
 
         try {
             await db.transactionTemplates.add(template)
-            setTransactionTemplates(previousTemplates => [
-                ...previousTemplates,
-                template
-            ])
             setName('')
             setAmount('')
             setCategoryId(null)
@@ -109,9 +123,6 @@ export default function TransactionTemplates() {
 
         try {
             await db.transactionTemplates.delete(id)
-            setTransactionTemplates(previousTemplates =>
-                previousTemplates.filter(template => template.id !== id)
-            )
             setError('')
             toast.success('Template deleted')
         } catch (error) {
@@ -121,37 +132,6 @@ export default function TransactionTemplates() {
             setDeletingId(null)
         }
     }
-
-    useEffect(() => {
-        let isActive = true
-
-        Promise.all([
-            db.transactionTemplates.toArray(),
-            db.categories.toArray()
-        ])
-            .then(([templates, categories]) => {
-                if (!isActive) return
-
-                setTransactionTemplates(templates)
-                setCategories(categories)
-            })
-            .catch(error => {
-                console.error('failed to load transaction template data', error)
-
-                if (isActive) {
-                    showError('Couldn’t load transaction templates')
-                }
-            })
-            .finally(() => {
-                if (isActive) {
-                    setIsLoading(false)
-                }
-            })
-
-        return () => {
-            isActive = false
-        }
-    }, [])
 
     const isFormDisabled = isLoading || isAdding
     const isNameInvalid = error === 'Please enter a name'
