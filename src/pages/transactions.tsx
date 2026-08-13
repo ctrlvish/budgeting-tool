@@ -62,6 +62,9 @@ interface TransactionsProps {
     onEditTransaction : (transaction : Transaction) => void
 }
 
+const emptyTransactions : Transaction[] = []
+const emptyCategories : Category[] = []
+
 type DatePreset = 'today' | 'week' | 'month' | 'custom' | null
 type SortOption = 'newest' | 'oldest' | 'highest' | 'lowest'
 
@@ -105,8 +108,6 @@ export default function Transactions({ onLogTransaction, onEditTransaction } : T
     const [datePreset, setDatePreset] = useState<DatePreset>(null)
     const [isDateFilterOpen, setIsDateFilterOpen] = useState(false)
     const [sortOption, setSortOption] = useState<SortOption>('newest')
-    const emptyTransactions : Transaction[] = []
-    const emptyCategories : Category[] = []
 
     const liveData = useLiveQuery(async () => {
         try {
