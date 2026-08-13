@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { db } from '../lib/db'
 import type { Category } from "../types"
 import { 
@@ -40,16 +40,19 @@ import {
     AlertDialogFooter
  } from "@/components/ui/alert-dialog"
 
+import { useLiveQuery } from 'dexie-react-hooks'
+
 
 const categoryChipStyles = `
     max-w-full truncate rounded-md bg-muted/50 px-2 py-1 text-xs text-muted-foreground
     hover:bg-muted hover:text-foreground hover:cursor-pointer
 `
 
+const emptyCategories : Category[] = []
+
 export default function Categories(){
 
     const [error, setError] = useState('')
-    const [categories, setCategories] = useState<Category[]>([])
     const [name, setName] = useState('')
     const [categoryGroup, setCategoryGroup] = useState<CategoryGroup>('needs')
     const [isAdding, setIsAdding] = useState(false)
@@ -65,6 +68,12 @@ export default function Categories(){
     const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null)
     const [isDeleting, setIsDeleting] = useState(false)
     const categoryGroups : CategoryGroup[] = ['income', 'needs', 'wants', 'savings']
+
+    const categories = useLiveQuery(
+        () => db.categories.toArray(),
+        [],
+        emptyCategories
+    )
     
     const categoryGroupItems = categoryGroups.map(group => ({
         label: group.charAt(0).toUpperCase() + group.slice(1),
@@ -113,9 +122,7 @@ export default function Categories(){
 
         try {
             await db.categories.add(category)
-            setCategories(previousCategories => [...previousCategories, category])
             setName('')
-            setError('')
             toast.success('Category added')
         } catch (error) {
             console.error('failed to create category', error)
@@ -160,13 +167,6 @@ export default function Categories(){
             await db.categories.update(selectedCategory.id, {
                 name: trimmedName
             })
-
-            setCategories(previousCategories =>
-            previousCategories.map(category =>
-                category.id === selectedCategory.id
-                    ? { ...category, name: trimmedName }
-                    : category
-            ))
 
             setSelectedCategory(null)
             toast.success('Category renamed')
@@ -215,12 +215,6 @@ export default function Categories(){
             //delete safely
             await db.categories.delete(categoryToDelete.id)
 
-            setCategories(previous => 
-                previous.filter(prev => 
-                    prev.id !== categoryToDelete.id
-                )
-            )
-
             //close dialogs if successful
             setCategoryToDelete(null)
             setSelectedCategory(null)
@@ -235,16 +229,6 @@ export default function Categories(){
 
     }
 
-
-    useEffect(() => {
-        db.categories.toArray()
-            .then(category => setCategories(category))
-            .catch(error => {
-                console.error(error)
-                toast.error('Couldn’t load categories')
-            })
-                
-    }, [])
     return (
         <Card className="w-full min-w-0">
         <CardHeader>
