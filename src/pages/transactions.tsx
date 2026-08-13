@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react"
+import { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { ArrowUpDownIcon, CalendarIcon, Plus, SearchIcon } from "lucide-react"
 import { 
@@ -55,10 +55,10 @@ import {
     startOfMonth,
     startOfWeek
 } from "date-fns"
+import { useLiveQuery } from 'dexie-react-hooks'
 
 interface TransactionsProps {
     onLogTransaction : () => void
-    revision : number
     onEditTransaction : (transaction : Transaction) => void
 }
 
@@ -97,51 +97,44 @@ function formatDate(date : string) {
 }
 
 
-export default function Transactions({ onLogTransaction, revision, onEditTransaction } : TransactionsProps){
+export default function Transactions({ onLogTransaction, onEditTransaction } : TransactionsProps){
 
-    const [error, setError] = useState('')
-    const [transactions, setTransactions] = useState<Transaction[]>([])
-    const [categories, setCategories] = useState<Category[]>([])
-    const [isLoading, setIsLoading] = useState(true)
     const [search, setSearch] = useState('')
     const [selectedCategoryId, setSelectedCategoryId] = useState('all')
     const [date, setDate] = useState<DateRange | undefined>(undefined)
     const [datePreset, setDatePreset] = useState<DatePreset>(null)
     const [isDateFilterOpen, setIsDateFilterOpen] = useState(false)
     const [sortOption, setSortOption] = useState<SortOption>('newest')
+    const emptyTransactions : Transaction[] = []
+    const emptyCategories : Category[] = []
 
+    const liveData = useLiveQuery(async () => {
+        try {
+            const [transactions, categories] = await Promise.all([
+                db.transactions.toArray(),
+                db.categories.toArray()
+            ])
 
-    useEffect(() => {
-        let isActive = true
+            return {
+                transactions,
+                categories,
+                error: ''
+            }
+        } catch (error) {
+            console.error('failed to load transactions', error)
 
-        Promise.all([
-            db.transactions.toArray(),
-            db.categories.toArray()
-        ])
-            .then(([transactions, categories]) => {
-                if (!isActive) return
-
-                setTransactions(transactions)
-                setCategories(categories)
-            })
-            .catch(error => {
-                console.error('failed to load transactions', error)
-
-                if (isActive) {
-                    setError('Could not load transactions')
-                }
-            })
-            .finally(() => {
-                if (isActive) {
-                    setIsLoading(false)
-                }
-            })
-
-        return () => {
-            isActive = false
+            return {
+                transactions: [],
+                categories: [],
+                error: 'Could not load transactions'
+            }
         }
-    }, [revision])
+    }, [], null)
 
+    const transactions = liveData?.transactions ?? emptyTransactions
+    const categories = liveData?.categories ?? emptyCategories
+    const error = liveData?.error ?? ''
+    const isLoading = liveData === null
 
     const categoryMap = useMemo(() => {
         const map = new Map<string, Category>()

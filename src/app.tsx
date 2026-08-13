@@ -62,7 +62,6 @@ function App() {
                                 element={
                                     <Transactions
                                         onLogTransaction={openTransactionDialog}
-                                        revision={transactionsRevision}
                                         onEditTransaction={openEditTransaction}
                                     />
                                 }
