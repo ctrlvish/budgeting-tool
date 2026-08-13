@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react"
+import { useState, useMemo } from "react"
 import type { Transaction, Category } from '../types'
 import { db } from "@/lib/db"
 import { addMonths, format, isSameMonth, subMonths } from "date-fns"
@@ -27,9 +27,9 @@ import {
     CardDescription,
     CardContent,
  } from "@/components/ui/card"
+ import { useLiveQuery } from 'dexie-react-hooks'
 
 interface DashboardProps {
-    revision : number
     onLogTransaction : () => void
 }
 
@@ -38,6 +38,9 @@ interface MonthlyIncomeDescriptionProps {
     monthLabel : string
     onLogIncome : () => void
 }
+
+const emptyTransactions : Transaction[] = []
+const emptyCategories : Category[] = []
 
 const currencyFormatter = new Intl.NumberFormat('en-AU', {
     style: 'currency',
@@ -86,61 +89,48 @@ function MonthlyIncomeDescription({
 }
 
 
-export default function Dashboard({
-    revision,
-    onLogTransaction
-} : DashboardProps){
-
-    const [transactions, setTransactions] = useState<Transaction[]>([])
-    const [categories, setCategories] = useState<Category[]>([])
-    const [startingSavingsBalanceCents, setStartingSavingsBalanceCents] = useState(0)
-    const [isLoading, setIsLoading] = useState(true)
-    const [error, setError] = useState('')
+export default function Dashboard({ onLogTransaction } : DashboardProps){
     const [loadAttempt, setLoadAttempt] = useState(0)
     const [selectedMonth, setSelectedMonth] = useState(() => new Date())
     const [selectedYear, setSelectedYear] = useState(() => new Date().getFullYear())
     const [isMonthlyOverviewExpanded, setIsMonthlyOverviewExpanded] = useState(false)
     const monthKey = `${selectedMonth.getFullYear()}-${String(selectedMonth.getMonth() + 1).padStart(2, "0")}`
 
-    useEffect(() => {
+    const liveData = useLiveQuery(async () => {
+        try {
+            const [transactions, categories, budgetSetting] = await Promise.all([
+                db.transactions.toArray(),
+                db.categories.toArray(),
+                db.budgetSettings.get('#budget-settings')
+            ])
 
-        let isActive = true
+            return {
+                transactions,
+                categories,
+                startingSavingsBalanceCents:
+                    budgetSetting?.startingSavingsBalanceCents ?? 0,
+                error: ''
+            }
+        } catch (error) {
+            console.error('failed to load dashboard data', error)
 
-        Promise.all([
-            db.transactions.toArray(),
-            db.categories.toArray(),
-            db.budgetSettings.get('#budget-settings')
-        ])
-            .then(([transactions, categories, budgetSetting]) => {
-                if (!isActive) return
-
-                setTransactions(transactions)
-                setCategories(categories)
-                setStartingSavingsBalanceCents(
-                    budgetSetting?.startingSavingsBalanceCents ?? 0
-                )
-                setError('')
-            })
-        
-            .catch(error => {
-                if (!isActive) return
-
-                console.error('failed to load dashboard data', error)
-                setError('Could not load dashboard')
-            })
-            .finally(() => {
-                if (!isActive) return
-
-                setIsLoading(false)
-            })
-        return () => {
-            isActive = false
+            return {
+                transactions: emptyTransactions,
+                categories: emptyCategories,
+                startingSavingsBalanceCents: 0,
+                error: 'Could not load dashboard'
+            }
         }
-    }, [revision, loadAttempt])
+    }, [loadAttempt], null)
+
+    const transactions = liveData?.transactions ?? emptyTransactions
+    const categories = liveData?.categories ?? emptyCategories
+    const startingSavingsBalanceCents =
+        liveData?.startingSavingsBalanceCents ?? 0
+    const error = liveData?.error ?? ''
+    const isLoading = liveData === null
 
     function handleRetry() {
-        setIsLoading(true)
-        setError('')
         setLoadAttempt(attempt => attempt + 1)
     }
 

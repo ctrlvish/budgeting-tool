@@ -86,14 +86,12 @@ function getToday() {
 interface TransactionDialogProps {
     open : boolean
     onOpenChange : (open : boolean) => void
-    onCreated : () => void
     transaction : Transaction | null
 }
 
 export default function TransactionDialog({
     open,
     onOpenChange,
-    onCreated,
     transaction
 } : TransactionDialogProps) {
     const [categories, setCategories] = useState<Category[]>([])
@@ -264,7 +262,6 @@ export default function TransactionDialog({
                 await db.transactions.add({ id: crypto.randomUUID(), ...transactionData })
             }
 
-            onCreated()
             onOpenChange(false)
             toast.success(isEditing ? 'Transaction updated' : 'Transaction added')
         } catch (error) {
@@ -285,7 +282,6 @@ export default function TransactionDialog({
 
         try {
             await db.transactions.delete(transaction.id)
-            onCreated()
             setIsDeleteDialogOpen(false)
             onOpenChange(false)
             toast.success('Transaction deleted')

@@ -12,17 +12,12 @@ import { AnimatePresence } from 'motion/react'
 
 function App() {
     const [isTransactionDialogOpen, setIsTransactionDialogOpen] = useState(false)
-    const [transactionsRevision, setTransactionsRevision] = useState(0)
     const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
     const location = useLocation()
 
     function openTransactionDialog() {
         setSelectedTransaction(null)
         setIsTransactionDialogOpen(true)
-    }
-
-    function handleTransactionCreated() {
-        setTransactionsRevision(previousRevision => previousRevision + 1)
     }
 
     function openEditTransaction(transaction : Transaction) {
@@ -52,7 +47,6 @@ function App() {
                                 path="/"
                                 element={
                                     <Dashboard
-                                        revision={transactionsRevision}
                                         onLogTransaction={openTransactionDialog}
                                     />
                                 }
@@ -74,7 +68,6 @@ function App() {
             <TransactionDialog
                 open={isTransactionDialogOpen}
                 onOpenChange={setIsTransactionDialogOpen}
-                onCreated={handleTransactionCreated}
                 transaction={selectedTransaction}
             />
         </div>
