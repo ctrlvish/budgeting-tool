@@ -109,15 +109,15 @@ export default function Dashboard({
         Promise.all([
             db.transactions.toArray(),
             db.categories.toArray(),
-            db.budgetSettings.toArray()
+            db.budgetSettings.get('#budget-settings')
         ])
-            .then(([transactions, categories, budgetSettings]) => {
+            .then(([transactions, categories, budgetSetting]) => {
                 if (!isActive) return
 
                 setTransactions(transactions)
                 setCategories(categories)
                 setStartingSavingsBalanceCents(
-                    budgetSettings[0]?.startingSavingsBalanceCents ?? 0
+                    budgetSetting?.startingSavingsBalanceCents ?? 0
                 )
                 setError('')
             })

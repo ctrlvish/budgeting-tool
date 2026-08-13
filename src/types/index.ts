@@ -13,6 +13,7 @@ export interface Category {
 }
 
 export interface BudgetSetting {
+    id: string
     startingSavingsBalanceCents : number
     needs : number //ratios
     wants : number

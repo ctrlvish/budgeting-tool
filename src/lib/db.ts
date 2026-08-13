@@ -3,79 +3,79 @@ import type {Category, BudgetSetting, TransactionTemplate, Transaction} from '..
 
 const defaultCategories : Category[] = [
     {
-        id : 'rent',
+        id : '#rent',
         name : 'Rent',
         type: 'expense',
         bucket : 'needs'
     },
     {
-        id : 'groceries',
+        id : '#groceries',
         name : 'Groceries',
         type: 'expense',
         bucket : 'needs'
     },
     {
-        id : 'bills',
+        id : '#bills',
         name : 'Bills',
         type: 'expense',
         bucket : 'needs'
     },
     {
-        id : 'transport',
+        id : '#transport',
         name : 'Transport',
         type: 'expense',
         bucket : 'needs'
     },
     {
-        id : 'food',
+        id : '#food',
         name : 'Food',
         type: 'expense',
         bucket : 'needs'
     },
     {
-        id : 'medical',
+        id : '#medical',
         name : 'Medical',
         type: 'expense',
         bucket : 'needs'
     },
     {
-        id : 'activities',
+        id : '#activities',
         name : 'Activities',
         type: 'expense',
         bucket : 'wants'
     },
     {
-        id : 'shopping',
+        id : '#shopping',
         name : 'Shopping',
         type: 'expense',
         bucket : 'wants'
     },
     {
-        id : 'eating-out',
+        id : '#eating-out',
         name : 'Eating out',
         type: 'expense',
         bucket : 'wants'
     },
     {
-        id : 'subscriptions',
+        id : '#subscriptions',
         name : 'Subscriptions',
         type: 'expense',
         bucket : 'wants'
     },
     {
-        id : 'salary',
+        id : '#salary',
         name : 'Salary',
         type: 'income'
     },
     {
-        id : 'stocks',
+        id : '#stocks',
         name : 'Stocks',
         type: 'expense',
         bucket: 'savings'
 
     },
     {
-        id : 'tax-returns',
+        id : '#tax-returns',
         name : 'Tax returns',
         type: 'income'
     }
@@ -91,13 +91,15 @@ export class BudgetDatabase extends Dexie {
         super('budgeting-tool-db')
         this.version(1).stores({
             categories : 'id, type, bucket',
-            budgetSettings : '++autoId',
+            budgetSettings : 'id',
             transactionTemplates : 'id, categoryId',
             transactions : 'id, type, date, categoryId, transactionTemplateId'
         })
 
-        this.on('populate', async () => {
-            await this.categories.bulkAdd(defaultCategories)
+        this.on('populate', () => {
+            this.on('ready', async () => {
+                await this.categories.bulkPut(defaultCategories)
+            })
         })
     }
 }

@@ -39,6 +39,7 @@ function budgetSettingsToFormData(settings : BudgetSetting) : BudgetSettingsForm
 
 function formDataToBudgetSettings(formData : BudgetSettingsFormData) : BudgetSetting {
     return {
+        id: '#budget-settings',
         startingSavingsBalanceCents: Math.round(Number(formData.startingSavingsBalance) * 100),
         needs: Number(formData.needs),
         wants: Number(formData.wants),
@@ -54,10 +55,10 @@ export default function BudgetSetup() {
     useEffect(() => {
         let isActive = true
 
-        db.budgetSettings.toArray()
-            .then(records => {
-                if (isActive && records[0]) {
-                    setFormData(budgetSettingsToFormData(records[0]))
+        db.budgetSettings.get('#budget-settings')
+            .then(settings => {
+                if (isActive && settings) {
+                    setFormData(budgetSettingsToFormData(settings))
                 }
             })
             .catch(error => {
@@ -101,8 +102,7 @@ export default function BudgetSetup() {
         try {
             const settings = formDataToBudgetSettings(formData)
 
-            await db.budgetSettings.clear()
-            await db.budgetSettings.add(settings)
+            await db.budgetSettings.put(settings)
             toast.success('Budget settings saved')
         } catch (error) {
             console.error('Failed to save budget settings', error)
