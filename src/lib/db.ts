@@ -99,8 +99,7 @@ export class BudgetDatabase extends Dexie {
             transactions : 'id, type, date, categoryId, transactionTemplateId'
         })
         this.cloud.configure({
-            databaseUrl: import.meta.env.VITE_DEXIE_CLOUD_URL,
-            requireAuth: true
+            databaseUrl: import.meta.env.VITE_DEXIE_CLOUD_URL
         })
 
         this.on('populate', () => {
