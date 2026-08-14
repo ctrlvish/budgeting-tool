@@ -14,6 +14,12 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { useLiveQuery } from 'dexie-react-hooks'
+import { Info } from 'lucide-react'
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger
+} from '@/components/ui/popover'
 
 type BudgetSettingsFormData = {
     startingSavingsBalance: string,
@@ -120,7 +126,32 @@ export default function BudgetSetup() {
             <CardContent>
                 <form id="budget-settings-form" className="grid gap-5 sm:gap-6" onSubmit={handleSubmit}>
                     <div className="grid gap-2">
-                        <Label htmlFor='startingSavingsBalanceInput'>Starting savings balance</Label>
+                        <div className="flex items-center gap-1.5">
+                            <Label htmlFor='startingSavingsBalanceInput'>Starting savings balance</Label>
+                            <Popover>
+                                <PopoverTrigger
+                                    openOnHover
+                                    delay={250}
+                                    render={
+                                        <button
+                                            type="button"
+                                            className="cursor-pointer text-muted-foreground transition-colors duration-150 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                            aria-label="About starting savings balance"
+                                        />
+                                    }
+                                >
+                                    <Info className="size-3.5" />
+                                </PopoverTrigger>
+                                <PopoverContent
+                                    className="w-64 text-xs leading-relaxed text-muted-foreground"
+                                    side="top"
+                                    align="start"
+                                    sideOffset={6}
+                                >
+                                    What you had before you began logging. This is the baseline for your savings balance.
+                                </PopoverContent>
+                            </Popover>
+                        </div>
                         <div className="relative">
                             <span
                                 className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
@@ -140,9 +171,6 @@ export default function BudgetSetup() {
                                 placeholder="0.00"
                             />
                         </div>
-                        <p className="text-xs leading-relaxed text-muted-foreground">
-                            What you had before you began logging. This is the baseline for your savings balance.
-                        </p>
                     </div>
 
                     <div className="grid grid-cols-3 gap-2 sm:gap-3">
