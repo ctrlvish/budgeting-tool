@@ -34,18 +34,6 @@ const defaultCategories : Category[] = [
         bucket : 'needs'
     },
     {
-        id : '#medical',
-        name : 'Medical',
-        type: 'expense',
-        bucket : 'needs'
-    },
-    {
-        id : '#activities',
-        name : 'Activities',
-        type: 'expense',
-        bucket : 'wants'
-    },
-    {
         id : '#shopping',
         name : 'Shopping',
         type: 'expense',
@@ -54,12 +42,6 @@ const defaultCategories : Category[] = [
     {
         id : '#eating-out',
         name : 'Eating out',
-        type: 'expense',
-        bucket : 'wants'
-    },
-    {
-        id : '#subscriptions',
-        name : 'Subscriptions',
         type: 'expense',
         bucket : 'wants'
     },
@@ -74,11 +56,6 @@ const defaultCategories : Category[] = [
         type: 'expense',
         bucket: 'savings'
 
-    },
-    {
-        id : '#tax-returns',
-        name : 'Tax returns',
-        type: 'income'
     }
 ]
 
@@ -103,10 +80,10 @@ export class BudgetDatabase extends Dexie {
             customLoginGui: true
         })
 
-        this.on('populate', () => {
-            this.on('ready', async () => {
+        this.on('ready', async () => {
+            if (await this.categories.count() === 0) {
                 await this.categories.bulkPut(defaultCategories)
-            })
+            }
         })
     }
 }
