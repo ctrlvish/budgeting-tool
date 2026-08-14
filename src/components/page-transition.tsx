@@ -1,42 +1,23 @@
 import { forwardRef, type ReactNode } from 'react'
-import { motion, useIsPresent } from 'motion/react'
-
-const transitionDuration = 0.4
+import { motion } from 'motion/react'
 
 interface PageTransitionProps {
     children : ReactNode
-    initialClipPath : string
 }
 
 const PageTransition = forwardRef<HTMLDivElement, PageTransitionProps>(
-    function PageTransition({ children, initialClipPath }, ref) {
-        const isPresent = useIsPresent()
-
+    function PageTransition({ children }, ref) {
         return (
             <motion.div
                 ref={ref}
-                className={`absolute inset-0 overflow-y-auto bg-background ${
-                    isPresent
-                        ? 'z-20'
-                        : 'pointer-events-none z-10'
-                }`}
-                initial={{ clipPath: initialClipPath }}
-                animate={{ clipPath: 'inset(0 0 0 0)' }}
-                exit={{
-                    opacity: 0,
-                    transition: {
-                        delay: transitionDuration,
-                        duration: 0
-                    }
-                }}
+                className="absolute inset-0 overflow-y-auto bg-background"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
                 transition={{
-                    clipPath: {
-                        duration: transitionDuration,
-                        ease: [0.4, 0, 0.2, 1]
-                    }
+                    duration: 0.15,
+                    ease: 'easeOut'
                 }}
-                aria-hidden={!isPresent}
-                inert={!isPresent}
             >
                 {children}
             </motion.div>

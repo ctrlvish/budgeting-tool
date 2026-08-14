@@ -49,22 +49,12 @@ function App() {
         }
     }
 
-    const initialClipPath =
-        location.pathname === '/settings'
-            ? 'inset(0 0 100% 0)'
-            : location.pathname === '/transactions'
-                ? 'inset(0 0 0 100%)'
-                : 'inset(0 100% 0 0)'
-
     return (
         <div className="flex h-lvh flex-col overflow-hidden">
             <AppHeader onLogTransaction={openTransactionDialog} />
             <div className="relative isolate min-h-0 flex-1 overflow-hidden">
                 <AnimatePresence mode="sync" initial={false}>
-                    <PageTransition
-                        key={location.pathname}
-                        initialClipPath={initialClipPath}
-                    >
+                    <PageTransition key={location.pathname}>
                         <Routes location={location}>
                             <Route
                                 path="/"
