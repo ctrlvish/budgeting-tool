@@ -325,7 +325,7 @@ export default function TransactionDialog({
                     </div>
 
                     <div className="grid grid-cols-[minmax(0,4fr)_minmax(0,6fr)] gap-3 sm:grid-cols-2 sm:gap-4">
-                        <div className="grid gap-2">
+                        <div className="grid min-w-0 gap-2">
                             <Label htmlFor="transactionAmount">Amount</Label>
                             <div className="relative">
                                 <span
@@ -353,10 +353,10 @@ export default function TransactionDialog({
                             </div>
                         </div>
 
-                        <div className="grid gap-2">
+                        <div className="grid min-w-0 gap-2">
                             <Label htmlFor="transactionDate">Date</Label>
                             <Input
-                                className="h-10 min-w-0 text-sm sm:h-8"
+                                className="h-10 max-h-10 min-h-0 min-w-0 max-w-full appearance-none text-sm leading-5 sm:h-8 sm:max-h-8"
                                 id="transactionDate"
                                 type="date"
                                 value={date}

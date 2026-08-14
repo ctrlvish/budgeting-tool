@@ -78,7 +78,7 @@ export default function CategoryBreakdown({
 
     return (
         <div className={cn(
-            "grid content-start gap-3 overflow-y-auto overscroll-contain pr-1 sm:gap-4 sm:pr-2",
+            "no-scrollbar grid content-start gap-3 overflow-y-auto overscroll-contain pr-1 sm:gap-4 sm:pr-2",
             expanded ? "h-full min-h-0" : "h-56 sm:h-64"
         )}>
             {sections.map(section => (

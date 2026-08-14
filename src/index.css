@@ -93,11 +93,18 @@
 
     html {
         @apply bg-background font-sans;
+        height: 100%;
         scrollbar-gutter: stable;
     }
 
     body {
         @apply bg-background text-foreground;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    #root {
+        height: 100%;
     }
 
     ::selection {
