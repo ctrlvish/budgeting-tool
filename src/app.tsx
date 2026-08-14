@@ -10,10 +10,16 @@ import type { Transaction } from './types'
 import { useLocation } from 'react-router'
 import { AnimatePresence } from 'motion/react'
 import CloudAuthDialog from './components/cloud-auth-dialog'
+import HowToDialog from './components/how-to-dialog'
+
+const HOW_TO_SEEN_KEY = 'budgeting-tool-how-to-seen'
 
 function App() {
     const [isTransactionDialogOpen, setIsTransactionDialogOpen] = useState(false)
     const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
+    const [isHowToDialogOpen, setIsHowToDialogOpen] = useState(
+        () => localStorage.getItem(HOW_TO_SEEN_KEY) !== 'true'
+    )
     const location = useLocation()
 
     function openTransactionDialog() {
@@ -25,6 +31,14 @@ function App() {
       
         setSelectedTransaction(transaction)
         setIsTransactionDialogOpen(true)
+    }
+
+    function handleHowToOpenChange(open : boolean) {
+        setIsHowToDialogOpen(open)
+
+        if (!open) {
+            localStorage.setItem(HOW_TO_SEEN_KEY, 'true')
+        }
     }
 
     const initialClipPath =
@@ -61,7 +75,14 @@ function App() {
                                     />
                                 }
                             />
-                            <Route path="/settings" element={<Settings />} />
+                            <Route
+                                path="/settings"
+                                element={
+                                    <Settings
+                                        onOpenHowTo={() => setIsHowToDialogOpen(true)}
+                                    />
+                                }
+                            />
                         </Routes>
                     </PageTransition>
                 </AnimatePresence>
@@ -72,6 +93,10 @@ function App() {
                 transaction={selectedTransaction}
             />
             <CloudAuthDialog />
+            <HowToDialog
+                open={isHowToDialogOpen}
+                onOpenChange={handleHowToOpenChange}
+            />
         </div>
     )
 }
