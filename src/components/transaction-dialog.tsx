@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react"
-import { CalendarIcon } from "lucide-react"
 import type { 
     Category, 
     Transaction, 
@@ -8,7 +7,6 @@ import type {
 import { db } from "@/lib/db"
 import { MAX_TRANSACTION_AMOUNT_CENTS } from "@/lib/money"
 import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
 import {
     Dialog,
     DialogContent,
@@ -28,19 +26,8 @@ import {
     AlertDialogTitle
 } from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
-import {
-    InputGroup,
-    InputGroupAddon,
-    InputGroupButton,
-    InputGroupInput
-} from "@/components/ui/input-group"
 import { Label } from "@/components/ui/label"
 import GroupedCategoryCombobox from '@/components/grouped-category-combobox'
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger
-} from "@/components/ui/popover"
 import { 
     Select,
     SelectContent,
@@ -52,35 +39,13 @@ import {
  } from "./ui/select"
 import { toast } from "sonner"
 
-function formatDisplayDate(date : Date | undefined) {
-    if (!date) return ''
-
-    return date.toLocaleDateString('en-AU', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric'
-    })
-}
-
-function formatStoredDate(date : Date): string {
+function getToday() {
+    const date = new Date()
     const year = date.getFullYear()
     const month = String(date.getMonth() + 1).padStart(2, '0')
     const day = String(date.getDate()).padStart(2, '0')
 
     return `${year}-${month}-${day}`
-}
-
-function parseStoredDate(dateStr : string): Date{
-    const splitDate = dateStr.split('-').map(Number)
-    return new Date(splitDate[0], splitDate[1] - 1, splitDate[2])
-}
-
-function isValidDate(date : Date | undefined) {
-    return date !== undefined && !Number.isNaN(date.getTime())
-}
-
-function getToday() {
-    return new Date()
 }
 
 interface TransactionDialogProps {
@@ -97,10 +62,7 @@ export default function TransactionDialog({
     const [categories, setCategories] = useState<Category[]>([])
     const [description, setDescription] = useState('')
     const [amount, setAmount] = useState('')
-    const [date, setDate] = useState<Date | undefined>(getToday)
-    const [dateValue, setDateValue] = useState(() => formatDisplayDate(getToday()))
-    const [calendarMonth, setCalendarMonth] = useState<Date | undefined>(getToday)
-    const [isDatePickerOpen, setIsDatePickerOpen] = useState(false)
+    const [date, setDate] = useState(getToday)
     const [categoryId, setCategoryId] = useState<string | null>(null)
     const [error, setError] = useState('')
     const [isLoading, setIsLoading] = useState(true)
@@ -136,13 +98,9 @@ export default function TransactionDialog({
                 setCategories(categories)
 
                 if (transaction) {
-                    const parsedDate = parseStoredDate(transaction.date)
-
                     setDescription(transaction.description)
                     setAmount((transaction.amountCents / 100).toFixed(2))
-                    setDate(parsedDate)
-                    setDateValue(formatDisplayDate(parsedDate))
-                    setCalendarMonth(parsedDate)
+                    setDate(transaction.date)
                     setCategoryId(transaction.categoryId)
                     setTransactionTemplateId(transaction.transactionTemplateId ?? null)
                 }
@@ -166,14 +124,9 @@ export default function TransactionDialog({
     }, [open, transaction])
 
     function resetForm() {
-        const today = getToday()
-
         setDescription('')
         setAmount('')
-        setDate(today)
-        setDateValue(formatDisplayDate(today))
-        setCalendarMonth(today)
-        setIsDatePickerOpen(false)
+        setDate(getToday())
         setCategoryId(null)
         setError('')
         setTransactionTemplateId(null)
@@ -243,7 +196,7 @@ export default function TransactionDialog({
         }
 
         const transactionData = {
-            date: formatStoredDate(date),
+            date,
             description: trimmedDescription,
             categoryId,
             amountCents,
@@ -385,6 +338,7 @@ export default function TransactionDialog({
                                     className="h-10 pl-6 sm:h-8"
                                     id="transactionAmount"
                                     type="number"
+                                    inputMode="decimal"
                                     min="0.01"
                                     max="50000000"
                                     step="0.01"
@@ -401,73 +355,17 @@ export default function TransactionDialog({
 
                         <div className="grid gap-2">
                             <Label htmlFor="transactionDate">Date</Label>
-                            <InputGroup className="h-10 sm:h-8">
-                                <InputGroupInput
-                                    className="text-sm"
-                                    id="transactionDate"
-                                    value={dateValue}
-                                    onChange={e => {
-                                        const nextDate = new Date(e.target.value)
-
-                                        setDateValue(e.target.value)
-                                        setDate(isValidDate(nextDate) ? nextDate : undefined)
-
-                                        if (isValidDate(nextDate)) {
-                                            setCalendarMonth(nextDate)
-                                        }
-                                    }}
-                                    onKeyDown={e => {
-                                        if (e.key === 'ArrowDown') {
-                                            e.preventDefault()
-                                            setIsDatePickerOpen(true)
-                                        }
-                                    }}
-                                    disabled={isFormDisabled}
-                                    placeholder="29 July 2026"
-                                    aria-required="true"
-                                    aria-invalid={isDateInvalid}
-                                    aria-describedby={isDateInvalid ? 'transaction-error' : undefined}
-                                />
-                                <InputGroupAddon align="inline-end">
-                                    <Popover
-                                        open={isDatePickerOpen}
-                                        onOpenChange={setIsDatePickerOpen}
-                                    >
-                                        <PopoverTrigger
-                                            render={
-                                                <InputGroupButton
-                                                    id="transactionDatePicker"
-                                                    variant="ghost"
-                                                    size="icon-xs"
-                                                    aria-label="Select date"
-                                                    disabled={isFormDisabled}
-                                                >
-                                                    <CalendarIcon />
-                                                    <span className="sr-only">Select date</span>
-                                                </InputGroupButton>
-                                            }
-                                        />
-                                        <PopoverContent
-                                            className="w-auto overflow-hidden p-0"
-                                            align="end"
-                                            alignOffset={-8}
-                                            sideOffset={10}
-                                        >
-                                            <Calendar
-                                                mode="single"
-                                                selected={date}
-                                                month={calendarMonth}
-                                                onMonthChange={setCalendarMonth}
-                                                onSelect={selectedDate => {
-                                                    setDate(selectedDate)
-                                                    setDateValue(formatDisplayDate(selectedDate))
-                                                    setIsDatePickerOpen(false)
-                                                }}
-                                            />
-                                        </PopoverContent>
-                                    </Popover>
-                                </InputGroupAddon>
-                            </InputGroup>
+                            <Input
+                                className="h-10 min-w-0 text-sm sm:h-8"
+                                id="transactionDate"
+                                type="date"
+                                value={date}
+                                onChange={e => setDate(e.target.value)}
+                                disabled={isFormDisabled}
+                                aria-required="true"
+                                aria-invalid={isDateInvalid}
+                                aria-describedby={isDateInvalid ? 'transaction-error' : undefined}
+                            />
                         </div>
                     </div>
 

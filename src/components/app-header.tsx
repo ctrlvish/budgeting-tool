@@ -60,7 +60,7 @@ export default function AppHeader({ onLogTransaction } : AppHeaderProps) {
             </header>
 
             <nav
-                className="fixed inset-x-0 bottom-0 z-40 border-t border-border/50 bg-background/85 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl sm:hidden"
+                className="order-last z-40 w-full shrink-0 border-t border-border/50 bg-background/85 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl sm:hidden"
                 aria-label="Mobile navigation"
             >
                 <div className="mx-auto grid h-16 max-w-md grid-cols-3 px-2">

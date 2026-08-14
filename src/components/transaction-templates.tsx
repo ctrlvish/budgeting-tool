@@ -222,6 +222,7 @@ const isLoading = liveData === null
                                     className="h-10 pl-6 sm:h-8"
                                     id="transactionTemplateAmount"
                                     type="number"
+                                    inputMode="decimal"
                                     min="0.01"
                                     max="50000000"
                                     step="0.01"

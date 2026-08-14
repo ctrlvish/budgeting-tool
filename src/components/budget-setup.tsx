@@ -162,6 +162,7 @@ export default function BudgetSetup() {
                             <Input
                                 className="h-10 pl-6 sm:h-8"
                                 type='number'
+                                inputMode="decimal"
                                 step='0.01'
                                 id="startingSavingsBalanceInput"
                                 name="startingSavingsBalance"

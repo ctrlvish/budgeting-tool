@@ -15,7 +15,7 @@ const PageTransition = forwardRef<HTMLDivElement, PageTransitionProps>(
         return (
             <motion.div
                 ref={ref}
-                className={`absolute inset-0 overflow-y-auto bg-background pb-[calc(4rem+env(safe-area-inset-bottom))] sm:pb-0 ${
+                className={`absolute inset-0 overflow-y-auto bg-background ${
                     isPresent
                         ? 'z-20'
                         : 'pointer-events-none z-10'
@@ -32,7 +32,7 @@ const PageTransition = forwardRef<HTMLDivElement, PageTransitionProps>(
                 transition={{
                     clipPath: {
                         duration: transitionDuration,
-                        ease: [0.22, 1, 0.36, 1]
+                        ease: [0.4, 0, 0.2, 1]
                     }
                 }}
                 aria-hidden={!isPresent}
