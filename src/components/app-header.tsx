@@ -44,17 +44,30 @@ export default function AppHeader({ onLogTransaction } : AppHeaderProps) {
                         <NavLink to='/transactions' className={navigationLinkStyles}>
                             transactions
                         </NavLink>
+                        <NavLink to='/settings' className={navigationLinkStyles}>
+                            settings
+                        </NavLink>
                     </nav>
                     <div className="flex items-center gap-1 justify-self-end">
                         <ModeToggle />
                         <NavLink
                             to="/settings"
-                            className="flex size-10 items-center justify-center rounded-full bg-transparent text-foreground transition-opacity duration-150 hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:size-8"
+                            className="flex size-10 items-center justify-center rounded-full bg-transparent text-foreground transition-opacity duration-150 hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:hidden"
                             aria-label="Settings"
                         >
                             <Settings className="size-5" />
                             <span className="sr-only">Settings</span>
                         </NavLink>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            className="hidden size-8 bg-transparent hover:bg-transparent hover:text-muted-foreground sm:flex dark:hover:bg-transparent"
+                            onClick={onLogTransaction}
+                            aria-label="Log transaction"
+                        >
+                            <Plus className="size-5" />
+                        </Button>
                     </div>
                 </div>
             </header>
