@@ -3,7 +3,7 @@
   <h1>Budgeting Tool</h1>
   <p>A simple, local-first way to understand where your money goes.</p>
   <p><strong>Works offline · Syncs across devices · Installs like an app</strong></p>
-  <p><a href="https://budget.ctrlvish.me" target="_blank" rel="noopener noreferrer"><strong>Open the app →</strong></a></p>
+  <p><a href="https://budget.ctrlvish.me"><strong>Open the app →</strong></a></p>
 </div>
 
 ## Why I built it
@@ -22,8 +22,8 @@ I used to manage my budget in an Excel file stored in iCloud. Moving between my 
 
 ## Install the app
 
-- **iPhone or iPad:** Open <a href="https://budget.ctrlvish.me" target="_blank" rel="noopener noreferrer">budget.ctrlvish.me</a> in Safari → **Share** → **Add to Home Screen**.
-- **Android:** Open <a href="https://budget.ctrlvish.me" target="_blank" rel="noopener noreferrer">budget.ctrlvish.me</a> in Chrome → open the browser menu → **Install app** or **Add to Home screen**.
+- **iPhone or iPad:** Open [budget.ctrlvish.me](https://budget.ctrlvish.me) in Safari → **Share** → **Add to Home Screen**.
+- **Android:** Open [budget.ctrlvish.me](https://budget.ctrlvish.me) in Chrome → open the browser menu → **Install app** or **Add to Home screen**.
 
 ## How it works
 
@@ -54,4 +54,4 @@ VITE_DEXIE_CLOUD_URL=your_database_url
 
 ---
 
-If you are a **recruiter, hiring manager, or interviewer**, read the <a href="docs/engineering-case-study.md" target="_blank" rel="noopener noreferrer">engineering case study</a> for the design decisions, trade-offs, and lessons behind this project!
+If you are a **recruiter, hiring manager, or interviewer**, read the [engineering case study](docs/engineering-case-study.md) for the design decisions, trade-offs, and lessons behind this project!
