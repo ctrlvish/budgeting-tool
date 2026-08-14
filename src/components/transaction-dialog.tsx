@@ -321,7 +321,7 @@ export default function TransactionDialog({
                             value={description}
                             onChange={e => setDescription(e.target.value)}
                             disabled={isFormDisabled}
-                            placeholder="e.g. Weekly groceries"
+                            placeholder="Transaction name"
                             aria-required="true"
                             aria-invalid={isDescriptionInvalid}
                             aria-describedby={isDescriptionInvalid ? 'transaction-error' : undefined}
