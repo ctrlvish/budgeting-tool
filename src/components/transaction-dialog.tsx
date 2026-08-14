@@ -360,7 +360,7 @@ export default function TransactionDialog({
                         <div className="grid min-w-0 gap-2">
                             <Label htmlFor="transactionDate">Date</Label>
                             <Input
-                                className="h-10 max-h-10 min-h-0 min-w-0 max-w-full appearance-none text-sm leading-5 sm:h-8 sm:max-h-8"
+                                className="h-10 max-h-10 min-h-0 min-w-0 max-w-full appearance-none text-sm leading-5 [&::-webkit-calendar-picker-indicator]:opacity-50 sm:h-8 sm:max-h-8 dark:[&::-webkit-calendar-picker-indicator]:invert"
                                 id="transactionDate"
                                 type="date"
                                 value={date}
