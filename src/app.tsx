@@ -9,6 +9,7 @@ import PageTransition from './components/page-transition'
 import type { Transaction } from './types'
 import { useLocation } from 'react-router'
 import { AnimatePresence } from 'motion/react'
+import CloudAuthDialog from './components/cloud-auth-dialog'
 
 function App() {
     const [isTransactionDialogOpen, setIsTransactionDialogOpen] = useState(false)
@@ -70,6 +71,7 @@ function App() {
                 onOpenChange={setIsTransactionDialogOpen}
                 transaction={selectedTransaction}
             />
+            <CloudAuthDialog />
         </div>
     )
 }

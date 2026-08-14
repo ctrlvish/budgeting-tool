@@ -1,5 +1,6 @@
 import { useObservable } from 'dexie-react-hooks'
 import { useState } from 'react'
+import Dexie from 'dexie'
 import { db } from '@/lib/db'
 import {
     Card,
@@ -22,6 +23,11 @@ import {
 } from '@/components/ui/alert-dialog'
 import { toast } from 'sonner'
 
+function isUserCancellation(error : unknown) {
+    return error instanceof Dexie.AbortError
+        || (error instanceof Error && error.message.includes('User cancelled'))
+}
+
 export default function AccountSettings() {
     const user = useObservable(db.cloud.currentUser)
     const [isLogoutOpen, setIsLogoutOpen] = useState(false)
@@ -35,6 +41,8 @@ export default function AccountSettings() {
             await db.cloud.logout()
             setIsLogoutOpen(false)
         } catch (error) {
+            if (isUserCancellation(error)) return
+
             console.error('failed to log out', error)
             toast.error('Couldn’t log out')
         } finally {
@@ -48,6 +56,8 @@ export default function AccountSettings() {
         try {
             await db.cloud.login()
         } catch (error) {
+            if (isUserCancellation(error)) return
+
             console.error('failed to log in', error)
             toast.error('Couldn’t sign in')
         } finally {
@@ -108,7 +118,7 @@ export default function AccountSettings() {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
 
-                    <AlertDialogFooter>
+                    <AlertDialogFooter className="bg-popover">
                         <AlertDialogCancel
                             disabled={isLoggingOut}
                         >Cancel</AlertDialogCancel>
