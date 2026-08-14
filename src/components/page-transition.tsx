@@ -11,9 +11,9 @@ const PageTransition = forwardRef<HTMLDivElement, PageTransitionProps>(
             <motion.div
                 ref={ref}
                 className="absolute inset-0 overflow-y-auto bg-background"
-                initial={{ opacity: 0, filter: 'blur(2px)' }}
+                initial={{ opacity: 0, filter: 'blur(1px)' }}
                 animate={{ opacity: 1, filter: 'blur(0px)' }}
-                exit={{ opacity: 0, filter: 'blur(2px)' }}
+                exit={{ opacity: 0, filter: 'blur(1px)' }}
                 transition={{
                     duration: 0.15,
                     ease: 'easeOut'
