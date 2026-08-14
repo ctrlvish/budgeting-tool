@@ -30,7 +30,7 @@ import {
  import { useLiveQuery } from 'dexie-react-hooks'
 
 interface DashboardProps {
-    onLogTransaction : () => void
+    onLogTransaction : (date : string) => void
 }
 
 interface MonthlyIncomeDescriptionProps {
@@ -67,9 +67,8 @@ function MonthlyIncomeDescription({
     return (
         <>
             <span>{monthLabel}</span>
-            <span aria-hidden="true">·</span>
             {incomeCents > 0 ? (
-                <span>
+                <span className="basis-full">
                     Income{' '}
                     <span className="font-mono font-medium tabular-nums text-foreground/70">
                         {formatMoney(incomeCents)}
@@ -78,7 +77,7 @@ function MonthlyIncomeDescription({
             ) : (
                 <button
                     type="button"
-                    className="cursor-pointer bg-transparent! text-xs underline underline-offset-4 transition-colors hover:bg-transparent! hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="basis-full cursor-pointer bg-transparent! text-left underline underline-offset-4 transition-colors hover:bg-transparent! hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     onClick={onLogIncome}
                 >
                     Log income
@@ -325,7 +324,7 @@ export default function Dashboard({ onLogTransaction } : DashboardProps){
 
     function handleLogIncome() {
         setIsMonthlyOverviewExpanded(false)
-        onLogTransaction()
+        onLogTransaction(format(selectedMonth, 'yyyy-MM-dd'))
     }
 
 

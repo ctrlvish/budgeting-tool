@@ -27,7 +27,7 @@ export default function PeriodNavigation({
             {showReset && (
                 <button
                     type="button"
-                    className="mr-0.5 min-h-9 cursor-pointer bg-transparent! px-1 text-xs underline underline-offset-4 transition-colors hover:bg-transparent! hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:mr-1 sm:min-h-7"
+                    className="mr-0.5 min-h-9 cursor-pointer bg-transparent! px-1 text-[11px] text-muted-foreground underline underline-offset-4 transition-colors hover:bg-transparent! hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:mr-1 sm:min-h-7 sm:text-xs"
                     aria-label={resetLabel}
                     onClick={onReset}
                 >

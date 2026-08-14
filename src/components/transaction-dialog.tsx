@@ -49,12 +49,14 @@ function getToday() {
 }
 
 interface TransactionDialogProps {
+    initialDate : string | null
     open : boolean
     onOpenChange : (open : boolean) => void
     transaction : Transaction | null
 }
 
 export default function TransactionDialog({
+    initialDate,
     open,
     onOpenChange,
     transaction
@@ -103,6 +105,8 @@ export default function TransactionDialog({
                     setDate(transaction.date)
                     setCategoryId(transaction.categoryId)
                     setTransactionTemplateId(transaction.transactionTemplateId ?? null)
+                } else {
+                    setDate(initialDate ?? getToday())
                 }
             })
             .catch(error => {
@@ -121,7 +125,7 @@ export default function TransactionDialog({
         return () => {
             isActive = false
         }
-    }, [open, transaction])
+    }, [initialDate, open, transaction])
 
     function resetForm() {
         setDescription('')

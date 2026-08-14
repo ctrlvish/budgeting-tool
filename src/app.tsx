@@ -17,6 +17,7 @@ const HOW_TO_SEEN_KEY = 'budgeting-tool-how-to-seen'
 function App() {
     const [isTransactionDialogOpen, setIsTransactionDialogOpen] = useState(false)
     const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
+    const [initialTransactionDate, setInitialTransactionDate] = useState<string | null>(null)
     const [isHowToDialogOpen, setIsHowToDialogOpen] = useState(
         () => localStorage.getItem(HOW_TO_SEEN_KEY) !== 'true'
     )
@@ -24,12 +25,19 @@ function App() {
 
     function openTransactionDialog() {
         setSelectedTransaction(null)
+        setInitialTransactionDate(null)
+        setIsTransactionDialogOpen(true)
+    }
+
+    function openTransactionDialogForDate(date : string) {
+        setSelectedTransaction(null)
+        setInitialTransactionDate(date)
         setIsTransactionDialogOpen(true)
     }
 
     function openEditTransaction(transaction : Transaction) {
-      
         setSelectedTransaction(transaction)
+        setInitialTransactionDate(null)
         setIsTransactionDialogOpen(true)
     }
 
@@ -62,7 +70,7 @@ function App() {
                                 path="/"
                                 element={
                                     <Dashboard
-                                        onLogTransaction={openTransactionDialog}
+                                        onLogTransaction={openTransactionDialogForDate}
                                     />
                                 }
                             />
@@ -91,6 +99,7 @@ function App() {
                 open={isTransactionDialogOpen}
                 onOpenChange={setIsTransactionDialogOpen}
                 transaction={selectedTransaction}
+                initialDate={initialTransactionDate}
             />
             <CloudAuthDialog />
             <HowToDialog
