@@ -83,7 +83,7 @@ export default function CategoryBreakdown({
         )}>
             {sections.map(section => (
                 <section key={section.id} className="grid gap-2.5">
-                    <h3 className="sticky top-0 z-10 bg-card py-1 text-sm font-medium">
+                    <h3 className="text-sm font-medium">
                         {section.label}
                         <span className="ml-1 text-muted-foreground">
                             ({formatPercentage(section.percentage)})
