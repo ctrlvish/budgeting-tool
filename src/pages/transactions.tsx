@@ -1,6 +1,13 @@
 import { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
-import { ArrowUpDownIcon, CalendarIcon, Plus, SearchIcon } from "lucide-react"
+import {
+    ArrowUpDownIcon,
+    CalendarIcon,
+    ChevronLeftIcon,
+    ChevronRightIcon,
+    Plus,
+    SearchIcon
+} from "lucide-react"
 import { 
     Card,
     CardHeader,
@@ -64,6 +71,7 @@ interface TransactionsProps {
 
 const emptyTransactions : Transaction[] = []
 const emptyCategories : Category[] = []
+const transactionsPerPage = 25
 
 type DatePreset = 'today' | 'week' | 'month' | 'custom' | null
 type SortOption = 'newest' | 'oldest' | 'highest' | 'lowest'
@@ -108,6 +116,7 @@ export default function Transactions({ onLogTransaction, onEditTransaction } : T
     const [datePreset, setDatePreset] = useState<DatePreset>(null)
     const [isDateFilterOpen, setIsDateFilterOpen] = useState(false)
     const [sortOption, setSortOption] = useState<SortOption>('newest')
+    const [requestedPage, setRequestedPage] = useState(1)
 
     const liveData = useLiveQuery(async () => {
         try {
@@ -185,6 +194,17 @@ export default function Transactions({ onLogTransaction, onEditTransaction } : T
         })
     }, [date, search, selectedCategoryId, sortOption, transactions])
 
+    const totalPages = Math.max(
+        1,
+        Math.ceil(filteredTransactions.length / transactionsPerPage)
+    )
+    const currentPage = Math.min(requestedPage, totalPages)
+    const pageStartIndex = (currentPage - 1) * transactionsPerPage
+    const paginatedTransactions = filteredTransactions.slice(
+        pageStartIndex,
+        pageStartIndex + transactionsPerPage
+    )
+
     const categoryItems = [
         { label: 'All categories', value: 'all' },
         ...categories.map(category => ({
@@ -230,12 +250,14 @@ export default function Transactions({ onLogTransaction, onEditTransaction } : T
 
         setDatePreset(preset)
         setIsDateFilterOpen(false)
+        setRequestedPage(1)
     }
 
     function clearDateFilter() {
         setDate(undefined)
         setDatePreset(null)
         setIsDateFilterOpen(false)
+        setRequestedPage(1)
     }
 
     const dateFilterLabel = datePreset === 'today'
@@ -273,7 +295,10 @@ export default function Transactions({ onLogTransaction, onEditTransaction } : T
                     <InputGroupAddon><SearchIcon /></InputGroupAddon>
                     <InputGroupInput
                         value={search}
-                        onChange={e => setSearch(e.target.value)}
+                        onChange={event => {
+                            setSearch(event.target.value)
+                            setRequestedPage(1)
+                        }}
                         placeholder='Search transactions...'
                         aria-label="Search transactions"
                     />
@@ -281,7 +306,10 @@ export default function Transactions({ onLogTransaction, onEditTransaction } : T
                 <Select
                     items={categoryItems}
                     value={selectedCategoryId}
-                    onValueChange={value => setSelectedCategoryId(value ?? 'all')}
+                    onValueChange={value => {
+                        setSelectedCategoryId(value ?? 'all')
+                        setRequestedPage(1)
+                    }}
                 >
                     <SelectTrigger
                         className="w-full data-[size=default]:h-10 sm:w-52 sm:data-[size=default]:h-8"
@@ -362,6 +390,7 @@ export default function Transactions({ onLogTransaction, onEditTransaction } : T
                             onSelect={range => {
                                 setDate(range)
                                 setDatePreset(range?.from ? 'custom' : null)
+                                setRequestedPage(1)
                             }}
                         />
                         {date?.from && (
@@ -397,7 +426,10 @@ export default function Transactions({ onLogTransaction, onEditTransaction } : T
                     <DropdownMenuContent className="w-44" align="end">
                         <DropdownMenuRadioGroup
                             value={sortOption}
-                            onValueChange={value => setSortOption(value as SortOption)}
+                            onValueChange={value => {
+                                setSortOption(value as SortOption)
+                                setRequestedPage(1)
+                            }}
                         >
                             <DropdownMenuLabel>Sort by</DropdownMenuLabel>
                             {(Object.entries(sortOptionLabels) as [SortOption, string][]).map(
@@ -427,67 +459,109 @@ export default function Transactions({ onLogTransaction, onEditTransaction } : T
                         <div className="flex min-h-52 items-center justify-center text-center">
                             <p className="text-sm text-muted-foreground">No matching transactions</p>
                         </div>
-                    ) :
-                <Table className="block table-fixed sm:table">
-                    <colgroup className="hidden sm:table-column-group">
-                        <col className="w-24 md:w-28" />
-                        <col />
-                        <col className="w-32 md:w-40" />
-                        <col className="w-28 md:w-32" />
-                    </colgroup>
-                    <TableHeader className="hidden sm:table-header-group">
-                        <TableRow>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Description</TableHead>
-                            <TableHead>Category</TableHead>
-                            <TableHead className="text-right">Amount</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody className="block sm:table-row-group">
-                        {filteredTransactions.map((transaction) => {
+                    ) : (
+                        <>
+                            <Table className="block table-fixed sm:table">
+                                <colgroup className="hidden sm:table-column-group">
+                                    <col className="w-24 md:w-28" />
+                                    <col />
+                                    <col className="w-32 md:w-40" />
+                                    <col className="w-28 md:w-32" />
+                                </colgroup>
+                                <TableHeader className="hidden sm:table-header-group">
+                                    <TableRow>
+                                        <TableHead>Date</TableHead>
+                                        <TableHead>Description</TableHead>
+                                        <TableHead>Category</TableHead>
+                                        <TableHead className="text-right">Amount</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody className="block sm:table-row-group">
+                                    {paginatedTransactions.map(transaction => {
+                                        const category = categoryMap.get(transaction.categoryId)
+                                        const categoryGroup = transaction.type === 'income'
+                                            ? 'income'
+                                            : category?.bucket
 
-                            const category = categoryMap.get(transaction.categoryId)
-                            const categoryGroup = transaction.type === 'income'
-                                ? 'income'
-                                : category?.bucket
-
-                            return (
-                            <TableRow 
-                                key={transaction.id} 
-                                className="grid cursor-pointer grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-0.5 px-2 py-2.5 first:border-t transition-colors hover:bg-muted/50 focus-within:bg-muted/50 focus-within:outline-none focus-within:ring-2 focus-within:ring-inset focus-within:ring-ring sm:table-row sm:px-0 sm:py-0 sm:first:border-t-0"
-                                onClick={() => onEditTransaction(transaction)}
-                            >
-                                <TableCell className="col-start-2 row-start-2 block p-0 text-right text-[11px] font-normal text-muted-foreground sm:table-cell sm:p-2 sm:text-left sm:text-sm sm:font-medium sm:text-foreground">
-                                    {formatDate(transaction.date)}
-                                </TableCell>
-                                <TableCell className="col-start-1 row-start-1 block min-w-0 p-0 font-medium sm:table-cell sm:p-2 sm:font-normal" title={transaction.description}>
-                                    <p className="truncate">{transaction.description}</p>
-                                    <button
-                                        type="button"
-                                        className="sr-only"
-                                        onClick={event => {
-                                            event.stopPropagation()
-                                            onEditTransaction(transaction)
-                                        }}
-                                    >
-                                        Edit {transaction.description} transaction
-                                    </button>
-                                </TableCell>
-                                <TableCell className="col-start-1 row-start-2 block min-w-0 overflow-hidden p-0 sm:table-cell sm:p-2">
-                                    <p className="truncate text-xs text-muted-foreground sm:text-sm sm:text-foreground">
-                                        {category?.name}
-                                        <span className="ml-1 capitalize sm:hidden">· {categoryGroup}</span>
+                                        return (
+                                            <TableRow
+                                                key={transaction.id}
+                                                className="grid cursor-pointer grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-0.5 px-2 py-2.5 first:border-t transition-colors hover:bg-muted/50 focus-within:bg-muted/50 focus-within:outline-none focus-within:ring-2 focus-within:ring-inset focus-within:ring-ring sm:table-row sm:px-0 sm:py-0 sm:first:border-t-0"
+                                                onClick={() => onEditTransaction(transaction)}
+                                            >
+                                                <TableCell className="col-start-2 row-start-2 block p-0 text-right text-[11px] font-normal text-muted-foreground sm:table-cell sm:p-2 sm:text-left sm:text-sm sm:font-medium sm:text-foreground">
+                                                    {formatDate(transaction.date)}
+                                                </TableCell>
+                                                <TableCell className="col-start-1 row-start-1 block min-w-0 p-0 font-medium sm:table-cell sm:p-2 sm:font-normal" title={transaction.description}>
+                                                    <p className="truncate">{transaction.description}</p>
+                                                    <button
+                                                        type="button"
+                                                        className="sr-only"
+                                                        onClick={event => {
+                                                            event.stopPropagation()
+                                                            onEditTransaction(transaction)
+                                                        }}
+                                                    >
+                                                        Edit {transaction.description} transaction
+                                                    </button>
+                                                </TableCell>
+                                                <TableCell className="col-start-1 row-start-2 block min-w-0 overflow-hidden p-0 sm:table-cell sm:p-2">
+                                                    <p className="truncate text-xs text-muted-foreground sm:text-sm sm:text-foreground">
+                                                        {category?.name}
+                                                        <span className="ml-1 capitalize sm:hidden">· {categoryGroup}</span>
+                                                    </p>
+                                                    <p className="hidden capitalize text-xs text-muted-foreground sm:block">{categoryGroup}</p>
+                                                </TableCell>
+                                                <TableCell className="col-start-2 row-start-1 block p-0 text-right font-medium tabular-nums sm:table-cell sm:p-2 sm:font-normal">
+                                                    {formatMoney(transaction.amountCents)}
+                                                </TableCell>
+                                            </TableRow>
+                                        )
+                                    })}
+                                </TableBody>
+                            </Table>
+                            {totalPages > 1 && (
+                                <nav
+                                    className="mt-3 flex items-center justify-between gap-3 border-t pt-3"
+                                    aria-label="Transaction pages"
+                                >
+                                    <p className="text-xs tabular-nums text-muted-foreground">
+                                        {pageStartIndex + 1}–{Math.min(
+                                            pageStartIndex + transactionsPerPage,
+                                            filteredTransactions.length
+                                        )} of {filteredTransactions.length}
                                     </p>
-                                    <p className="hidden capitalize text-xs text-muted-foreground sm:block">{categoryGroup}</p>
-                                </TableCell>
-                                <TableCell className="col-start-2 row-start-1 block p-0 text-right font-medium tabular-nums sm:table-cell sm:p-2 sm:font-normal">
-                                    {formatMoney(transaction.amountCents)}
-                                </TableCell>
-                            </TableRow>
-                        )
-                        })}
-                    </TableBody>
-                </Table>}
+                                    <div className="flex items-center gap-1">
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon-sm"
+                                            className="size-8 bg-transparent hover:bg-transparent hover:text-muted-foreground dark:hover:bg-transparent"
+                                            onClick={() => setRequestedPage(currentPage - 1)}
+                                            disabled={currentPage === 1}
+                                            aria-label="Previous transaction page"
+                                        >
+                                            <ChevronLeftIcon />
+                                        </Button>
+                                        <span className="min-w-12 text-center text-xs tabular-nums text-muted-foreground">
+                                            {currentPage} of {totalPages}
+                                        </span>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon-sm"
+                                            className="size-8 bg-transparent hover:bg-transparent hover:text-muted-foreground dark:hover:bg-transparent"
+                                            onClick={() => setRequestedPage(currentPage + 1)}
+                                            disabled={currentPage === totalPages}
+                                            aria-label="Next transaction page"
+                                        >
+                                            <ChevronRightIcon />
+                                        </Button>
+                                    </div>
+                                </nav>
+                            )}
+                        </>
+                    )}
 
             </CardContent>
         </Card>
