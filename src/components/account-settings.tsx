@@ -25,9 +25,18 @@ import { toast } from 'sonner'
 
 function getSyncDescription(
     isLoggedIn : boolean,
-    phase : typeof db.cloud.syncState.value.phase | undefined
+    phase : typeof db.cloud.syncState.value.phase | undefined,
+    license : typeof db.cloud.syncState.value.license | undefined
 ) {
     if (!isLoggedIn) return 'Your budget is stored on this device'
+
+    if (license === 'expired') {
+        return 'Cloud access expired — refresh after assigning a production seat'
+    }
+
+    if (license === 'deactivated') {
+        return 'Cloud access is deactivated for this account'
+    }
 
     if (!phase || phase === 'initial' || phase === 'not-in-sync') {
         return 'Checking cloud sync status…'
@@ -64,7 +73,12 @@ export default function AccountSettings() {
     const isSyncInProgress = isSyncing
         || syncState?.phase === 'pushing'
         || syncState?.phase === 'pulling'
-    const syncDescription = getSyncDescription(isLoggedIn, syncState?.phase)
+    const licenseStatus = syncState?.license ?? user?.license?.status
+    const syncDescription = getSyncDescription(
+        isLoggedIn,
+        syncState?.phase,
+        licenseStatus
+    )
 
     async function handleLogout() {
         setIsLoggingOut(true)
@@ -102,9 +116,12 @@ export default function AccountSettings() {
         setIsSyncing(true)
 
         try {
+            await db.cloud.login()
             await db.cloud.sync({ wait: true, purpose: 'pull' })
             toast.success('Budget is up to date')
         } catch (error) {
+            if (isUserCancellation(error)) return
+
             console.error('failed to sync budget', error)
             toast.error('Couldn’t sync budget. Your data is still on this device.')
         } finally {
