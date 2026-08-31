@@ -23,6 +23,31 @@ import {
 } from '@/components/ui/alert-dialog'
 import { toast } from 'sonner'
 
+function getSyncDescription(
+    isLoggedIn : boolean,
+    phase : typeof db.cloud.syncState.value.phase | undefined
+) {
+    if (!isLoggedIn) return 'Your budget is stored on this device'
+
+    if (!phase || phase === 'initial' || phase === 'not-in-sync') {
+        return 'Checking cloud sync status…'
+    }
+
+    if (phase === 'pushing' || phase === 'pulling') {
+        return 'Syncing your budget…'
+    }
+
+    if (phase === 'in-sync') {
+        return 'Your budget is up to date across devices'
+    }
+
+    if (phase === 'offline') {
+        return 'Offline — changes will sync when you reconnect'
+    }
+
+    return 'Cloud sync failed — your data is still stored on this device'
+}
+
 function isUserCancellation(error : unknown) {
     return error instanceof Dexie.AbortError
         || (error instanceof Error && error.message.includes('User cancelled'))
@@ -30,9 +55,16 @@ function isUserCancellation(error : unknown) {
 
 export default function AccountSettings() {
     const user = useObservable(db.cloud.currentUser)
+    const syncState = useObservable(db.cloud.syncState)
     const [isLogoutOpen, setIsLogoutOpen] = useState(false)
     const [isLoggingOut, setIsLoggingOut] = useState(false)
     const [isLoggingIn, setIsLoggingIn] = useState(false)
+    const [isSyncing, setIsSyncing] = useState(false)
+    const isLoggedIn = Boolean(user?.isLoggedIn)
+    const isSyncInProgress = isSyncing
+        || syncState?.phase === 'pushing'
+        || syncState?.phase === 'pulling'
+    const syncDescription = getSyncDescription(isLoggedIn, syncState?.phase)
 
     async function handleLogout() {
         setIsLoggingOut(true)
@@ -55,6 +87,7 @@ export default function AccountSettings() {
 
         try {
             await db.cloud.login()
+            await db.cloud.sync({ wait: true, purpose: 'pull' })
         } catch (error) {
             if (isUserCancellation(error)) return
 
@@ -65,17 +98,29 @@ export default function AccountSettings() {
         }
     }
 
+    async function handleSync() {
+        setIsSyncing(true)
+
+        try {
+            await db.cloud.sync({ wait: true, purpose: 'pull' })
+            toast.success('Budget is up to date')
+        } catch (error) {
+            console.error('failed to sync budget', error)
+            toast.error('Couldn’t sync budget. Your data is still on this device.')
+        } finally {
+            setIsSyncing(false)
+        }
+    }
+
     return (
         <Card>
             <CardHeader>
                 <CardTitle>Account</CardTitle>
-                <CardDescription>
-                    {user?.isLoggedIn
-                        ? 'Your budget is synced across devices'
-                        : 'Your budget is stored on this device'}
+                <CardDescription aria-live="polite">
+                    {syncDescription}
                 </CardDescription>
                 <CardAction>
-                    {user?.isLoggedIn ? (
+                    {isLoggedIn ? (
                         <Button
                             type="button"
                             variant="outline"
@@ -98,11 +143,20 @@ export default function AccountSettings() {
                 </CardAction>
             </CardHeader>
 
-            {user?.isLoggedIn && (
-                <CardContent>
-                    <p className="text-sm text-muted-foreground">
-                        {user.email ?? user.userId}
+            {isLoggedIn && (
+                <CardContent className="flex flex-wrap items-center justify-between gap-3">
+                    <p className="min-w-0 truncate text-sm text-muted-foreground">
+                        {user?.email ?? user?.userId}
                     </p>
+                    <Button
+                        type="button"
+                        variant="secondary"
+                        className="h-10 px-4 sm:h-8"
+                        disabled={isSyncInProgress}
+                        onClick={handleSync}
+                    >
+                        {isSyncInProgress ? 'Syncing…' : 'Sync now'}
+                    </Button>
                 </CardContent>
             )}
             <AlertDialog
