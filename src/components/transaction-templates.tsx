@@ -163,7 +163,7 @@ const isLoading = liveData === null
                                 const category = categories.find(
                                     category => category.id === template.categoryId
                                 )
-    
+
                                 return (
                                     <li
                                         className="flex items-center justify-between gap-3 px-3 py-2.5"
@@ -183,7 +183,7 @@ const isLoading = liveData === null
                                                 type="button"
                                                 variant="destructive"
                                                 size="icon-sm"
-                                                className="size-9 !bg-transparent hover:!bg-transparent sm:size-7 dark:!bg-transparent dark:hover:!bg-transparent"
+                                                className="size-9 sm:size-7"
                                                 onClick={() => handleDelete(template.id)}
                                                 disabled={deletingId === template.id}
                                                 aria-label={`Delete ${template.name}`}

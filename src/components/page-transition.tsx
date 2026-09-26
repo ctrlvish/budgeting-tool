@@ -10,7 +10,7 @@ const PageTransition = forwardRef<HTMLDivElement, PageTransitionProps>(
         return (
             <motion.div
                 ref={ref}
-                className="absolute inset-0 overflow-y-auto bg-background"
+                className="absolute inset-0 overflow-y-auto bg-background pb-[calc(env(safe-area-inset-bottom)+5.5rem)] sm:pb-0"
                 initial={{ opacity: 0, filter: 'blur(1px)' }}
                 animate={{ opacity: 1, filter: 'blur(0px)' }}
                 exit={{ opacity: 0, filter: 'blur(1px)' }}

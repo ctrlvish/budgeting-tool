@@ -536,7 +536,7 @@ export default function Transactions({ onLogTransaction, onEditTransaction } : T
                                             type="button"
                                             variant="ghost"
                                             size="icon-sm"
-                                            className="size-8 bg-transparent hover:bg-transparent hover:text-muted-foreground dark:hover:bg-transparent"
+                                            className="size-8"
                                             onClick={() => setRequestedPage(currentPage - 1)}
                                             disabled={currentPage === 1}
                                             aria-label="Previous transaction page"
@@ -550,7 +550,7 @@ export default function Transactions({ onLogTransaction, onEditTransaction } : T
                                             type="button"
                                             variant="ghost"
                                             size="icon-sm"
-                                            className="size-8 bg-transparent hover:bg-transparent hover:text-muted-foreground dark:hover:bg-transparent"
+                                            className="size-8"
                                             onClick={() => setRequestedPage(currentPage + 1)}
                                             disabled={currentPage === totalPages}
                                             aria-label="Next transaction page"

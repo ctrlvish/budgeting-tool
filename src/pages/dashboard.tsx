@@ -130,7 +130,6 @@ export default function Dashboard({ onLogTransaction } : DashboardProps) {
                                     </span>
                                 ))}
                             </div>
-                            {budget.remainingCents < 0 && <p className="mt-3 text-xs text-muted-foreground">Spending and reserved savings exceed logged income by {money(-budget.remainingCents)}.</p>}
                         </CardContent>
                     </Card>
 

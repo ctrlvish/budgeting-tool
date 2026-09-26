@@ -10,7 +10,7 @@ import {
 } from "./ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { toast } from "sonner"
 import { 
     Select,
@@ -43,10 +43,10 @@ import {
 import { useLiveQuery } from 'dexie-react-hooks'
 
 
-const categoryChipStyles = `
-    max-w-full truncate rounded-md bg-muted/50 px-2 py-1 text-xs text-muted-foreground
-    hover:bg-muted hover:text-foreground hover:cursor-pointer
-`
+const categoryChipStyles = buttonVariants({
+    size: 'xs',
+    className: 'max-w-full truncate'
+})
 
 const emptyCategories : Category[] = []
 

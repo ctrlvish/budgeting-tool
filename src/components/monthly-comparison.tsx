@@ -113,7 +113,7 @@ export default function MonthlyComparison({ data, year, onYearChange } : Monthly
                                                 <TableHead scope="row" className={rowHeading}>
                                                     <Button
                                                         variant="ghost"
-                                                        className="relative min-h-9 w-full whitespace-normal bg-transparent! px-5 text-sm"
+                                                        className="relative min-h-9 w-full whitespace-normal border-transparent! bg-transparent! px-5 text-sm"
                                                         aria-expanded={expanded}
                                                         aria-label={`${group.label} categories`}
                                                         onClick={event => {

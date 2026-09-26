@@ -1,6 +1,8 @@
-import { Button } from "./ui/button"
-import { NavLink } from "react-router"
+import { Button, buttonVariants } from "./ui/button"
+import { NavLink, useLocation } from "react-router"
 import { House, List, Plus, Settings } from "lucide-react"
+import { motion, useReducedMotion } from "motion/react"
+import { useState } from "react"
 import { ModeToggle } from "./mode-toggle"
 
 const navigationLinkStyles = `
@@ -12,7 +14,7 @@ const navigationLinkStyles = `
 
 function mobileNavigationLinkStyles({isActive} : {isActive : boolean}) {
     return `
-        flex min-h-14 items-center justify-center px-2
+        relative z-10 flex min-h-12 items-center justify-center rounded-full px-2
         transition-colors duration-150 hover:text-muted-foreground
         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset
         focus-visible:ring-ring
@@ -25,14 +27,20 @@ interface AppHeaderProps {
 }
 
 export default function AppHeader({ onLogTransaction } : AppHeaderProps) {
+    const { pathname } = useLocation()
+    const reduceMotion = useReducedMotion()
+    const [keyboardNavigation, setKeyboardNavigation] = useState(false)
+    const selectedPosition = pathname === '/transactions' ? 200 : 0
+    const hasSelection = pathname === '/' || pathname === '/transactions'
+
     return (
         <>
-            <header className="sticky top-0 z-40 w-full border-b border-border/50 bg-background/85 pt-[env(safe-area-inset-top)] backdrop-blur-xl">
+            <header className="sticky top-0 z-40 w-full border-b border-border/50 shrink-0 bg-background pt-[calc(env(safe-area-inset-top)+0.5rem)] sm:bg-background/85 sm:pt-[env(safe-area-inset-top)] sm:backdrop-blur-xl">
                 <div className="mx-auto grid h-14 w-full max-w-4xl grid-cols-[minmax(0,1fr)_auto] items-center px-4 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
                     <div className="flex h-full items-center">
                         <NavLink
                             to='/'
-                            className="font-heading text-sm font-medium text-foreground transition-colors duration-150 hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:font-normal sm:text-base"
+                            className="relative inline-flex font-heading text-sm font-medium text-foreground transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:font-normal sm:text-base"
                         >
                             budgeting tool
                         </NavLink>
@@ -52,7 +60,7 @@ export default function AppHeader({ onLogTransaction } : AppHeaderProps) {
                         <ModeToggle />
                         <NavLink
                             to="/settings"
-                            className="flex size-10 items-center justify-center rounded-full bg-transparent text-foreground transition-opacity duration-150 hover:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:hidden"
+                            className={buttonVariants({ variant: 'plain', size: 'icon', className: 'size-10 sm:hidden' })}
                             aria-label="Settings"
                         >
                             <Settings className="size-5" />
@@ -60,9 +68,9 @@ export default function AppHeader({ onLogTransaction } : AppHeaderProps) {
                         </NavLink>
                         <Button
                             type="button"
-                            variant="ghost"
+                            variant="plain"
                             size="icon-sm"
-                            className="hidden size-8 bg-transparent hover:bg-transparent hover:text-muted-foreground sm:flex dark:hover:bg-transparent"
+                            className="hidden size-8 sm:flex"
                             onClick={onLogTransaction}
                             aria-label="Log transaction"
                         >
@@ -73,18 +81,32 @@ export default function AppHeader({ onLogTransaction } : AppHeaderProps) {
             </header>
 
             <nav
-                className="order-last z-40 w-full shrink-0 border-t border-border/50 bg-background/85 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl sm:hidden"
+                className="fixed bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] left-1/2 z-40 w-[calc(100%-2rem)] max-w-80 -translate-x-1/2 rounded-full border border-foreground/10 bg-background/55 p-1 shadow-lg shadow-black/10 backdrop-blur-xl sm:hidden"
+                onPointerDownCapture={() => setKeyboardNavigation(false)}
+                onKeyDownCapture={() => setKeyboardNavigation(true)}
                 aria-label="Mobile navigation"
             >
-                <div className="mx-auto grid h-16 max-w-md grid-cols-3 px-2">
+                <div className="relative grid h-12 grid-cols-3">
+                    <motion.span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute inset-y-0 left-0 w-1/3 rounded-full bg-foreground/10 dark:bg-black/25"
+                        initial={false}
+                        animate={{
+                            transform: `translateX(${selectedPosition}%)`,
+                            opacity: hasSelection ? 1 : 0
+                        }}
+                        transition={reduceMotion || keyboardNavigation
+                            ? { duration: 0 }
+                            : { type: 'spring', duration: 0.4, bounce: 0.2 }}
+                    />
                     <NavLink to='/' className={mobileNavigationLinkStyles} end>
                         <House className="size-6" />
                         <span className="sr-only">Dashboard</span>
                     </NavLink>
                     <Button
                         type="button"
-                        variant="ghost"
-                        className="h-full w-full rounded-none bg-transparent text-foreground hover:bg-transparent hover:text-muted-foreground dark:hover:bg-transparent"
+                        variant="plain"
+                        className="relative z-10 size-10 self-center justify-self-center"
                         onClick={onLogTransaction}
                         aria-label="Log transaction"
                     >

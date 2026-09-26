@@ -26,9 +26,9 @@ export default function PeriodNavigation({
         <div className="flex items-center gap-0.5 sm:gap-1">
             <Button
                 type="button"
-                variant="ghost"
+                variant="plain"
                 size="icon-sm"
-                className="size-9 bg-transparent! hover:bg-transparent! hover:text-muted-foreground sm:size-7 dark:bg-transparent! dark:hover:bg-transparent!"
+                className="size-9 sm:size-7"
                 aria-label={previousLabel}
                 onClick={onPrevious}
             >
@@ -36,7 +36,7 @@ export default function PeriodNavigation({
             </Button>
             <Button
                 type="button"
-                variant="ghost"
+                variant="plain"
                 size="sm"
                 className="h-9 w-16 shrink-0 text-xs sm:h-7"
                 aria-label={resetLabel}
@@ -48,9 +48,9 @@ export default function PeriodNavigation({
             </Button>
             <Button
                 type="button"
-                variant="ghost"
+                variant="plain"
                 size="icon-sm"
-                className="size-9 bg-transparent! hover:bg-transparent! hover:text-muted-foreground sm:size-7 dark:bg-transparent! dark:hover:bg-transparent!"
+                className="size-9 sm:size-7"
                 aria-label={nextLabel}
                 disabled={disableNext}
                 onClick={onNext}

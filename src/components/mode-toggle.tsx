@@ -14,9 +14,9 @@ export function ModeToggle() {
   return (
     <Button
       type="button"
-      variant="ghost"
+      variant="plain"
       size="icon"
-      className="relative size-10 bg-transparent transition-[opacity,transform] hover:bg-transparent hover:opacity-70 dark:bg-transparent dark:hover:bg-transparent sm:size-8"
+      className="relative size-10 transition-[opacity,transform] sm:size-8"
       onClick={toggleTheme}
       aria-label="Toggle light and dark theme"
       title="Toggle light and dark theme"

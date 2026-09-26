@@ -16,6 +16,7 @@
     --primary: oklch(0.31 0.009 65);
     --primary-foreground: oklch(0.945 0.003 85);
     --secondary: oklch(0.915 0.003 85);
+    --button-background: oklch(0.965 0.003 85);
     --secondary-foreground: oklch(0.34 0.008 65);
     --muted: oklch(0.92 0.003 85);
     --muted-foreground: oklch(0.553 0.013 58.071);
@@ -41,6 +42,7 @@
     --primary: oklch(0.87 0.004 85);
     --primary-foreground: oklch(0.235 0.007 65);
     --secondary: oklch(0.268 0.007 34.298);
+    --button-background: var(--secondary);
     --secondary-foreground: oklch(0.84 0.004 85);
     --muted: oklch(0.268 0.007 34.298);
     --muted-foreground: oklch(0.709 0.01 56.259);

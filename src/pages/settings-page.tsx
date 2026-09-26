@@ -1,5 +1,6 @@
 import { BudgetSetup, TransactionTemplates, Categories, AccountSettings } from '../components'
 import { Info } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 interface SettingsProps {
     onOpenHowTo : () => void
@@ -12,14 +13,15 @@ export default function Settings({onOpenHowTo} : SettingsProps){
             <header className="space-y-1">
                 <div className="flex items-center justify-between gap-3">
                     <h1 className='font-heading text-2xl font-semibold tracking-tight sm:text-3xl'>Settings</h1>
-                    <button
+                    <Button
                         type="button"
-                        className="inline-flex cursor-pointer items-center gap-1 text-xs font-medium text-muted-foreground underline underline-offset-4 transition-colors duration-150 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        size="sm"
+                        variant="plain"
                         onClick={onOpenHowTo}
                     >
                         <Info className="size-3.5" />
                         How to use
-                    </button>
+                    </Button>
                 </div>
                 <p className='text-sm text-muted-foreground'>Manage your budget and categories</p>
             </header>
