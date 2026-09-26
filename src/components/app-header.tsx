@@ -35,7 +35,7 @@ export default function AppHeader({ onLogTransaction } : AppHeaderProps) {
 
     return (
         <>
-            <header className="sticky top-0 z-40 w-full border-b border-border/50 shrink-0 bg-background pt-[calc(env(safe-area-inset-top)+0.5rem)] sm:bg-background/85 sm:pt-[env(safe-area-inset-top)] sm:backdrop-blur-xl">
+            <header className="sticky top-0 z-40 w-full border-b border-border/50 shrink-0 isolate bg-background/85 backdrop-blur-xl pt-[calc(env(safe-area-inset-top)+1rem)] sm:pt-[env(safe-area-inset-top)]">
                 <div className="mx-auto grid h-14 w-full max-w-4xl grid-cols-[minmax(0,1fr)_auto] items-center px-4 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
                     <div className="flex h-full items-center">
                         <NavLink
