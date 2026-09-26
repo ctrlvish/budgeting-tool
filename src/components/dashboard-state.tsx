@@ -1,75 +1,40 @@
 import { Button } from "@/components/ui/button"
 import {
     Card,
-    CardAction,
-    CardContent,
-    CardHeader
+    CardContent
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 
-const chartBarHeights = [
-    '38%',
-    '56%',
-    '72%',
-    '48%',
-    '64%',
-    '82%',
-    '58%',
-    '76%',
-    '44%',
-    '68%',
-    '52%',
-    '74%'
-]
-
-function LoadingHeader() {
-    return (
-        <CardHeader>
-            <Skeleton className="h-5.5 w-32" />
-            <Skeleton className="h-5 w-20" />
-            <CardAction>
-                <Skeleton className="h-7 w-16" />
-            </CardAction>
-        </CardHeader>
-    )
-}
-
 export function DashboardLoading() {
     return (
-        <>
-            <Card size="sm" aria-busy="true" aria-label="Loading savings balance">
-                <CardContent className="flex items-end justify-between gap-4">
-                    <div className="grid gap-2">
-                        <Skeleton className="h-3 w-28" />
-                        <Skeleton className="h-9 w-40" />
-                    </div>
-                    <Skeleton className="h-8 w-32" />
+        <div className="grid min-w-0 gap-8" aria-busy="true" aria-label="Loading dashboard">
+            <Card>
+                <CardContent className="grid gap-4 py-4">
+                    <Skeleton className="h-4 w-28" />
+                    <Skeleton className="h-16 w-60 max-w-full" />
+                    <Skeleton className="h-3 w-48" />
+                    <Skeleton className="mt-4 h-6 w-full" />
                 </CardContent>
             </Card>
-            <Card aria-busy="true" aria-label="Loading monthly overview">
-                <LoadingHeader />
-                <CardContent className="grid h-56 content-start gap-4 pt-2 sm:h-64 sm:gap-5">
-                    {Array.from({length: 4}).map((_, index) => (
-                        <div className="grid gap-2" key={index}>
-                            <Skeleton className="h-3 w-24" />
-                            <Skeleton className="h-3.5 w-full rounded-full" />
-                        </div>
+            <div className="grid gap-4 sm:grid-cols-3">
+                {Array.from({ length: 3 }, (_, index) => (
+                    <Card key={index}>
+                        <CardContent className="grid gap-4">
+                            <Skeleton className="h-4 w-24" />
+                            <Skeleton className="h-9 w-32" />
+                            <Skeleton className="h-2 w-full" />
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+            <Card>
+                <CardContent className="grid gap-5 py-2">
+                    {Array.from({ length: 6 }, (_, index) => (
+                        <Skeleton key={index} className="h-5 w-full" />
                     ))}
                 </CardContent>
             </Card>
-            <Card aria-busy="true" aria-label="Loading yearly overview">
-                <LoadingHeader />
-                <CardContent className="flex h-56 items-end gap-1.5 pt-4 sm:h-64 sm:gap-2">
-                    {chartBarHeights.map((height, index) => (
-                        <Skeleton
-                            className="min-w-0 flex-1 rounded-t-md rounded-b-none"
-                            key={index}
-                            style={{height}}
-                        />
-                    ))}
-                </CardContent>
-            </Card>
-        </>
+        </div>
     )
 }
 

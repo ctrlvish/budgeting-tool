@@ -1,475 +1,176 @@
-import { useState, useMemo } from "react"
-import type { Transaction, Category } from '../types'
-import { db } from "@/lib/db"
-import { addMonths, format, isSameMonth, subMonths } from "date-fns"
-import { Maximize2Icon } from "lucide-react"
-import CategoryBreakdown from "@/components/category-breakdown"
-import {
-    DashboardError,
-    DashboardLoading
-} from "@/components/dashboard-state"
-import PeriodNavigation from "@/components/period-navigation"
-import YearlyBreakdown from "@/components/yearly-breakdown"
-import { getYearlyBreakdown } from "@/lib/yearly-breakdown"
-import { Button } from "@/components/ui/button"
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle
-} from "@/components/ui/dialog"
-import { 
-    Card,
-    CardAction,
-    CardHeader,
-    CardTitle,
-    CardDescription,
-    CardContent,
- } from "@/components/ui/card"
- import { useLiveQuery } from 'dexie-react-hooks'
+import { useMemo, useState } from 'react'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { addMonths, format, isSameMonth, startOfMonth, subMonths } from 'date-fns'
+import type { Category, Transaction } from '@/types'
+import { db } from '@/lib/db'
+import { getDashboardYear, getSpendingBudget } from '@/lib/dashboard-summary'
+import { DashboardError, DashboardLoading } from '@/components/dashboard-state'
+import PeriodNavigation from '@/components/period-navigation'
+import MonthlyComparison from '@/components/monthly-comparison'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 
 interface DashboardProps {
     onLogTransaction : (date : string) => void
 }
 
-interface MonthlyIncomeDescriptionProps {
-    incomeCents : number
-    monthLabel : string
-    onLogIncome : () => void
-}
-
 const emptyTransactions : Transaction[] = []
 const emptyCategories : Category[] = []
+const money = (cents : number) => new Intl.NumberFormat('en-AU', {
+    style: 'currency', currency: 'AUD'
+}).format(cents / 100)
+const availablePattern = 'repeating-linear-gradient(135deg, var(--muted), var(--muted) 3px, var(--card) 3px, var(--card) 6px)'
 
-const currencyFormatter = new Intl.NumberFormat('en-AU', {
-    style: 'currency',
-    currency: 'AUD'
-})
-
-function formatMoney(amountCents : number) {
-    return currencyFormatter.format(amountCents / 100)
-}
-
-function formatSignedMoney(amountCents : number) {
-    const absoluteAmount = formatMoney(Math.abs(amountCents))
-
-    if (amountCents === 0) return absoluteAmount
-
-    return `${amountCents > 0 ? '+' : '-'}${absoluteAmount}`
-}
-
-function MonthlyIncomeDescription({
-    incomeCents,
-    monthLabel,
-    onLogIncome
-} : MonthlyIncomeDescriptionProps) {
-    return (
-        <>
-            <span>{monthLabel}</span>
-            {incomeCents > 0 ? (
-                <span className="basis-full">
-                    Income{' '}
-                    <span className="font-mono font-medium tabular-nums text-foreground/70">
-                        {formatMoney(incomeCents)}
-                    </span>
-                </span>
-            ) : (
-                <button
-                    type="button"
-                    className="basis-full cursor-pointer bg-transparent! text-left underline underline-offset-4 transition-colors hover:bg-transparent! hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    onClick={onLogIncome}
-                >
-                    Log income
-                </button>
-            )}
-        </>
-    )
-}
-
-
-export default function Dashboard({ onLogTransaction } : DashboardProps){
+export default function Dashboard({ onLogTransaction } : DashboardProps) {
     const [loadAttempt, setLoadAttempt] = useState(0)
-    const [selectedMonth, setSelectedMonth] = useState(() => new Date())
+    const [selectedMonth, setSelectedMonth] = useState(() => startOfMonth(new Date()))
     const [selectedYear, setSelectedYear] = useState(() => new Date().getFullYear())
-    const [isMonthlyOverviewExpanded, setIsMonthlyOverviewExpanded] = useState(false)
-    const monthKey = `${selectedMonth.getFullYear()}-${String(selectedMonth.getMonth() + 1).padStart(2, "0")}`
-
     const liveData = useLiveQuery(async () => {
         try {
-            const [transactions, categories, budgetSetting] = await Promise.all([
+            const [transactions, categories, settings] = await Promise.all([
                 db.transactions.toArray(),
                 db.categories.toArray(),
                 db.budgetSettings.get('#budget-settings')
             ])
-
-            return {
-                transactions,
-                categories,
-                startingSavingsBalanceCents:
-                    budgetSetting?.startingSavingsBalanceCents ?? 0,
-                error: ''
-            }
+            return { transactions, categories, settings, error: false }
         } catch (error) {
-            console.error('failed to load dashboard data', error)
-
-            return {
-                transactions: emptyTransactions,
-                categories: emptyCategories,
-                startingSavingsBalanceCents: 0,
-                error: 'Could not load dashboard'
-            }
+            console.error('Failed to load dashboard data', error)
+            return { transactions: emptyTransactions, categories: emptyCategories, settings: undefined, error: true }
         }
     }, [loadAttempt], null)
-
     const transactions = liveData?.transactions ?? emptyTransactions
     const categories = liveData?.categories ?? emptyCategories
-    const startingSavingsBalanceCents =
-        liveData?.startingSavingsBalanceCents ?? 0
-    const error = liveData?.error ?? ''
-    const isLoading = liveData === null
+    const overviewYear = selectedMonth.getFullYear()
+    const overview = useMemo(() => getDashboardYear(transactions, categories, overviewYear), [transactions, categories, overviewYear])
+    const comparison = useMemo(() => getDashboardYear(transactions, categories, selectedYear), [transactions, categories, selectedYear])
+    const month = overview.months[selectedMonth.getMonth()]
+    const budget = getSpendingBudget(month, liveData?.settings)
+    const hasIncome = month.incomeCents > 0
+    const totalSavings = useMemo(() => {
+        const categoryMap = new Map(categories.map(category => [category.id, category]))
+        return transactions.reduce((balance, transaction) => {
+            if (transaction.type === 'income') return balance + transaction.amountCents
+            return categoryMap.get(transaction.categoryId)?.bucket === 'savings' ? balance : balance - transaction.amountCents
+        }, liveData?.settings?.startingSavingsBalanceCents ?? 0)
+    }, [transactions, categories, liveData?.settings?.startingSavingsBalanceCents])
+    const buckets = [
+        { id: 'needs', name: 'Needs', amount: month.needs, target: budget.needsTarget, ratio: budget.ratios.needs, color: 'var(--bucket-needs)' },
+        { id: 'wants', name: 'Wants', amount: month.wants, target: budget.wantsTarget, ratio: budget.ratios.wants, color: 'var(--bucket-wants)' },
+        { id: 'savings', name: 'Savings', amount: month.savings, target: budget.savingsTarget, ratio: budget.ratios.savings, color: 'var(--bucket-savings)' }
+    ]
+    const segments = [
+        ...buckets.map(bucket => ({ ...bucket, amount: bucket.id === 'savings' ? budget.reservedSavings : bucket.amount })),
+        { id: 'uncategorized', name: 'Uncategorized', amount: month.uncategorized, color: 'var(--muted-foreground)' },
+        { id: 'available', name: 'Available', amount: Math.max(0, budget.remainingCents), color: availablePattern }
+    ].filter(segment => segment.amount > 0)
 
-    function handleRetry() {
-        setLoadAttempt(attempt => attempt + 1)
+    function selectMonth(date : Date) {
+        setSelectedMonth(startOfMonth(date))
     }
-
-
-    const monthFilteredTransactions = useMemo(() => {
-        return transactions.filter(transaction =>
-            transaction.date.startsWith(monthKey)
-        )
-    }, [transactions, monthKey])
-
-    const monthlyIncomeCents = useMemo(() => {
-        return monthFilteredTransactions.filter(transaction => 
-            transaction.type === 'income'
-        ).reduce((acc, curr) => acc + curr.amountCents, 0)
-    }, [monthFilteredTransactions])
-
-    const categoryMap = useMemo(() => {
-        const map = new Map<string, Category>()
-
-        for (const category of categories) {
-            map.set(category.id, category)
-        }
-
-        return map
-    }, [categories])
-
-    const savingsChangeCents = useMemo(() => {
-        return transactions.reduce((total, transaction) => {
-            if (transaction.type === 'income') {
-                return total + transaction.amountCents
-            }
-
-            const bucket = categoryMap.get(transaction.categoryId)?.bucket
-
-            if (bucket === 'needs' || bucket === 'wants') {
-                return total - transaction.amountCents
-            }
-
-            return total
-        }, 0)
-    }, [transactions, categoryMap])
-
-    const currentSavingsBalanceCents = startingSavingsBalanceCents + savingsChangeCents
-
-
-    const monthlyNeedsCents = useMemo(() => {
-        return monthFilteredTransactions.filter(transaction => {
-            const category = categoryMap.get(transaction.categoryId)
-            return transaction.type === 'expense' 
-                && category?.bucket === 'needs'
-        }).reduce((total, transaction) => {
-            return total + transaction.amountCents
-        }, 0)
-    }, [monthFilteredTransactions, categoryMap])
-
-    const monthlyWantsCents = useMemo(() => {
-        return monthFilteredTransactions.filter(transaction => {
-            const category = categoryMap.get(transaction.categoryId)
-            return transaction.type === 'expense' 
-                && category?.bucket === 'wants'
-        }).reduce((total, transaction) => {
-            return total + transaction.amountCents
-        }, 0)
-    }, [monthFilteredTransactions, categoryMap])
-
-    const monthlyExplicitSavingsCents = useMemo(() => {
-        return monthFilteredTransactions.filter(transaction => {
-            const category = categoryMap.get(transaction.categoryId)
-            return transaction.type === 'expense' 
-                && category?.bucket === 'savings'
-        }).reduce((total, transaction) => {
-            return total + transaction.amountCents
-        }, 0)
-    }, [monthFilteredTransactions, categoryMap])
-
-    const leftoverCents = monthlyIncomeCents - monthlyNeedsCents - monthlyWantsCents - monthlyExplicitSavingsCents
-
-    const monthlySavingsCents = monthlyExplicitSavingsCents + leftoverCents
-    
-    function calculatePercentage(amountCents: number, incomeCents: number) {
-        if (incomeCents <= 0) return null
-
-        return (amountCents / incomeCents) * 100
-    }
-
-    const monthlyNeedsPercentage = calculatePercentage(monthlyNeedsCents, monthlyIncomeCents)
-    const monthlyWantsPercentage = calculatePercentage(monthlyWantsCents, monthlyIncomeCents)
-    const monthlySavingsPercentage = calculatePercentage(monthlySavingsCents, monthlyIncomeCents)
-
-    const monthlyCategoryTotals = useMemo(() => {
-        const totals = new Map<string, number>()
-
-        for (const transaction of monthFilteredTransactions){
-            if (transaction.type !== 'expense') continue
-
-            const previousTotal = totals.get(transaction.categoryId) ?? 0
-
-            totals.set(
-                transaction.categoryId, 
-                previousTotal + transaction.amountCents
-            )
-        }
-        return totals
-    }, [monthFilteredTransactions])
-
-    const monthlyCategoryEntries = Array.from(
-        monthlyCategoryTotals.entries()
-    )
-
-    const monthlyCategoryRows = monthlyCategoryEntries.flatMap(
-        ([categoryId, amountCents]) => {
-            const category = categoryMap.get(categoryId)
-
-            if (!category?.bucket) return []
-
-            return [{
-                id: categoryId,
-                name: category.name,
-                bucket: category.bucket,
-                amountCents,
-                percentage: calculatePercentage(
-                    amountCents,
-                    monthlyIncomeCents
-                )
-            }]
-        }
-    )
-
-    const sortedMonthlyCategoryRows = [...monthlyCategoryRows]
-        .sort((a, b) => b.amountCents - a.amountCents)
-
-    const monthlyCategoriesByBucket = {
-        needs: sortedMonthlyCategoryRows.filter(
-            row => row.bucket === 'needs'
-        ),
-        wants: sortedMonthlyCategoryRows.filter(
-            row => row.bucket === 'wants'
-        ),
-        savings: sortedMonthlyCategoryRows.filter(
-            row => row.bucket === 'savings'
-        )
-    }
-
-    if (leftoverCents !== 0) {
-        monthlyCategoriesByBucket.savings.push({
-            id: 'leftover',
-            name: leftoverCents > 0
-                ? 'Leftover'
-                : 'Drawn from savings',
-            bucket: 'savings',
-            amountCents: leftoverCents,
-            percentage: calculatePercentage(
-                leftoverCents,
-                monthlyIncomeCents
-            )
-        })
-    }
-
-    const monthLabel = format(selectedMonth, 'MMMM yyyy')
-    const isCurrentMonth = isSameMonth(selectedMonth, new Date())
-    const currentYear = new Date().getFullYear()
-
-    const yearlyData = useMemo(() => {
-        return getYearlyBreakdown(transactions, categoryMap, selectedYear)
-    }, [transactions, categoryMap, selectedYear])
-
-    const monthlyBucketSections = [
-        {
-            id: 'needs',
-            label: 'Needs',
-            percentage: monthlyNeedsPercentage,
-            rows: monthlyCategoriesByBucket.needs
-        },
-        {
-            id: 'wants',
-            label: 'Wants',
-            percentage: monthlyWantsPercentage,
-            rows: monthlyCategoriesByBucket.wants
-        },
-        {
-            id: 'savings',
-            label: 'Savings',
-            percentage: monthlySavingsPercentage,
-            rows: monthlyCategoriesByBucket.savings
-        }
-    ].filter(section => section.rows.length > 0)
-
-    function handleYearlyMonthSelect(monthIndex : number) {
-        setSelectedMonth(new Date(selectedYear, monthIndex, 1))
-        setIsMonthlyOverviewExpanded(true)
-    }
-
-    function handleLogIncome() {
-        setIsMonthlyOverviewExpanded(false)
-        onLogTransaction(format(selectedMonth, 'yyyy-MM-dd'))
-    }
-
 
     return (
-    <main className='mx-auto grid w-full max-w-4xl gap-4 px-3 py-6 sm:gap-6 sm:px-4 sm:py-10'>
-        <header className="space-y-1">
-            <h1 className='font-heading text-2xl font-semibold tracking-tight sm:text-3xl'>Dashboard</h1>
-            <p className='text-sm text-muted-foreground'>Your budget at a glance</p>
-        </header>
-        {isLoading ? (
-            <DashboardLoading />
-        ) : error ? (
-            <DashboardError onRetry={handleRetry} />
-        ) : (
-            <>
-                <Card className='gap-1' aria-label="Total Savings">
-                    <CardHeader>
-                        <CardTitle>Total Savings</CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                        <div>
-                            <p className={`font-heading text-3xl tracking-tight tabular-nums ${
-                                currentSavingsBalanceCents < 0
-                                    ? 'text-destructive'
-                                    : 'text-foreground'
-                            }`}>
-                                {formatMoney(currentSavingsBalanceCents)}
-                            </p>
-                        </div>
-                        <div className="grid gap-0.5 text-xs text-muted-foreground/85 sm:text-right">
-                            <p>
-                                Started at{' '}
-                                <span className="tabular-nums text-foreground/65">
-                                    {formatMoney(startingSavingsBalanceCents)}
-                                </span>
-                            </p>
-                            <p>
-                                <span className="tabular-nums text-foreground/65">
-                                    {formatSignedMoney(savingsChangeCents)}
-                                </span>
-                                {' '}from logged savings
-                            </p>
-                        </div>
-                    </CardContent>
-                </Card>
-                <div>
-                    <Card className="min-w-0">
-                        <CardHeader className={isMonthlyOverviewExpanded ? "invisible" : undefined}>
-                            <CardTitle>Monthly Overview</CardTitle>
-                            <CardDescription className="flex flex-wrap items-baseline gap-x-1.5">
-                                <MonthlyIncomeDescription
-                                    incomeCents={monthlyIncomeCents}
-                                    monthLabel={monthLabel}
-                                    onLogIncome={handleLogIncome}
-                                />
-                            </CardDescription>
-                            <CardAction>
-                                <div className="flex items-center gap-0.5 sm:gap-1">
-                                    <PeriodNavigation
-                                        disableNext={isCurrentMonth}
-                                        nextLabel="Next month"
-                                        previousLabel="Previous month"
-                                        onNext={() => {
-                                            setSelectedMonth(month => addMonths(month, 1))
-                                        }}
-                                        onPrevious={() => {
-                                            setSelectedMonth(month => subMonths(month, 1))
-                                        }}
-                                        onReset={() => setSelectedMonth(new Date())}
-                                        resetLabel="Reset to current month"
-                                        showReset={!isCurrentMonth}
-                                    />
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon-sm"
-                                        className="size-9 !bg-transparent hover:!bg-transparent hover:text-muted-foreground sm:size-7 dark:!bg-transparent dark:hover:!bg-transparent"
-                                        aria-label="Expand monthly overview"
-                                        onClick={() => setIsMonthlyOverviewExpanded(true)}
-                                    >
-                                        <Maximize2Icon />
-                                    </Button>
+        <main className="mx-auto grid w-full max-w-6xl gap-8 px-3 py-6 sm:px-6 sm:py-10">
+            <header className="flex flex-wrap items-center justify-between gap-3">
+                <h1 className="font-heading text-2xl font-medium tracking-tight">Dashboard</h1>
+                <div className="flex flex-wrap items-center gap-2 text-sm">
+                    <span>{format(selectedMonth, 'MMMM yyyy')}</span>
+                    <PeriodNavigation
+                        disableNext={selectedMonth >= startOfMonth(new Date())}
+                        nextLabel="Next month"
+                        previousLabel="Previous month"
+                        onNext={() => selectMonth(addMonths(selectedMonth, 1))}
+                        onPrevious={() => selectMonth(subMonths(selectedMonth, 1))}
+                        onReset={() => selectMonth(new Date())}
+                        resetLabel="Reset to current month"
+                        showReset={!isSameMonth(selectedMonth, new Date())}
+                    />
+                </div>
+            </header>
+            {liveData === null ? <DashboardLoading /> : liveData.error ? (
+                <DashboardError onRetry={() => setLoadAttempt(attempt => attempt + 1)} />
+            ) : (
+                <>
+                    <Card className="min-w-0 [--card-spacing:--spacing(5)] sm:[--card-spacing:--spacing(7)]">
+                        <CardContent>
+                            <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-center">
+                                <div className="min-w-0">
+                                    <h2 className="text-sm text-muted-foreground">{budget.remainingCents < 0 ? 'Over budget' : 'Left to spend'}</h2>
+                                    <p className="my-2 break-words font-heading text-5xl leading-tight tracking-tighter tabular-nums sm:text-6xl lg:text-7xl">
+                                        {hasIncome || month.hasActivity ? money(budget.remainingCents) : '—'}
+                                    </p>
+                                    {hasIncome ? (
+                                        <p className="text-xs text-muted-foreground">
+                                            After reserving {money(budget.reservedSavings)} for savings
+                                        </p>
+                                    ) : (
+                                        <Button
+                                            variant="link"
+                                            className="h-auto max-w-full justify-start p-0 text-xs font-normal whitespace-normal text-muted-foreground underline underline-offset-4 hover:text-foreground"
+                                            onClick={() => onLogTransaction(format(isSameMonth(selectedMonth, new Date()) ? new Date() : selectedMonth, 'yyyy-MM-dd'))}
+                                        >
+                                            Log income to see your budget
+                                        </Button>
+                                    )}
                                 </div>
-                            </CardAction>
-                        </CardHeader>
-                        <CardContent className={isMonthlyOverviewExpanded ? "invisible" : undefined}>
-                            <CategoryBreakdown
-                                hasIncome={monthlyIncomeCents > 0}
-                                sections={monthlyBucketSections}
-                            />
+                                <dl className="grid gap-3 text-sm sm:min-w-56">
+                                    {[['Income', month.incomeCents], ['Spent', month.spentCents], ['Savings target', budget.savingsTarget]].map(([label, value]) => (
+                                        <div className="flex justify-between gap-6" key={label}><dt className="text-muted-foreground">{label}</dt><dd className="tabular-nums">{money(Number(value))}</dd></div>
+                                    ))}
+                                </dl>
+                            </div>
+                            <div className="mt-7 flex h-6 gap-0.5 overflow-hidden rounded-sm bg-muted" role="img" aria-label={segments.length ? segments.map(segment => `${segment.name}: ${money(segment.amount)}`).join(', ') : 'No income or spending logged'}>
+                                {segments.map(segment => <span key={segment.id} style={{ flex: segment.amount, background: segment.color }} />)}
+                            </div>
+                            <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-xs text-muted-foreground">
+                                {segments.map(segment => (
+                                    <span className="flex items-center gap-1.5" key={segment.id}>
+                                        <i aria-hidden="true" className="size-2.5 rounded-xs" style={{ background: segment.color }} />
+                                        {segment.name}
+                                        <b className="font-medium text-foreground">{hasIncome ? `${Math.round(segment.amount / month.incomeCents * 1000) / 10}%` : money(segment.amount)}</b>
+                                    </span>
+                                ))}
+                            </div>
+                            {budget.remainingCents < 0 && <p className="mt-3 text-xs text-muted-foreground">Spending and reserved savings exceed logged income by {money(-budget.remainingCents)}.</p>}
                         </CardContent>
                     </Card>
-                </div>
-                <YearlyBreakdown
-                    data={yearlyData}
-                    disableNext={selectedYear >= currentYear}
-                    year={selectedYear}
-                    onNext={() => setSelectedYear(year => year + 1)}
-                    onPrevious={() => setSelectedYear(year => year - 1)}
-                    onReset={() => setSelectedYear(currentYear)}
-                    onMonthSelect={handleYearlyMonthSelect}
-                />
-                <Dialog
-                    open={isMonthlyOverviewExpanded}
-                    onOpenChange={setIsMonthlyOverviewExpanded}
-                >
-                    <DialogContent className="grid h-3/4 w-10/12 grid-rows-[auto_minmax(0,1fr)] gap-0 p-0 sm:max-h-160 sm:max-w-xl">
-                        <DialogHeader className="border-b p-4 sm:p-6">
-                            <DialogTitle className="pr-8 text-lg">
-                                Monthly Overview
-                            </DialogTitle>
-                            <div className="flex items-center justify-between gap-3">
-                                <DialogDescription className="flex flex-wrap items-baseline gap-x-1.5">
-                                    <MonthlyIncomeDescription
-                                        incomeCents={monthlyIncomeCents}
-                                        monthLabel={monthLabel}
-                                        onLogIncome={handleLogIncome}
-                                    />
-                                </DialogDescription>
-                                <PeriodNavigation
-                                    disableNext={isCurrentMonth}
-                                    nextLabel="Next month"
-                                    previousLabel="Previous month"
-                                    onNext={() => {
-                                        setSelectedMonth(month => addMonths(month, 1))
-                                    }}
-                                    onPrevious={() => {
-                                        setSelectedMonth(month => subMonths(month, 1))
-                                    }}
-                                    onReset={() => setSelectedMonth(new Date())}
-                                    resetLabel="Reset to current month"
-                                    showReset={!isCurrentMonth}
-                                />
-                            </div>
-                        </DialogHeader>
-                        <div className="min-h-0 p-4 sm:p-6">
-                            <CategoryBreakdown
-                                expanded
-                                hasIncome={monthlyIncomeCents > 0}
-                                sections={monthlyBucketSections}
-                            />
+
+                    <section aria-labelledby="distribution-heading" className="min-w-0">
+                        <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+                            <h2 id="distribution-heading" className="text-base font-medium">Current distribution</h2>
                         </div>
-                    </DialogContent>
-                </Dialog>
-            </>
-        )}
-    </main>)
+                        <Card className="grid gap-0 divide-y py-0 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+                            {buckets.map(bucket => {
+                                const isSavings = bucket.id === 'savings'
+                                const left = bucket.target - bucket.amount
+                                const amount = isSavings ? budget.reservedSavings : Math.abs(left)
+                                const progress = bucket.target > 0 ? Math.min(100, bucket.amount / bucket.target * 100) : bucket.amount > 0 ? 100 : 0
+                                return (
+                                    <CardContent key={bucket.id} className="min-w-0 py-3 sm:py-4">
+                                            <div className="mb-2 flex items-center justify-between gap-2 text-xs">
+                                                <h3 className="font-medium">{bucket.name}</h3>
+                                                <span className="text-muted-foreground">{bucket.ratio}% target</span>
+                                            </div>
+                                            <div className="flex flex-wrap items-baseline gap-2">
+                                                <span className={`break-all font-heading text-xl tracking-tight tabular-nums ${!isSavings && left < 0 ? 'text-destructive' : ''}`}>{money(amount)}</span>
+                                                <span className="text-xs text-muted-foreground">{isSavings ? 'reserved' : left < 0 ? 'over' : 'left'}</span>
+                                            </div>
+                                            <div className="mb-2 mt-2 h-1 overflow-hidden rounded-xs bg-muted" role="img" aria-label={`${bucket.name}: ${money(bucket.amount)} ${isSavings ? 'contributed' : 'spent'} of ${money(bucket.target)} target`}>
+                                                <span className="block h-full" style={{ width: `${progress}%`, background: bucket.color }} />
+                                            </div>
+                                            <div className="flex flex-wrap justify-between gap-1 text-xs text-muted-foreground"><span>{money(bucket.amount)} {isSavings ? 'contributed' : 'spent'}</span><span>of {money(bucket.target)}</span></div>
+                                    </CardContent>
+                                )
+                            })}
+                        </Card>
+                        <div className="mt-4 flex flex-wrap justify-between gap-2 text-xs text-muted-foreground">
+                            <span>Total savings <span className="ml-1 tabular-nums text-foreground">{money(totalSavings)}</span></span>
+                            {month.uncategorized > 0 && <span>Includes {money(month.uncategorized)} in uncategorized spending.</span>}
+                        </div>
+                    </section>
+
+                    <MonthlyComparison data={comparison} year={selectedYear} onYearChange={setSelectedYear} />
+                </>
+            )}
+        </main>
+    )
 }

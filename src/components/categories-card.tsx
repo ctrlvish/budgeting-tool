@@ -231,14 +231,14 @@ export default function Categories(){
 
     return (
         <Card className="w-full min-w-0">
-        <CardHeader>
+        <CardHeader className="shrink-0">
             <CardTitle>Categories</CardTitle>
             <CardDescription>Manage categories for income and spending</CardDescription>
         </CardHeader>
-        <CardContent className="min-w-0">
+        <CardContent className="min-h-0 min-w-0 lg:overflow-y-auto lg:overscroll-contain">
             <form
                 onSubmit={handleCategoryAdd}
-                className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 sm:grid-cols-[1fr_1fr_auto] sm:gap-4"
+                className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:gap-3"
             >
                 <div className="col-span-2 grid gap-2 sm:col-span-1">
                     <Label htmlFor="categoryName">Name</Label>
@@ -288,7 +288,7 @@ export default function Categories(){
                 <Button
                     disabled={isAdding}
                     variant="outline"
-                    className="h-10 min-w-20 self-end justify-self-end px-4 sm:h-8 sm:min-w-24"
+                    className="h-10 min-w-20 self-end justify-self-end px-4 sm:h-8 sm:min-w-16"
                     type="submit"
                 >
                     Add
@@ -297,7 +297,7 @@ export default function Categories(){
 
             {error && <p id="category-error" className="sr-only" role="alert">{error}</p>}
 
-        <div className="mt-5 grid grid-cols-2 gap-4 sm:mt-6 sm:gap-6 lg:grid-cols-4">
+        <div className="mt-4 grid grid-cols-2 gap-4 border-t pt-4">
             <div className="min-w-0">
                 <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                     Income ({incomeCategories.length})

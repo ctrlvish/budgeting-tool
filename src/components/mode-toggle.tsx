@@ -1,36 +1,28 @@
 import { Moon, Sun } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { useTheme } from "@/components/theme-provider"
 
 export function ModeToggle() {
   const { setTheme } = useTheme()
 
+  function toggleTheme() {
+    const isDark = document.documentElement.classList.contains("dark")
+    setTheme(isDark ? "light" : "dark")
+  }
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={<Button variant="ghost" size="icon" className="size-10 bg-transparent transition-[opacity,transform] hover:bg-transparent hover:opacity-70 dark:bg-transparent dark:hover:bg-transparent sm:size-8" />}>
-          <Sun className="size-5 scale-100 rotate-0 opacity-100 transition-[transform,opacity] duration-150 dark:scale-0 dark:-rotate-90 dark:opacity-0" />
-          <Moon className="absolute size-5 scale-0 rotate-90 opacity-0 transition-[transform,opacity] duration-150 dark:scale-100 dark:rotate-0 dark:opacity-100" />
-          <span className="sr-only">Toggle theme</span>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme("light")}>
-          Light
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")}>
-          Dark
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("system")}>
-          System
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      className="relative size-10 bg-transparent transition-[opacity,transform] hover:bg-transparent hover:opacity-70 dark:bg-transparent dark:hover:bg-transparent sm:size-8"
+      onClick={toggleTheme}
+      aria-label="Toggle light and dark theme"
+      title="Toggle light and dark theme"
+    >
+      <Moon aria-hidden="true" className="size-5 dark:hidden" />
+      <Sun aria-hidden="true" className="hidden size-5 dark:block" />
+    </Button>
   )
 }

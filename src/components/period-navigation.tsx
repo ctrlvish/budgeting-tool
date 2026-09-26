@@ -24,16 +24,6 @@ export default function PeriodNavigation({
 } : PeriodNavigationProps) {
     return (
         <div className="flex items-center gap-0.5 sm:gap-1">
-            {showReset && (
-                <button
-                    type="button"
-                    className="mr-0.5 min-h-9 cursor-pointer bg-transparent! px-1 text-[11px] text-muted-foreground underline underline-offset-4 transition-colors hover:bg-transparent! hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:mr-1 sm:min-h-7 sm:text-xs"
-                    aria-label={resetLabel}
-                    onClick={onReset}
-                >
-                    Back to current
-                </button>
-            )}
             <Button
                 type="button"
                 variant="ghost"
@@ -43,6 +33,18 @@ export default function PeriodNavigation({
                 onClick={onPrevious}
             >
                 <ChevronLeftIcon />
+            </Button>
+            <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-9 w-16 shrink-0 text-xs sm:h-7"
+                aria-label={resetLabel}
+                title={resetLabel}
+                disabled={!showReset}
+                onClick={onReset}
+            >
+                Current
             </Button>
             <Button
                 type="button"

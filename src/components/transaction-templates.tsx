@@ -8,7 +8,6 @@ import {
     Card,
     CardHeader,
     CardContent,
-    CardFooter,
     CardDescription,
     CardTitle
 } from './ui/card'
@@ -141,60 +140,67 @@ const isLoading = liveData === null
 
     return (
         <Card className="w-full min-w-0">
-            <CardHeader>
+            <CardHeader className="shrink-0">
                 <CardTitle>Transaction templates</CardTitle>
                 <CardDescription>Save templates for transactions you log often</CardDescription>
             </CardHeader>
-            <CardContent className="grid gap-6">
-                {isLoading ? (
-                    <p className="text-sm text-muted-foreground">Loading templates...</p>
-                ) : transactionTemplates.length === 0 ? (
-                    <p className="rounded-lg border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
-                        No templates yet.
-                    </p>
-                ) : (
-                    <ul className="divide-y rounded-lg border">
-                        {transactionTemplates.map(template => {
-                            const category = categories.find(
-                                category => category.id === template.categoryId
-                            )
+            <CardContent className="flex min-h-0 flex-1 flex-col gap-4">
+                <div
+                    className="max-h-48 overflow-y-auto overscroll-contain lg:min-h-0 lg:max-h-none lg:flex-1"
+                    role="region"
+                    aria-label="Saved transaction templates"
+                    tabIndex={0}
+                >
+                    {isLoading ? (
+                        <p className="text-sm text-muted-foreground">Loading templates...</p>
+                    ) : transactionTemplates.length === 0 ? (
+                        <p className="text-xs text-muted-foreground">
+                            No templates yet.
+                        </p>
+                    ) : (
+                        <ul className="divide-y rounded-lg border">
+                            {transactionTemplates.map(template => {
+                                const category = categories.find(
+                                    category => category.id === template.categoryId
+                                )
+    
+                                return (
+                                    <li
+                                        className="flex items-center justify-between gap-3 px-3 py-2.5"
+                                        key={template.id}
+                                    >
+                                        <div className="min-w-0">
+                                            <p className="truncate font-medium">{template.name}</p>
+                                            <p className="text-xs capitalize text-muted-foreground">
+                                                {getCategoryGroup(category)}
+                                            </p>
+                                        </div>
+                                        <div className="flex shrink-0 items-center gap-2">
+                                            <span className="font-medium tabular-nums">
+                                                {formatMoney(template.amountCents)}
+                                            </span>
+                                            <Button
+                                                type="button"
+                                                variant="destructive"
+                                                size="icon-sm"
+                                                className="size-9 !bg-transparent hover:!bg-transparent sm:size-7 dark:!bg-transparent dark:hover:!bg-transparent"
+                                                onClick={() => handleDelete(template.id)}
+                                                disabled={deletingId === template.id}
+                                                aria-label={`Delete ${template.name}`}
+                                            >
+                                                <Trash2 />
+                                            </Button>
+                                        </div>
+                                    </li>
+                                )
+                            })}
+                        </ul>
+                    )}
+                </div>
 
-                            return (
-                                <li
-                                    className="flex items-center justify-between gap-3 px-3 py-2.5"
-                                    key={template.id}
-                                >
-                                    <div className="min-w-0">
-                                        <p className="truncate font-medium">{template.name}</p>
-                                        <p className="text-xs capitalize text-muted-foreground">
-                                            {getCategoryGroup(category)}
-                                        </p>
-                                    </div>
-                                    <div className="flex shrink-0 items-center gap-2">
-                                        <span className="font-medium tabular-nums">
-                                            {formatMoney(template.amountCents)}
-                                        </span>
-                                        <Button
-                                            type="button"
-                                            variant="destructive"
-                                            size="icon-sm"
-                                            className="size-9 !bg-transparent hover:!bg-transparent sm:size-7 dark:!bg-transparent dark:hover:!bg-transparent"
-                                            onClick={() => handleDelete(template.id)}
-                                            disabled={deletingId === template.id}
-                                            aria-label={`Delete ${template.name}`}
-                                        >
-                                            <Trash2 />
-                                        </Button>
-                                    </div>
-                                </li>
-                            )
-                        })}
-                    </ul>
-                )}
-
-                <form id="transaction-template-form" className="grid gap-4 border-t pt-5 sm:pt-6" onSubmit={handleAdd}>
-                    <div className="grid grid-cols-[minmax(0,4fr)_minmax(0,6fr)] gap-3 sm:grid-cols-3 sm:gap-4">
-                        <div className="col-span-2 grid gap-2 sm:col-span-1">
+                <form id="transaction-template-form" className="grid shrink-0 gap-4" onSubmit={handleAdd}>
+                    <div className="grid grid-cols-[minmax(0,4fr)_minmax(0,6fr)] gap-3">
+                        <div className="col-span-2 grid gap-2">
                             <Label htmlFor="transactionTemplateName">Name</Label>
                             <Input
                                 className="h-10 sm:h-8"
@@ -255,26 +261,27 @@ const isLoading = liveData === null
                             />
                         </div>
                     </div>
+                    <div className="flex justify-end">
+                        <div className="sr-only" aria-live="polite">
+                            {error && (
+                                <p id="transaction-template-error" role="alert">
+                                    {error}
+                                </p>
+                            )}
+                        </div>
+                        <Button
+                            type="submit"
+                            form="transaction-template-form"
+                            variant="outline"
+                            className="h-10 px-4 sm:h-8"
+                            disabled={isFormDisabled}
+                        >
+                            Add template
+                        </Button>
+                    </div>
                 </form>
             </CardContent>
-            <CardFooter className="justify-end">
-                <div className="sr-only" aria-live="polite">
-                    {error && (
-                        <p id="transaction-template-error" role="alert">
-                            {error}
-                        </p>
-                    )}
-                </div>
-                <Button
-                    type="submit"
-                    form="transaction-template-form"
-                    variant="outline"
-                    className="h-10 px-4 sm:h-8"
-                    disabled={isFormDisabled}
-                >
-                    Add template
-                </Button>
-            </CardFooter>
+
         </Card>
     )
 }

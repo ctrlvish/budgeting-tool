@@ -5,7 +5,7 @@ import {
     Card, 
     CardHeader,
     CardContent,
-    CardFooter,
+    CardAction,
     CardDescription,
     CardTitle
 } from "./ui/card"
@@ -122,9 +122,20 @@ export default function BudgetSetup() {
             <CardHeader>
                 <CardTitle>Budget setup</CardTitle>
                 <CardDescription>Set savings and targets</CardDescription>
+                <CardAction>
+                    <Button
+                        type="submit"
+                        form="budget-settings-form"
+                        variant="outline"
+                        className="h-10 px-4 sm:h-8"
+                        disabled={isDisabled}
+                    >
+                        Save
+                    </Button>
+                </CardAction>
             </CardHeader>
             <CardContent>
-                <form id="budget-settings-form" className="grid gap-5 sm:gap-6" onSubmit={handleSubmit}>
+                <form id="budget-settings-form" className="grid items-end gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] md:gap-6" onSubmit={handleSubmit}>
                     <div className="grid gap-2">
                         <div className="flex items-center gap-1.5">
                             <Label htmlFor='startingSavingsBalanceInput'>Starting savings balance</Label>
@@ -226,25 +237,15 @@ export default function BudgetSetup() {
                     </div>
 
                 </form>
-            </CardContent>
-            <CardFooter className="items-center justify-between gap-3">
-                <div className="min-h-5" aria-live="polite">
+                <div aria-live="polite">
                     {!isRatioValid && (
-                        <p id="budget-ratio-message" className="text-sm font-medium text-destructive">
+                        <p id="budget-ratio-message" className="mt-3 text-sm font-medium text-destructive">
                             {ratioMessage}
                         </p>
                     )}
                 </div>
-                <Button
-                    type="submit"
-                    form="budget-settings-form"
-                    variant="outline"
-                    className="h-10 px-4 sm:h-8"
-                    disabled={isDisabled}
-                >
-                    Save
-                </Button>
-            </CardFooter>
+            </CardContent>
+
         </Card>
     )
 }
