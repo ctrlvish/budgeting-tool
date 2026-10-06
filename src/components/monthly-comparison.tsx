@@ -48,13 +48,13 @@ export default function MonthlyComparison({ data, year, onYearChange } : Monthly
     const monthCount = year === now.getFullYear() ? now.getMonth() + 1 : 12
     const currentIndex = now.getFullYear() === year ? now.getMonth() : -1
     const monthIndices = Array.from({ length: monthCount }, (_, index) => index)
-    const orderedIndices = currentIndex >= 0 && currentIndex < monthCount
-        ? [currentIndex, ...monthIndices.filter(index => index !== currentIndex)]
-        : monthIndices
-    const months = orderedIndices.map(index => ({ ...data.months[index], index }))
+    const orderedIndices = year === now.getFullYear() ? [...monthIndices].reverse() : monthIndices;
+    const months = orderedIndices.map(index => ({ ...data.months[index], index }));
+    console.log('months: ', months)
     const cellClass = (index : number) => index === currentIndex
         ? 'sticky left-36 z-10 bg-muted text-right tabular-nums border-r border-border'
         : 'text-right tabular-nums'
+        console.log('cellClass', cellClass)
     const rowHeading = 'sticky left-0 z-20 w-36 bg-card px-3 text-center whitespace-normal break-words'
 
     return (
