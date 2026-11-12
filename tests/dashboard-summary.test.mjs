@@ -61,12 +61,39 @@ test('represents no income and overspending without invalid numbers', () => {
     const empty = getDashboardYear([], [], 2026).months[0]
     assert.equal(getSpendingBudget(empty).remainingCents, 0)
     assert.equal(getSpendingBudget({ ...empty, spentCents: 5000 }).remainingCents, -5000)
-    assert.equal(getSpendingBudget({ ...september(), spentCents: 500000 }).remainingCents, -20000)
+    assert.equal(getSpendingBudget({ ...september(), spentCents: 500000 }).remainingCents, 0)
+})
+
+test('spending past the savings threshold reduces actual reserved savings', () => {
+    const month = september()
+    assert.equal(getSpendingBudget(month).reservedSavings, 120000)
+    assert.equal(getSpendingBudget({ ...month, spentCents: 480000 }).reservedSavings, 120000)
+    assert.equal(getSpendingBudget({ ...month, spentCents: 500000 }).reservedSavings, 100000)
+    assert.equal(getSpendingBudget({ ...month, spentCents: 650000 }).reservedSavings, 0)
+    assert.equal(getSpendingBudget({ ...month, spentCents: 650000 }).remainingCents, -50000)
+    assert.equal(getSpendingBudget({ ...september(150000), spentCents: 500000 }).reservedSavings, 150000)
+})
+
+test('manual savings remain visible even after other spending exceeds income', () => {
+    const month = getDashboardYear([
+        transaction('salary', 50000, '2026-09-01', 'income'),
+        transaction('rent', 60000),
+        transaction('food', 20000),
+        transaction('stocks', 10000)
+    ], categories, 2026).months[8]
+    const budget = getSpendingBudget(month)
+    assert.equal(budget.savingsTarget, 10000)
+    assert.equal(budget.reservedSavings, 10000)
+    assert.equal(budget.remainingCents, -40000)
+    assert.equal(month.unspentCents, 0)
+    assert.equal(month.shortfallCents, 40000)
+    assert.equal(month.totalSavingsCents, 10000)
 })
 
 test('recap savings includes unspent funds without double counting contributions', () => {
     const month = september(120000)
     assert.equal(month.unspentCents, 72000)
+    assert.equal(month.shortfallCents, 0)
     assert.equal(month.totalSavingsCents, 192000)
     assert.equal(month.savings + month.unspentCents, month.totalSavingsCents)
     const overspent = getDashboardYear([
@@ -74,8 +101,9 @@ test('recap savings includes unspent funds without double counting contributions
         transaction('rent', 15000),
         transaction('stocks', 2000)
     ], categories, 2026).months[8]
-    assert.equal(overspent.unspentCents, -7000)
-    assert.equal(overspent.totalSavingsCents, -5000)
+    assert.equal(overspent.unspentCents, 0)
+    assert.equal(overspent.shortfallCents, 7000)
+    assert.equal(overspent.totalSavingsCents, 2000)
 })
 
 test('keeps configured categories with zero spending', () => {

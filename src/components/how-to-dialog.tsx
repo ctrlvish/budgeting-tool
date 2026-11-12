@@ -77,7 +77,7 @@ export default function HowToDialog({
                     <section className="grid gap-1.5">
                         <h2 className="font-heading font-medium">Dashboard</h2>
                         <p className="leading-relaxed text-muted-foreground">
-                            See what’s left to spend after reserving your savings target, track your budget distribution, and compare category spending month by month.
+                            See what’s left to spend after your savings plan, track transfers and unspent money separately from cash shortfalls, and compare category spending month by month.
                         </p>
                     </section>
 

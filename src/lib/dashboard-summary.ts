@@ -63,11 +63,16 @@ export function getDashboardYear(transactions : Transaction[], categories : Cate
     }
 
     return {
-        months: months.map(month => ({
-            ...month,
-            unspentCents: month.incomeCents - month.spentCents - month.savings,
-            totalSavingsCents: month.incomeCents - month.spentCents
-        })),
+        months: months.map(month => {
+            const cashRemaining = month.incomeCents - month.spentCents - month.savings
+            const unspentCents = Math.max(0, cashRemaining)
+            return {
+                ...month,
+                unspentCents,
+                shortfallCents: Math.max(0, -cashRemaining),
+                totalSavingsCents: month.savings + unspentCents
+            }
+        }),
         rows: [...rows.values()].sort((a, b) => a.name.localeCompare(b.name))
     }
 }
@@ -81,7 +86,8 @@ export function getSpendingBudget(
     const savingsTarget = Math.round(month.incomeCents * ratios.savings / 100)
     // Assign rounding remainder to wants so targets always reconcile to income.
     const wantsTarget = month.incomeCents - needsTarget - savingsTarget
-    const reservedSavings = Math.max(savingsTarget, month.savings)
+    const availableSavings = Math.max(0, month.incomeCents - month.spentCents)
+    const reservedSavings = Math.max(month.savings, Math.min(savingsTarget, availableSavings))
 
     return {
         ratios,

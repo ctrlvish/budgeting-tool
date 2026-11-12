@@ -19,7 +19,6 @@ const emptyCategories : Category[] = []
 const money = (cents : number) => new Intl.NumberFormat('en-AU', {
     style: 'currency', currency: 'AUD'
 }).format(cents / 100)
-const availablePattern = 'repeating-linear-gradient(135deg, var(--muted), var(--muted) 3px, var(--card) 3px, var(--card) 6px)'
 
 export default function Dashboard({ onLogTransaction } : DashboardProps) {
     const [loadAttempt, setLoadAttempt] = useState(0)
@@ -56,13 +55,13 @@ export default function Dashboard({ onLogTransaction } : DashboardProps) {
     const buckets = [
         { id: 'needs', name: 'Needs', amount: month.needs, target: budget.needsTarget, ratio: budget.ratios.needs, color: 'var(--bucket-needs)' },
         { id: 'wants', name: 'Wants', amount: month.wants, target: budget.wantsTarget, ratio: budget.ratios.wants, color: 'var(--bucket-wants)' },
-        { id: 'savings', name: 'Savings', amount: month.savings, target: budget.savingsTarget, ratio: budget.ratios.savings, color: 'var(--bucket-savings)' }
+        { id: 'savings', name: 'Savings', amount: month.totalSavingsCents, target: budget.savingsTarget, ratio: budget.ratios.savings, color: 'var(--bucket-savings)' }
     ]
     const segments = [
-        ...buckets.map(bucket => ({ ...bucket, amount: bucket.id === 'savings' ? budget.reservedSavings : bucket.amount })),
-        { id: 'uncategorized', name: 'Uncategorized', amount: month.uncategorized, color: 'var(--muted-foreground)' },
-        { id: 'available', name: 'Available', amount: Math.max(0, budget.remainingCents), color: availablePattern }
+        ...buckets,
+        { id: 'uncategorized', name: 'Uncategorized', amount: month.uncategorized, color: 'var(--muted-foreground)' }
     ].filter(segment => segment.amount > 0)
+    const barTotal = Math.max(month.incomeCents, segments.reduce((total, segment) => total + segment.amount, 0))
 
     function selectMonth(date : Date) {
         setSelectedMonth(startOfMonth(date))
@@ -94,15 +93,11 @@ export default function Dashboard({ onLogTransaction } : DashboardProps) {
                         <CardContent>
                             <div className="flex flex-col justify-between gap-6 sm:flex-row sm:items-center">
                                 <div className="min-w-0">
-                                    <h2 className="text-sm text-muted-foreground">{budget.remainingCents < 0 ? 'Over budget' : 'Left to spend'}</h2>
+                                    <h2 className="text-sm text-muted-foreground">{budget.remainingCents < 0 ? 'Shortfall' : 'Left to spend'}</h2>
                                     <p className="my-2 break-words font-heading text-5xl leading-tight tracking-tighter tabular-nums sm:text-6xl lg:text-7xl">
-                                        {hasIncome || month.hasActivity ? money(budget.remainingCents) : '—'}
+                                        {hasIncome || month.hasActivity ? money(Math.abs(budget.remainingCents)) : '—'}
                                     </p>
-                                    {hasIncome ? (
-                                        <p className="text-xs text-muted-foreground">
-                                            After reserving {money(budget.reservedSavings)} for savings
-                                        </p>
-                                    ) : (
+                                    {!hasIncome && (
                                         <Button
                                             variant="link"
                                             className="h-auto max-w-full justify-start p-0 text-xs font-normal whitespace-normal text-muted-foreground underline underline-offset-4 hover:text-foreground"
@@ -113,7 +108,7 @@ export default function Dashboard({ onLogTransaction } : DashboardProps) {
                                     )}
                                 </div>
                                 <dl className="grid gap-3 text-sm sm:min-w-56">
-                                    {[['Income', month.incomeCents], ['Spent', month.spentCents], ['Savings target', budget.savingsTarget]].map(([label, value]) => (
+                                    {[['Income', month.incomeCents], ['Spent', month.spentCents], ['Saved this month', month.totalSavingsCents], ['Savings target', budget.savingsTarget]].map(([label, value]) => (
                                         <div className="flex justify-between gap-6" key={label}><dt className="text-muted-foreground">{label}</dt><dd className="tabular-nums">{money(Number(value))}</dd></div>
                                     ))}
                                 </dl>
@@ -126,7 +121,7 @@ export default function Dashboard({ onLogTransaction } : DashboardProps) {
                                     <span className="flex items-center gap-1.5" key={segment.id}>
                                         <i aria-hidden="true" className="size-2.5 rounded-xs" style={{ background: segment.color }} />
                                         {segment.name}
-                                        <b className="font-medium text-foreground">{hasIncome ? `${Math.round(segment.amount / month.incomeCents * 1000) / 10}%` : money(segment.amount)}</b>
+                                        <b className="font-medium text-foreground">{barTotal ? `${Math.round(segment.amount / barTotal * 1000) / 10}%` : money(segment.amount)}</b>
                                     </span>
                                 ))}
                             </div>
@@ -141,7 +136,7 @@ export default function Dashboard({ onLogTransaction } : DashboardProps) {
                             {buckets.map(bucket => {
                                 const isSavings = bucket.id === 'savings'
                                 const left = bucket.target - bucket.amount
-                                const amount = isSavings ? budget.reservedSavings : Math.abs(left)
+                                const amount = isSavings ? bucket.amount : Math.abs(left)
                                 const progress = bucket.target > 0 ? Math.min(100, bucket.amount / bucket.target * 100) : bucket.amount > 0 ? 100 : 0
                                 return (
                                     <CardContent key={bucket.id} className="min-w-0 py-3 sm:py-4">
@@ -151,18 +146,18 @@ export default function Dashboard({ onLogTransaction } : DashboardProps) {
                                             </div>
                                             <div className="flex flex-wrap items-baseline gap-2">
                                                 <span className={`break-all font-heading text-xl tracking-tight tabular-nums ${!isSavings && left < 0 ? 'text-destructive' : ''}`}>{money(amount)}</span>
-                                                <span className="text-xs text-muted-foreground">{isSavings ? 'reserved' : left < 0 ? 'over' : 'left'}</span>
+                                                <span className="text-xs text-muted-foreground">{isSavings ? 'saved' : left < 0 ? 'over' : 'left'}</span>
                                             </div>
-                                            <div className="mb-2 mt-2 h-1 overflow-hidden rounded-xs bg-muted" role="img" aria-label={`${bucket.name}: ${money(bucket.amount)} ${isSavings ? 'contributed' : 'spent'} of ${money(bucket.target)} target`}>
+                                            <div className="mb-2 mt-2 h-1 overflow-hidden rounded-xs bg-muted" role="img" aria-label={`${bucket.name}: ${money(bucket.amount)} ${isSavings ? 'saved' : 'spent'} of ${money(bucket.target)} target`}>
                                                 <span className="block h-full" style={{ width: `${progress}%`, background: bucket.color }} />
                                             </div>
-                                            <div className="flex flex-wrap justify-between gap-1 text-xs text-muted-foreground"><span>{money(bucket.amount)} {isSavings ? 'contributed' : 'spent'}</span><span>of {money(bucket.target)}</span></div>
+                                            <div className="flex flex-wrap justify-between gap-1 text-xs text-muted-foreground"><span>{isSavings ? `${money(month.savings)} transferred · ${money(month.unspentCents)} unspent` : `${money(bucket.amount)} spent`}</span><span>of {money(bucket.target)} target</span></div>
                                     </CardContent>
                                 )
                             })}
                         </Card>
                         <div className="mt-4 flex flex-wrap justify-between gap-2 text-xs text-muted-foreground">
-                            <span>Total savings <span className="ml-1 tabular-nums text-foreground">{money(totalSavings)}</span></span>
+                            <span>Estimated net position <span className="ml-1 tabular-nums text-foreground">{money(totalSavings)}</span></span>
                             {month.uncategorized > 0 && <span>Includes {money(month.uncategorized)} in uncategorized spending.</span>}
                         </div>
                     </section>
