@@ -102,7 +102,7 @@ export default function Dashboard({ onLogTransaction } : DashboardProps) {
                                             <p className="income-explanation">
                                                 <button type="button" className="income-link" aria-haspopup="dialog"
                                                     onClick={() => onLogTransaction(format(isSameMonth(selectedMonth, new Date()) ? new Date() : selectedMonth, 'yyyy-MM-dd'), 'income')}
-                                                >Log income</button>{' '}for {format(selectedMonth, 'MMMM')} to calculate your needs, wants, and savings budget.{month.hasActivity ? ' Your spending is already recorded.' : ''}
+                                                >Log income</button>{' '}to calculate your budget.
                                             </p>
                                         </div>
                                     )}
