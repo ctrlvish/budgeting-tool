@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import type { 
+    TransactionType,
     Category, 
     Transaction, 
     TransactionTemplate
@@ -49,6 +50,7 @@ function getToday() {
 }
 
 interface TransactionDialogProps {
+    initialType? : TransactionType | null
     initialDate : string | null
     open : boolean
     onOpenChange : (open : boolean) => void
@@ -57,6 +59,7 @@ interface TransactionDialogProps {
 
 export default function TransactionDialog({
     initialDate,
+    initialType,
     open,
     onOpenChange,
     transaction
@@ -107,6 +110,7 @@ export default function TransactionDialog({
                     setTransactionTemplateId(transaction.transactionTemplateId ?? null)
                 } else {
                     setDate(initialDate ?? getToday())
+                    if (initialType) setCategoryId(categories.find(category => category.type === initialType)?.id ?? null)
                 }
             })
             .catch(error => {
@@ -125,7 +129,7 @@ export default function TransactionDialog({
         return () => {
             isActive = false
         }
-    }, [initialDate, open, transaction])
+    }, [initialDate, initialType, open, transaction])
 
     function resetForm() {
         setDescription('')

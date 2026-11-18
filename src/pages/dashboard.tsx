@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { addMonths, format, isSameMonth, startOfMonth, subMonths } from 'date-fns'
-import type { Category, Transaction } from '@/types'
+import type { Category, Transaction, TransactionType } from '@/types'
 import { db } from '@/lib/db'
 import { getDashboardYear, getSpendingBudget } from '@/lib/dashboard-summary'
 import { DashboardError, DashboardLoading } from '@/components/dashboard-state'
@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 
 interface DashboardProps {
-    onLogTransaction : (date : string) => void
+    onLogTransaction : (date : string, initialType? : TransactionType) => void
 }
 
 const emptyTransactions : Transaction[] = []
@@ -93,23 +93,24 @@ export default function Dashboard({ onLogTransaction } : DashboardProps) {
                         <CardContent>
                             <div className="overview-layout">
                                 <div className="min-w-0">
-                                    <h2 className="text-sm text-muted-foreground">{budget.remainingCents < 0 ? 'Shortfall' : 'Left to spend'}</h2>
-                                    <p className={`balance-amount ${budget.remainingCents < 0 ? "is-shortfall" : ""}`}>
-                                        {hasIncome || month.hasActivity ? money(Math.abs(budget.remainingCents)) : '—'}
+                                    <h2 className="text-sm text-muted-foreground">{!hasIncome ? 'No income logged' : budget.remainingCents < 0 ? 'Shortfall' : 'Left to spend'}</h2>
+                                    <p className={`balance-amount ${hasIncome && budget.remainingCents < 0 ? "is-shortfall" : ""}`}>
+                                        {hasIncome ? money(Math.abs(budget.remainingCents)) : month.hasActivity ? money(month.spentCents) : '—'}
                                     </p>
                                     {!hasIncome && (
-                                        <Button
-                                            variant="link"
-                                            className="h-auto max-w-full justify-start p-0 text-xs font-normal whitespace-normal text-muted-foreground underline underline-offset-4 hover:text-foreground"
-                                            onClick={() => onLogTransaction(format(isSameMonth(selectedMonth, new Date()) ? new Date() : selectedMonth, 'yyyy-MM-dd'))}
-                                        >
-                                            Log income to see your budget
-                                        </Button>
+                                        <div className="income-prompt">
+                                            {month.hasActivity && <p className="text-sm text-muted-foreground">spent this month</p>}
+                                            <p className="income-explanation">Log income for {format(selectedMonth, 'MMMM')} to calculate your needs, wants, and savings budget.{month.hasActivity ? ' Your spending is already recorded.' : ''}</p>
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => onLogTransaction(format(isSameMonth(selectedMonth, new Date()) ? new Date() : selectedMonth, 'yyyy-MM-dd'), 'income')}
+                                            >Log income</Button>
+                                        </div>
                                     )}
                                 </div>
                                 <dl className="overview-totals">
-                                    {[['Income', month.incomeCents], ['Spent', month.spentCents], ['Savings + unspent', month.totalSavingsCents], ['Savings target', budget.savingsTarget]].map(([label, value]) => (
-                                        <div className="flex justify-between gap-6" key={label}><dt className="text-muted-foreground">{label}</dt><dd className="tabular-nums">{money(Number(value))}</dd></div>
+                                    {[['Income', month.incomeCents], ['Spent', month.spentCents], ['Savings + unspent', month.totalSavingsCents], ['Savings target', hasIncome ? budget.savingsTarget : null]].map(([label, value]) => (
+                                        <div className="flex justify-between gap-6" key={label}><dt className="text-muted-foreground">{label}</dt><dd className="tabular-nums">{value === null ? '—' : money(Number(value))}</dd></div>
                                     ))}
                                 </dl>
                             </div>
@@ -121,7 +122,7 @@ export default function Dashboard({ onLogTransaction } : DashboardProps) {
                                     <span className="flex items-center gap-1.5" key={segment.id}>
                                         <i aria-hidden="true" className="size-2.5 rounded-xs" style={{ background: segment.color }} />
                                         {segment.name}
-                                        <b className="font-medium text-foreground">{barTotal ? `${Math.round(segment.amount / barTotal * 1000) / 10}%` : money(segment.amount)}</b>
+                                        <b className="font-medium text-foreground">{hasIncome && barTotal ? `${Math.round(segment.amount / barTotal * 1000) / 10}%` : money(segment.amount)}</b>
                                     </span>
                                 ))}
                             </div>
@@ -136,22 +137,22 @@ export default function Dashboard({ onLogTransaction } : DashboardProps) {
                             {buckets.map(bucket => {
                                 const isSavings = bucket.id === 'savings'
                                 const left = bucket.target - bucket.amount
-                                const amount = isSavings ? bucket.amount : Math.abs(left)
+                                const amount = !hasIncome ? (isSavings ? month.savings : bucket.amount) : isSavings ? bucket.amount : Math.abs(left)
                                 const progress = bucket.target > 0 ? Math.min(100, bucket.amount / bucket.target * 100) : bucket.amount > 0 ? 100 : 0
                                 return (
                                     <article key={bucket.id} className={`budget-bucket bucket-${bucket.id}`}>
                                             <div className="mb-2 flex items-center justify-between gap-2 text-xs">
                                                 <h3 className="font-medium">{bucket.name}</h3>
-                                                <span className="text-muted-foreground">{bucket.ratio}% target</span>
+                                                <span className="text-muted-foreground">{hasIncome ? `${bucket.ratio}% target` : 'Awaiting income'}</span>
                                             </div>
                                             <div className="bucket-amount-line">
-                                                <span className={`bucket-amount ${!isSavings && left < 0 ? 'text-destructive' : ''}`}>{money(amount)}</span>
-                                                <span className="text-xs text-muted-foreground">{isSavings ? 'saved' : left < 0 ? 'over' : 'left'}</span>
+                                                <span className={`bucket-amount ${hasIncome && !isSavings && left < 0 ? 'text-destructive' : ''}`}>{money(amount)}</span>
+                                                <span className="text-xs text-muted-foreground">{!hasIncome ? (isSavings ? 'transferred' : 'spent') : isSavings ? 'saved' : left < 0 ? 'over' : 'left'}</span>
                                             </div>
-                                            <div className="mb-2 mt-2 h-1 overflow-hidden rounded-xs bg-muted" role="img" aria-label={`${bucket.name}: ${money(bucket.amount)} ${isSavings ? 'saved' : 'spent'} of ${money(bucket.target)} target`}>
+                                            {hasIncome && <div className="mb-2 mt-2 h-1 overflow-hidden rounded-xs bg-muted" role="img" aria-label={`${bucket.name}: ${money(bucket.amount)} ${isSavings ? 'saved' : 'spent'} of ${money(bucket.target)} target`}>
                                                 <span className="block h-full" style={{ width: `${progress}%`, background: bucket.color }} />
-                                            </div>
-                                            <div className="flex flex-wrap justify-between gap-1 text-xs text-muted-foreground"><span>{isSavings ? `${money(month.savings)} transferred · ${money(month.unspentCents)} unspent` : `${money(bucket.amount)} spent`}</span><span>of {money(bucket.target)} target</span></div>
+                                            </div>}
+                                            {hasIncome && <div className="flex flex-wrap justify-between gap-1 text-xs text-muted-foreground"><span>{isSavings ? `${money(month.savings)} transferred · ${money(month.unspentCents)} unspent` : `${money(bucket.amount)} spent`}</span><span>of {money(bucket.target)} target</span></div>}
                                     </article>
                                 )
                             })}
