@@ -1,204 +1,146 @@
-import { useState } from "react"
-import type { BudgetSetting } from '../types'
-import { db } from '../lib/db'
-import {
-    Card,
-    CardHeader,
-    CardContent,
-    CardAction,
-    CardDescription,
-    CardTitle
-} from "./ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
-import { toast } from "sonner"
+import { useRef, useState } from 'react'
+import { db } from '@/lib/db'
+import { defaultBudgetSettings, getRatios, patchBudgetSettings, type BudgetRatios } from '@/lib/budget-settings'
+import { Card, CardHeader, CardContent, CardDescription, CardTitle } from './ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Info, GripVertical, Check } from 'lucide-react'
-import { motion, useReducedMotion } from 'motion/react'
 import AnimatedPercentage from './animated-percentage'
 import { Slider } from '@base-ui/react/slider'
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger
-} from '@/components/ui/popover'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 
-type BudgetSettingsFormData = {
-    startingSavingsBalance: string,
-    needs: string,
-    wants: string,
-    savings: string
+function snapRatios(values: number[]): BudgetRatios {
+    const first = Math.round(values[0] / 5) * 5
+    const second = Math.round(values[1] / 5) * 5
+    return { needs: first, wants: second - first, savings: 100 - second }
 }
 
-const defaultSettings: BudgetSettingsFormData = {
-    startingSavingsBalance: '',
-    needs: '50',
-    wants: '30',
-    savings: '20'
-}
-
-function budgetSettingsToFormData(settings : BudgetSetting) : BudgetSettingsFormData {
-    return {
-        startingSavingsBalance: String(settings.startingSavingsBalanceCents / 100),
-        needs: String(settings.needs),
-        wants: String(settings.wants),
-        savings: String(settings.savings)
-    }
-}
-
-function formDataToBudgetSettings(formData : BudgetSettingsFormData) : BudgetSetting {
-    return {
-        id: '#budget-settings',
-        startingSavingsBalanceCents: Math.round(Number(formData.startingSavingsBalance) * 100),
-        needs: Number(formData.needs),
-        wants: Number(formData.wants),
-        savings: Number(formData.savings)
-    }
-}
+type SaveStatus = 'idle' | 'editing' | 'saving' | 'saved' | 'error'
 
 export default function BudgetSetup() {
-    const [formDraft, setFormDraft] = useState<BudgetSettingsFormData | null>(null)
-    const [isSaving, setIsSaving] = useState(false)
-    const [savedForm, setSavedForm] = useState<BudgetSettingsFormData | null>(null)
-    const reduceMotion = useReducedMotion()
-
-    const savedSettings = useLiveQuery(
-        () => db.budgetSettings.get('#budget-settings'),
-        [],
-        null
-    )
-    const formData =
-        formDraft ??
-        (savedSettings
-            ? budgetSettingsToFormData(savedSettings)
-            : defaultSettings)
-
+    const savedSettings = useLiveQuery(() => db.budgetSettings.get('#budget-settings'), [], null)
     const isLoading = savedSettings === null
-
-    const handleChange = (e : React.ChangeEvent<HTMLInputElement>) => {
-        const {name, value} = e.target
-
-        setFormDraft((prevDraft) => ({
-            ...(prevDraft ?? formData),
-            [name] : value
-        }))
-
-    }
-
-    const handleSubmit = async (e : React.SubmitEvent<HTMLFormElement>) => {
-        e.preventDefault()
-
-        if (!isRatioValid) {
-            toast.error('Budget targets must total 100%')
-            return
-        }
-
-        setIsSaving(true)
-
-        try {
-            const settings = formDataToBudgetSettings(formData)
-
-            await db.budgetSettings.put(settings)
-            setSavedForm({ ...formData })
-            toast.success('Budget settings saved')
-        } catch (error) {
-            console.error('Failed to save budget settings', error)
-            toast.error('Couldn’t save budget settings')
-        } finally {
-            setIsSaving(false)
-        }
-    }
-
-    const isDisabled = isLoading || isSaving
-
-    const needs = Number(formData.needs)
-    const wants = Number(formData.wants)
-    const savings = Number(formData.savings)
+    const settings = savedSettings ?? defaultBudgetSettings
+    const [ratioDraft, setRatioDraft] = useState<BudgetRatios | null>(null)
+    const [ratioStatus, setRatioStatus] = useState<SaveStatus>('idle')
+    const [undoRatios, setUndoRatios] = useState<BudgetRatios | null>(null)
+    const ratioRevision = useRef(0)
+    const [balanceDraft, setBalanceDraft] = useState<string | null>(null)
+    const [balanceStatus, setBalanceStatus] = useState<SaveStatus>('idle')
+    const [balanceError, setBalanceError] = useState('')
+    const { needs, wants, savings } = ratioDraft ?? settings
     const isRatioValid = [needs, wants, savings].every(value => Number.isFinite(value) && value >= 0 && value <= 100)
         && Math.abs(needs + wants + savings - 100) < 0.000001
     const boundaries = isRatioValid ? [needs, needs + wants] : [50, 80]
+    const balanceInput = balanceDraft ?? (savedSettings ? String(settings.startingSavingsBalanceCents / 100) : '')
+    const balanceCents = Math.round(Number(balanceInput) * 100)
+    const balanceDirty = balanceDraft !== null && balanceCents !== settings.startingSavingsBalanceCents
 
-    function changeAllocation(values : number[]) {
-        const first = Math.round(values[0] / 5) * 5
-        const second = Math.round(values[1] / 5) * 5
-        setFormDraft({
-            ...formData,
-            needs: String(first),
-            wants: String(second - first),
-            savings: String(100 - second)
-        })
+    function changeAllocation(values: number[]) {
+        ratioRevision.current += 1
+        setRatioDraft(snapRatios(values))
+        setRatioStatus('editing')
     }
 
-    const isSaved = savedForm !== null && Object.keys(formData).every(key =>
-        formData[key as keyof BudgetSettingsFormData] === savedForm[key as keyof BudgetSettingsFormData])
+    async function persistRatios(next: BudgetRatios, offerUndo = true) {
+        const revision = ++ratioRevision.current
+        setRatioDraft(next)
+        setRatioStatus('saving')
+        try {
+            const previous = await patchBudgetSettings(next)
+            if (revision !== ratioRevision.current) return
+            setRatioDraft(null)
+            setRatioStatus('saved')
+            setUndoRatios(offerUndo ? getRatios(previous) : null)
+        } catch (error) {
+            console.error('Failed to save budget targets', error)
+            if (revision === ratioRevision.current) setRatioStatus('error')
+        }
+    }
+
+    async function saveBalance(event: React.SubmitEvent<HTMLFormElement>) {
+        event.preventDefault()
+        if (!balanceInput.trim() || !Number.isFinite(Number(balanceInput)) || !Number.isSafeInteger(balanceCents)) {
+            setBalanceError('Enter a valid starting balance.')
+            return
+        }
+        setBalanceStatus('saving')
+        setBalanceError('')
+        try {
+            await patchBudgetSettings({ startingSavingsBalanceCents: balanceCents })
+            setBalanceDraft(null)
+            setBalanceStatus('saved')
+        } catch (error) {
+            console.error('Failed to save starting balance', error)
+            setBalanceStatus('error')
+            setBalanceError('Couldn’t save your starting balance. Try again.')
+        }
+    }
 
     return (
         <Card className="w-full min-w-0">
             <CardHeader>
                 <CardTitle>Budget targets</CardTitle>
                 <CardDescription>One income, three buckets. Move the dividers to find your balance.</CardDescription>
-                <CardAction>
-                    <Button
-                        type="submit"
-                        form="budget-settings-form"
-                        variant="outline"
-                        className="h-10 px-4 sm:h-8"
-                        disabled={isDisabled}
-                    >
-                        {isSaving ? 'Saving…' : isSaved ? <><motion.span key="saved" initial={reduceMotion ? false : { scale: .6 }} animate={{ scale: 1 }}><Check className="size-4" /></motion.span> Saved</> : 'Save'}
-                    </Button>
-                </CardAction>
             </CardHeader>
-            <CardContent>
-                <form id="budget-settings-form" className="budget-form grid items-end gap-4" onSubmit={handleSubmit}>
-                    <div className="allocation-editor">
-                        <div className="allocation-values" aria-label="Budget percentages">
-                            {([
-                                ['Needs', needs, 'needs'],
-                                ['Wants', wants, 'wants'],
-                                ['Savings', savings, 'savings']
-                            ] as const).map(([label, value, bucket]) => (
-                                <div className={`allocation-value allocation-${bucket}`} key={bucket}>
-                                    <span><i aria-hidden="true" />{label}</span>
-                                    <strong><AnimatedPercentage value={value} /></strong>
-                                </div>
-                            ))}
-                        </div>
-                        <Slider.Root
-                            className="allocation-slider"
-                            value={boundaries}
-                            onValueChange={changeAllocation}
-                            min={0}
-                            max={100}
-                            step={5}
-                            largeStep={10}
-                            thumbCollisionBehavior="none"
-                            disabled={isDisabled}
-                            aria-describedby="allocation-help"
-                        >
-                            <Slider.Control className="allocation-control">
-                                <Slider.Track className="allocation-track">
-                                    <span className="allocation-segment allocation-needs" style={{ width: `${boundaries[0]}%` }} />
-                                    <span className="allocation-segment allocation-wants" style={{ width: `${boundaries[1] - boundaries[0]}%` }} />
-                                    <span className="allocation-segment allocation-savings" style={{ width: `${100 - boundaries[1]}%` }} />
-                                </Slider.Track>
-                                <Slider.Thumb
-                                    index={0}
-                                    className="allocation-thumb"
-                                    getAriaLabel={() => 'Needs and wants divider'}
-                                    getAriaValueText={() => `${needs}% needs, ${wants}% wants, ${savings}% savings`}
-                                ><GripVertical aria-hidden="true" /></Slider.Thumb>
-                                <Slider.Thumb
-                                    index={1}
-                                    className="allocation-thumb"
-                                    getAriaLabel={() => 'Wants and savings divider'}
-                                    getAriaValueText={() => `${needs}% needs, ${wants}% wants, ${savings}% savings`}
-                                ><GripVertical aria-hidden="true" /></Slider.Thumb>
-                            </Slider.Control>
-                        </Slider.Root>
-                        <p id="allocation-help" className="allocation-help">Drag a divider to shift the two buckets beside it. Total stays at 100%.<span>Or focus a divider and use the arrow keys for 5% steps.</span></p>
+            <CardContent className="budget-settings-content">
+                <div className="allocation-editor">
+                    <div className="allocation-values" aria-label="Budget percentages">
+                        {([
+                            ['Needs', needs, 'needs'],
+                            ['Wants', wants, 'wants'],
+                            ['Savings', savings, 'savings']
+                        ] as const).map(([label, value, bucket]) => (
+                            <div className={`allocation-value allocation-${bucket}`} key={bucket}>
+                                <span><i aria-hidden="true" />{label}</span>
+                                <strong><AnimatedPercentage value={value} /></strong>
+                            </div>
+                        ))}
                     </div>
+                    <Slider.Root
+                        className="allocation-slider"
+                        value={boundaries}
+                        onValueChange={changeAllocation}
+                        onValueCommitted={values => { void persistRatios(snapRatios(values)) }}
+                        min={0}
+                        max={100}
+                        step={5}
+                        largeStep={10}
+                        thumbCollisionBehavior="none"
+                        disabled={isLoading}
+                        aria-describedby="allocation-help"
+                    >
+                        <Slider.Control className="allocation-control">
+                            <Slider.Track className="allocation-track">
+                                <span className="allocation-segment allocation-needs" style={{ width: `${boundaries[0]}%` }} />
+                                <span className="allocation-segment allocation-wants" style={{ width: `${boundaries[1] - boundaries[0]}%` }} />
+                                <span className="allocation-segment allocation-savings" style={{ width: `${100 - boundaries[1]}%` }} />
+                            </Slider.Track>
+                            <Slider.Thumb
+                                index={0}
+                                className="allocation-thumb"
+                                getAriaLabel={() => 'Needs and wants divider'}
+                                getAriaValueText={() => `${needs}% needs, ${wants}% wants, ${savings}% savings`}
+                            ><GripVertical aria-hidden="true" /></Slider.Thumb>
+                            <Slider.Thumb
+                                index={1}
+                                className="allocation-thumb"
+                                getAriaLabel={() => 'Wants and savings divider'}
+                                getAriaValueText={() => `${needs}% needs, ${wants}% wants, ${savings}% savings`}
+                            ><GripVertical aria-hidden="true" /></Slider.Thumb>
+                        </Slider.Control>
+                    </Slider.Root>
+                    <p id="allocation-help" className="allocation-help">Drag a divider to shift the two buckets beside it. Saves when you release. Total stays at 100%.<span>Or focus a divider and use the arrow keys for 5% steps.</span></p>
+                </div>
+                <div className="ratio-save-status" aria-live="polite">
+                    <span>{ratioStatus === 'editing' ? 'Release to save' : ratioStatus === 'saving' ? 'Saving…' : ratioStatus === 'saved' ? 'Saved' : ratioStatus === 'error' ? 'Targets not saved.' : ''}</span>
+                    {ratioStatus === 'error' && ratioDraft && <button type="button" className="settings-inline-action" onClick={() => { void persistRatios(ratioDraft) }}>Retry</button>}
+                    {undoRatios && ratioStatus === 'saved' && <button type="button" className="settings-inline-action" onClick={() => { void persistRatios(undoRatios, false) }}>Undo</button>}
+                </div>
+
+                <form id="starting-balance-form" onSubmit={saveBalance}>
                     <div className="starting-balance grid gap-2">
                         <div className="flex items-center gap-1.5">
                             <Label htmlFor='startingSavingsBalanceInput'>Starting savings balance</Label>
@@ -226,39 +168,39 @@ export default function BudgetSetup() {
                                 </PopoverContent>
                             </Popover>
                         </div>
-                        <div className="relative">
-                            <span
-                                className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
-                                aria-hidden="true"
-                            >
-                                $
-                            </span>
-                            <Input
-                                className="h-10 pl-6 sm:h-8"
-                                type='number'
-                                inputMode="decimal"
-                                step='0.01'
-                                id="startingSavingsBalanceInput"
-                                name="startingSavingsBalance"
-                                value={formData.startingSavingsBalance}
-                                onChange={handleChange}
-                                disabled={isDisabled}
-                                placeholder="0.00"
-                            />
+                        <div className="balance-save-row">
+                            <div className="relative min-w-0 flex-1">
+                                <span
+                                    className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
+                                    aria-hidden="true"
+                                >
+                                    $
+                                </span>
+                                <Input
+                                    className="h-10 pl-6 sm:h-8"
+                                    type='number'
+                                    inputMode="decimal"
+                                    step='0.01'
+                                    id="startingSavingsBalanceInput"
+                                    name="startingSavingsBalance"
+                                    value={balanceInput}
+                                    onChange={event => { setBalanceDraft(event.target.value); setBalanceStatus('idle'); setBalanceError('') }}
+                                    disabled={isLoading || balanceStatus === 'saving'}
+                                    required
+                                    aria-invalid={Boolean(balanceError)}
+                                    aria-describedby={balanceError ? 'balance-save-error' : undefined}
+                                    placeholder="0.00"
+                                />
+                            </div>
+                            <Button type="submit" className="h-11 px-4" disabled={isLoading || balanceStatus === 'saving' || !balanceDirty}>
+                                {balanceStatus === 'saving' ? 'Saving…' : balanceStatus === 'saved' ? <><Check aria-hidden="true" className="size-4" />Saved</> : 'Save'}
+                            </Button>
                         </div>
+                        {balanceError && <p id="balance-save-error" role="alert" className="text-xs text-destructive">{balanceError}</p>}
                     </div>
 
                 </form>
-                <div aria-live="polite">
-
-                    {!isRatioValid && (
-                        <p id="budget-ratio-message" className="mt-3 text-sm font-medium text-destructive">
-                            These targets need to add up to 100%. Move a divider to set a new plan.
-                        </p>
-                    )}
-                </div>
             </CardContent>
-
         </Card>
     )
 }
