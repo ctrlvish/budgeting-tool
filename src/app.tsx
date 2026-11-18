@@ -93,6 +93,7 @@ function App() {
             />
             <CloudAuthDialog />
             <HowToDialog
+                className={location.pathname === "/settings" ? "settings-theme" : undefined}
                 open={isHowToDialogOpen}
                 onOpenChange={handleHowToOpenChange}
             />

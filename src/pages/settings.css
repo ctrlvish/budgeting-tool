@@ -158,3 +158,6 @@
     .allocation-segment, .allocation-thumb { transition: none; }
     .settings-theme .app-page-scroll { scroll-behavior: auto; }
 }
+
+/* The help dialog is portaled outside the page, so it receives the theme explicitly. */
+.settings-theme.how-to-dialog { background: var(--card); }
