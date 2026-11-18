@@ -27,3 +27,6 @@ dist-ssr
 # dexie cloud
 dexie-cloud.json
 dexie-cloud.key
+
+# Private working ideas (keep local)
+/notes/

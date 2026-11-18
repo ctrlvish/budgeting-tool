@@ -50,7 +50,7 @@ function App() {
     }
 
     return (
-        <div className="flex h-lvh flex-col overflow-hidden">
+        <div className={`flex h-lvh flex-col overflow-hidden${location.pathname === "/settings" ? " settings-theme" : ""}`}>
             <AppHeader onLogTransaction={openTransactionDialog} />
             <div className="relative isolate min-h-0 flex-1 overflow-hidden">
                 <AnimatePresence mode="sync" initial={false}>

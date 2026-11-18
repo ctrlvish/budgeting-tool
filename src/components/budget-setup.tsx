@@ -1,8 +1,8 @@
 import { useState } from "react"
 import type { BudgetSetting } from '../types'
 import { db } from '../lib/db'
-import { 
-    Card, 
+import {
+    Card,
     CardHeader,
     CardContent,
     CardAction,
@@ -14,7 +14,8 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Info } from 'lucide-react'
+import { Info, GripVertical } from 'lucide-react'
+import { Slider } from '@base-ui/react/slider'
 import {
     Popover,
     PopoverContent,
@@ -106,22 +107,29 @@ export default function BudgetSetup() {
 
     const isDisabled = isLoading || isSaving
 
-    const total =
-        Number(formData.needs) +
-        Number(formData.wants) +
-        Number(formData.savings)
+    const needs = Number(formData.needs)
+    const wants = Number(formData.wants)
+    const savings = Number(formData.savings)
+    const isRatioValid = [needs, wants, savings].every(value => Number.isFinite(value) && value >= 0 && value <= 100)
+        && Math.abs(needs + wants + savings - 100) < 0.000001
+    const boundaries = isRatioValid ? [needs, needs + wants] : [50, 80]
 
-    const isRatioValid = total === 100
-
-    const ratioMessage = total < 100
-        ? `${100 - total}% left to allocate`
-        : `${Math.abs(100 - total)}% over allocation`
+    function changeAllocation(values : number[]) {
+        const first = Math.round(values[0])
+        const second = Math.round(values[1])
+        setFormDraft({
+            ...formData,
+            needs: String(first),
+            wants: String(second - first),
+            savings: String(100 - second)
+        })
+    }
 
     return (
         <Card className="w-full min-w-0">
             <CardHeader>
-                <CardTitle>Budget setup</CardTitle>
-                <CardDescription>Set savings and targets</CardDescription>
+                <CardTitle>Budget targets</CardTitle>
+                <CardDescription>One income, three buckets. Move the dividers to find your balance.</CardDescription>
                 <CardAction>
                     <Button
                         type="submit"
@@ -135,8 +143,55 @@ export default function BudgetSetup() {
                 </CardAction>
             </CardHeader>
             <CardContent>
-                <form id="budget-settings-form" className="grid items-end gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] md:gap-6" onSubmit={handleSubmit}>
-                    <div className="grid gap-2">
+                <form id="budget-settings-form" className="budget-form grid items-end gap-4" onSubmit={handleSubmit}>
+                    <div className="allocation-editor">
+                        <div className="allocation-values" aria-label="Budget percentages">
+                            {([
+                                ['Needs', needs, 'needs'],
+                                ['Wants', wants, 'wants'],
+                                ['Savings', savings, 'savings']
+                            ] as const).map(([label, value, bucket]) => (
+                                <div className={`allocation-value allocation-${bucket}`} key={bucket}>
+                                    <span><i aria-hidden="true" />{label}</span>
+                                    <strong>{value}<small>%</small></strong>
+                                </div>
+                            ))}
+                        </div>
+                        <Slider.Root
+                            className="allocation-slider"
+                            value={boundaries}
+                            onValueChange={changeAllocation}
+                            min={0}
+                            max={100}
+                            step={1}
+                            thumbCollisionBehavior="none"
+                            disabled={isDisabled}
+                            aria-describedby="allocation-help"
+                        >
+                            <Slider.Control className="allocation-control">
+                                <Slider.Track className="allocation-track">
+                                    <span className="allocation-segment allocation-needs" style={{ width: `${boundaries[0]}%` }} />
+                                    <span className="allocation-segment allocation-wants" style={{ width: `${boundaries[1] - boundaries[0]}%` }} />
+                                    <span className="allocation-segment allocation-savings" style={{ width: `${100 - boundaries[1]}%` }} />
+                                </Slider.Track>
+                                <Slider.Thumb
+                                    index={0}
+                                    className="allocation-thumb"
+                                    getAriaLabel={() => 'Needs and wants divider'}
+                                    getAriaValueText={() => `${needs}% needs, ${wants}% wants, ${savings}% savings`}
+                                ><GripVertical aria-hidden="true" /></Slider.Thumb>
+                                <Slider.Thumb
+                                    index={1}
+                                    className="allocation-thumb"
+                                    getAriaLabel={() => 'Wants and savings divider'}
+                                    getAriaValueText={() => `${needs}% needs, ${wants}% wants, ${savings}% savings`}
+                                ><GripVertical aria-hidden="true" /></Slider.Thumb>
+                            </Slider.Control>
+                        </Slider.Root>
+                        <p id="allocation-help" className="allocation-help">Drag a divider to shift the two buckets beside it. Total stays at 100%.<span>Or focus a divider and use the arrow keys for 1% steps.</span></p>
+                    </div>
+
+                    <div className="starting-balance grid gap-2">
                         <div className="flex items-center gap-1.5">
                             <Label htmlFor='startingSavingsBalanceInput'>Starting savings balance</Label>
                             <Popover>
@@ -185,62 +240,12 @@ export default function BudgetSetup() {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                        <div className="grid gap-2">
-                            <Label htmlFor='needsInput'>Needs (%)</Label>
-                            <Input
-                                className="h-10 sm:h-8"
-                                type='number'
-                                id="needsInput"
-                                name="needs"
-                                value={formData.needs}
-                                onChange={handleChange}
-                                disabled={isDisabled}
-                                placeholder="50"
-                                aria-required="true"
-                                aria-invalid={!isRatioValid}
-                                aria-describedby={!isRatioValid ? 'budget-ratio-message' : undefined}
-                            />
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor='wantsInput'>Wants (%)</Label>
-                            <Input
-                                className="h-10 sm:h-8"
-                                type='number'
-                                id="wantsInput"
-                                name="wants"
-                                value={formData.wants}
-                                onChange={handleChange}
-                                disabled={isDisabled}
-                                placeholder="30"
-                                aria-required="true"
-                                aria-invalid={!isRatioValid}
-                                aria-describedby={!isRatioValid ? 'budget-ratio-message' : undefined}
-                            />
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor='savingsInput'>Savings (%)</Label>
-                            <Input
-                                className="h-10 sm:h-8"
-                                type='number'
-                                id="savingsInput"
-                                name="savings"
-                                value={formData.savings}
-                                onChange={handleChange}
-                                disabled={isDisabled}
-                                placeholder="20"
-                                aria-required="true"
-                                aria-invalid={!isRatioValid}
-                                aria-describedby={!isRatioValid ? 'budget-ratio-message' : undefined}
-                            />
-                        </div>
-                    </div>
-
                 </form>
                 <div aria-live="polite">
+
                     {!isRatioValid && (
                         <p id="budget-ratio-message" className="mt-3 text-sm font-medium text-destructive">
-                            {ratioMessage}
+                            These targets need to add up to 100%. Move a divider to set a new plan.
                         </p>
                     )}
                 </div>
