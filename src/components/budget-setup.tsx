@@ -16,9 +16,7 @@ import { toast } from "sonner"
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Info, GripVertical, Check } from 'lucide-react'
 import { motion, useReducedMotion } from 'motion/react'
-import BudgetAllocationControl from './budget-allocation-control'
 import AnimatedPercentage from './animated-percentage'
-import type { Allocation } from '@/lib/budget-allocation'
 import { Slider } from '@base-ui/react/slider'
 import {
     Popover,
@@ -62,7 +60,6 @@ function formDataToBudgetSettings(formData : BudgetSettingsFormData) : BudgetSet
 export default function BudgetSetup() {
     const [formDraft, setFormDraft] = useState<BudgetSettingsFormData | null>(null)
     const [isSaving, setIsSaving] = useState(false)
-    const [controlMode, setControlMode] = useState<'dividers' | 'rebalance' | 'hold'>('rebalance')
     const [savedForm, setSavedForm] = useState<BudgetSettingsFormData | null>(null)
     const reduceMotion = useReducedMotion()
 
@@ -123,18 +120,14 @@ export default function BudgetSetup() {
     const boundaries = isRatioValid ? [needs, needs + wants] : [50, 80]
 
     function changeAllocation(values : number[]) {
-        const first = Math.round(values[0])
-        const second = Math.round(values[1])
+        const first = Math.round(values[0] / 5) * 5
+        const second = Math.round(values[1] / 5) * 5
         setFormDraft({
             ...formData,
             needs: String(first),
             wants: String(second - first),
             savings: String(100 - second)
         })
-    }
-
-    function updateAllocation(allocation: Allocation) {
-        setFormDraft({ ...formData, needs: String(allocation.needs), wants: String(allocation.wants), savings: String(allocation.savings) })
     }
 
     const isSaved = savedForm !== null && Object.keys(formData).every(key =>
@@ -144,7 +137,7 @@ export default function BudgetSetup() {
         <Card className="w-full min-w-0">
             <CardHeader>
                 <CardTitle>Budget targets</CardTitle>
-                <CardDescription>One income, three buckets. Choose how you want to adjust your plan.</CardDescription>
+                <CardDescription>One income, three buckets. Move the dividers to find your balance.</CardDescription>
                 <CardAction>
                     <Button
                         type="submit"
@@ -159,66 +152,52 @@ export default function BudgetSetup() {
             </CardHeader>
             <CardContent>
                 <form id="budget-settings-form" className="budget-form grid items-end gap-4" onSubmit={handleSubmit}>
-                    <div className="allocation-exploration">
-                        <div className="allocation-modes" role="group" aria-label="Budget adjustment method">
+                    <div className="allocation-editor">
+                        <div className="allocation-values" aria-label="Budget percentages">
                             {([
-                                ['rebalance', 'Rebalance'], ['hold', 'Hold one steady'], ['dividers', 'Dividers']
-                            ] as const).map(([mode, label]) => (
-                                <button type="button" key={mode} disabled={isDisabled} aria-pressed={controlMode === mode}
-                                    onClick={() => setControlMode(mode)}>{label}</button>
+                                ['Needs', needs, 'needs'],
+                                ['Wants', wants, 'wants'],
+                                ['Savings', savings, 'savings']
+                            ] as const).map(([label, value, bucket]) => (
+                                <div className={`allocation-value allocation-${bucket}`} key={bucket}>
+                                    <span><i aria-hidden="true" />{label}</span>
+                                    <strong><AnimatedPercentage value={value} /></strong>
+                                </div>
                             ))}
                         </div>
-                        {controlMode === 'dividers' ? <div className="allocation-editor">
-                            <div className="allocation-values" aria-label="Budget percentages">
-                                {([
-                                    ['Needs', needs, 'needs'],
-                                    ['Wants', wants, 'wants'],
-                                    ['Savings', savings, 'savings']
-                                ] as const).map(([label, value, bucket]) => (
-                                    <div className={`allocation-value allocation-${bucket}`} key={bucket}>
-                                        <span><i aria-hidden="true" />{label}</span>
-                                        <strong><AnimatedPercentage value={value} /></strong>
-                                    </div>
-                                ))}
-                            </div>
-                            <Slider.Root
-                                className="allocation-slider"
-                                value={boundaries}
-                                onValueChange={changeAllocation}
-                                min={0}
-                                max={100}
-                                step={1}
-                                thumbCollisionBehavior="none"
-                                disabled={isDisabled}
-                                aria-describedby="allocation-help"
-                            >
-                                <Slider.Control className="allocation-control">
-                                    <Slider.Track className="allocation-track">
-                                        <span className="allocation-segment allocation-needs" style={{ width: `${boundaries[0]}%` }} />
-                                        <span className="allocation-segment allocation-wants" style={{ width: `${boundaries[1] - boundaries[0]}%` }} />
-                                        <span className="allocation-segment allocation-savings" style={{ width: `${100 - boundaries[1]}%` }} />
-                                    </Slider.Track>
-                                    <Slider.Thumb
-                                        index={0}
-                                        className="allocation-thumb"
-                                        getAriaLabel={() => 'Needs and wants divider'}
-                                        getAriaValueText={() => `${needs}% needs, ${wants}% wants, ${savings}% savings`}
-                                    ><GripVertical aria-hidden="true" /></Slider.Thumb>
-                                    <Slider.Thumb
-                                        index={1}
-                                        className="allocation-thumb"
-                                        getAriaLabel={() => 'Wants and savings divider'}
-                                        getAriaValueText={() => `${needs}% needs, ${wants}% wants, ${savings}% savings`}
-                                    ><GripVertical aria-hidden="true" /></Slider.Thumb>
-                                </Slider.Control>
-                            </Slider.Root>
-                            <p id="allocation-help" className="allocation-help">Drag a divider to shift the two buckets beside it. Total stays at 100%.<span>Or focus a divider and use the arrow keys for 1% steps.</span></p>
-                        </div> : <BudgetAllocationControl
-                            key={controlMode}
-                            values={isRatioValid ? { needs, wants, savings } : { needs: 50, wants: 30, savings: 20 }}
-                            onChange={updateAllocation}
-                            holdOne={controlMode === 'hold'} disabled={isDisabled}
-                        />}
+                        <Slider.Root
+                            className="allocation-slider"
+                            value={boundaries}
+                            onValueChange={changeAllocation}
+                            min={0}
+                            max={100}
+                            step={5}
+                            largeStep={10}
+                            thumbCollisionBehavior="none"
+                            disabled={isDisabled}
+                            aria-describedby="allocation-help"
+                        >
+                            <Slider.Control className="allocation-control">
+                                <Slider.Track className="allocation-track">
+                                    <span className="allocation-segment allocation-needs" style={{ width: `${boundaries[0]}%` }} />
+                                    <span className="allocation-segment allocation-wants" style={{ width: `${boundaries[1] - boundaries[0]}%` }} />
+                                    <span className="allocation-segment allocation-savings" style={{ width: `${100 - boundaries[1]}%` }} />
+                                </Slider.Track>
+                                <Slider.Thumb
+                                    index={0}
+                                    className="allocation-thumb"
+                                    getAriaLabel={() => 'Needs and wants divider'}
+                                    getAriaValueText={() => `${needs}% needs, ${wants}% wants, ${savings}% savings`}
+                                ><GripVertical aria-hidden="true" /></Slider.Thumb>
+                                <Slider.Thumb
+                                    index={1}
+                                    className="allocation-thumb"
+                                    getAriaLabel={() => 'Wants and savings divider'}
+                                    getAriaValueText={() => `${needs}% needs, ${wants}% wants, ${savings}% savings`}
+                                ><GripVertical aria-hidden="true" /></Slider.Thumb>
+                            </Slider.Control>
+                        </Slider.Root>
+                        <p id="allocation-help" className="allocation-help">Drag a divider to shift the two buckets beside it. Total stays at 100%.<span>Or focus a divider and use the arrow keys for 5% steps.</span></p>
                     </div>
                     <div className="starting-balance grid gap-2">
                         <div className="flex items-center gap-1.5">
