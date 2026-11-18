@@ -149,3 +149,49 @@
     .allocation-value strong { font-size: 34px; }
     .allocation-track { height: 42px; }
 }
+
+.allocation-modes { display: flex; flex-wrap: wrap; gap: 6px; padding: 5px; margin-bottom: 24px; background: var(--secondary); border-radius: 15px; width: fit-content; }
+.allocation-modes button { padding: 9px 13px; min-height: 40px; border-radius: 11px; font-size: 12px; cursor: pointer; color: var(--muted-foreground); transition: background 160ms, color 160ms, box-shadow 160ms; }
+.allocation-modes button[aria-pressed="true"] { background: var(--card); color: var(--foreground); box-shadow: 0 1px 4px #0000000d; }
+.allocation-modes button:focus-visible, .bucket-select:focus-visible, .bucket-lock:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
+.allocation-modes button:disabled, .bucket-control button:disabled { cursor: default; }
+.bucket-choices { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.bucket-choice { border: 1px solid transparent; border-radius: 16px; transition: border-color 180ms, background 180ms; overflow: hidden; }
+.bucket-choice[data-selected="true"] { border-color: var(--input); background: color-mix(in srgb, var(--allocation-color) 18%, var(--card)); }
+.bucket-select { display: block; width: 100%; text-align: left; padding: 14px 12px; cursor: pointer; border-radius: 14px; }
+.bucket-select > span { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted-foreground); }
+.bucket-select i { width: 8px; height: 8px; border-radius: 50%; background: var(--allocation-color); flex-shrink: 0; }
+.bucket-select strong { display: block; font: 450 clamp(30px, 4vw, 46px)/1.3 var(--font-heading); letter-spacing: -1.5px; font-variant-numeric: tabular-nums; margin-top: 8px; }
+.bucket-select small { font-size: .45em; color: var(--muted-foreground); margin-left: 2px; }
+.bucket-lock { display: flex; align-items: center; justify-content: center; gap: 5px; padding: 9px 4px; min-height: 38px; width: 100%; font-size: 11px; color: var(--muted-foreground); cursor: pointer; }
+.bucket-lock svg { width: 12px; height: 12px; flex-shrink: 0; }
+.bucket-lock[aria-pressed="true"] { background: var(--secondary); color: var(--foreground); }
+.rebalance-flow { display: flex; height: 18px; border-radius: 8px; overflow: hidden; margin: 24px 0; }
+.rebalance-flow > span { background: var(--allocation-color); height: 100%; transition: width 180ms cubic-bezier(.2,.8,.2,1); }
+.bucket-slider-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 13px; margin-bottom: 5px; }
+.bucket-slider-heading > span:last-child { font-size: 11px; color: var(--muted-foreground); text-align: right; }
+.single-bucket-slider { padding-inline: 14px; }
+.single-bucket-track-control { display: flex; align-items: center; height: 48px; position: relative; user-select: none; touch-action: pan-y; }
+.single-bucket-track { width: 100%; height: 7px; border-radius: 10px; overflow: hidden; background: var(--secondary); }
+.single-bucket-indicator { height: 100%; background: var(--allocation-color); }
+.single-bucket-thumb { position: absolute; top: 50%; width: 44px; height: 44px; touch-action: none; cursor: ew-resize; }
+.single-bucket-thumb::before { content: ''; position: absolute; inset: 8px; border-radius: 50%; background: var(--card); border: 2px solid var(--ring); box-shadow: 0 2px 5px #00000012; transition: transform 150ms; }
+.single-bucket-thumb[data-dragging]::before { transform: scale(1.12); }
+.single-bucket-thumb:focus-within::before { outline: 2px solid var(--ring); outline-offset: 3px; }
+.single-bucket-slider[data-disabled] { opacity: .5; }
+.settings-theme .app-page-scroll { scroll-behavior: smooth; }
+@media (max-width: 440px) {
+    .allocation-modes { gap: 2px; padding: 3px; width: 100%; }
+    .allocation-modes button { flex: 1; padding: 8px 5px; font-size: 11px; }
+    .bucket-choices { gap: 4px; }
+    .bucket-select { padding: 12px 6px; }
+    .bucket-select > span { font-size: 11px; gap: 5px; }
+    .bucket-select strong { font-size: 30px; }
+    .bucket-lock { flex-direction: column; font-size: 10px; gap: 3px; }
+    .bucket-slider-heading { flex-wrap: wrap; gap: 4px; }
+    .bucket-slider-heading > span:last-child { text-align: left; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .rebalance-flow > span, .bucket-choice, .allocation-modes button, .single-bucket-thumb::before { transition: none; }
+    .settings-theme .app-page-scroll { scroll-behavior: auto; }
+}
