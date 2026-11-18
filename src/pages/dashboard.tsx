@@ -7,7 +7,6 @@ import { getDashboardYear, getSpendingBudget } from '@/lib/dashboard-summary'
 import { DashboardError, DashboardLoading } from '@/components/dashboard-state'
 import PeriodNavigation from '@/components/period-navigation'
 import MonthlyComparison from '@/components/monthly-comparison'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 
 interface DashboardProps {
@@ -100,11 +99,11 @@ export default function Dashboard({ onLogTransaction } : DashboardProps) {
                                     {!hasIncome && (
                                         <div className="income-prompt">
                                             {month.hasActivity && <p className="text-sm text-muted-foreground">spent this month</p>}
-                                            <p className="income-explanation">Log income for {format(selectedMonth, 'MMMM')} to calculate your needs, wants, and savings budget.{month.hasActivity ? ' Your spending is already recorded.' : ''}</p>
-                                            <Button
-                                                variant="outline"
-                                                onClick={() => onLogTransaction(format(isSameMonth(selectedMonth, new Date()) ? new Date() : selectedMonth, 'yyyy-MM-dd'), 'income')}
-                                            >Log income</Button>
+                                            <p className="income-explanation">
+                                                <button type="button" className="income-link" aria-haspopup="dialog"
+                                                    onClick={() => onLogTransaction(format(isSameMonth(selectedMonth, new Date()) ? new Date() : selectedMonth, 'yyyy-MM-dd'), 'income')}
+                                                >Log income</button>{' '}for {format(selectedMonth, 'MMMM')} to calculate your needs, wants, and savings budget.{month.hasActivity ? ' Your spending is already recorded.' : ''}
+                                            </p>
                                         </div>
                                     )}
                                 </div>

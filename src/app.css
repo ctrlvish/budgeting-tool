@@ -25,7 +25,9 @@
 .balance-amount.is-shortfall { color: var(--destructive); }
 .income-prompt { display: grid; justify-items: start; gap: 14px; }
 .income-explanation { max-width: 44ch; font-size: 14px; line-height: 1.7; color: var(--muted-foreground); }
-.income-prompt > button { min-height: 40px; padding-inline: 18px; }
+.income-link { display: inline; padding: 0; font: inherit; color: var(--foreground); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.income-link:hover { color: var(--primary); }
+.income-link:focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; border-radius: 2px; }
 .overview-totals { font-size: 14px; }
 .overview-totals > div { display: flex; justify-content: space-between; gap: 20px; padding: 13px 0; border-bottom: 1px solid var(--border); }
 .money-flow { display: flex; height: 17px; gap: 4px; margin-top: 38px; background: var(--muted); border-radius: 9px; overflow: hidden; }
