@@ -22,8 +22,8 @@ export default defineConfig({
         name: 'budgeting tool',
         short_name: 'budget',
         description: 'A private, local-first budgeting tool.',
-        theme_color: '#161311',
-        background_color: '#f3f2ef',
+        theme_color: '#fcfcfd',
+        background_color: '#fcfcfd',
         display: 'standalone',
         icons: [
           {

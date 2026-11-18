@@ -50,7 +50,7 @@ function App() {
     }
 
     return (
-        <div className={`flex h-lvh flex-col overflow-hidden${location.pathname === "/settings" ? " settings-theme" : ""}`}>
+        <div className="app-shell flex h-lvh flex-col overflow-hidden">
             <AppHeader onLogTransaction={openTransactionDialog} />
             <div className="relative isolate min-h-0 flex-1 overflow-hidden">
                 <AnimatePresence mode="sync" initial={false}>
@@ -93,7 +93,6 @@ function App() {
             />
             <CloudAuthDialog />
             <HowToDialog
-                className={location.pathname === "/settings" ? "settings-theme" : undefined}
                 open={isHowToDialogOpen}
                 onOpenChange={handleHowToOpenChange}
             />

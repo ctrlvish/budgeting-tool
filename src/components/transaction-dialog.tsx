@@ -272,9 +272,9 @@ export default function TransactionDialog({
                 onOpenChange={handleOpenChange}
                 onOpenChangeComplete={handleOpenChangeComplete}
             >
-            <DialogContent className="max-h-[calc(100dvh-1.5rem)] max-w-[calc(100%-3rem)] gap-5 overflow-y-auto [&_[data-slot=dialog-close]]:size-9 sm:max-h-[calc(100dvh-2rem)] sm:max-w-sm sm:gap-4 sm:**:data-[slot=dialog-close]:size-7">
+            <DialogContent className="max-h-[calc(100dvh-1.5rem)] max-w-[calc(100%-3rem)] gap-5 overflow-y-auto [&_[data-slot=dialog-close]]:size-9 sm:max-h-[calc(100dvh-2rem)] sm:max-w-lg sm:gap-6 sm:**:data-[slot=dialog-close]:size-7">
                 <DialogHeader className="gap-1.5 sm:gap-2">
-                    <DialogTitle className="text-lg sm:text-base">
+                    <DialogTitle className="text-lg sm:text-xl">
                         {isEditing ? 'Edit Transaction' : 'Log Transaction'}
                     </DialogTitle>
                     {!isEditing && (
@@ -360,7 +360,7 @@ export default function TransactionDialog({
                         <div className="grid min-w-0 gap-2">
                             <Label htmlFor="transactionDate">Date</Label>
                             <Input
-                                className="h-10 max-h-10 min-h-0 min-w-0 max-w-full appearance-none text-sm leading-5 [&::-webkit-calendar-picker-indicator]:opacity-50 sm:h-8 sm:max-h-8 dark:[&::-webkit-calendar-picker-indicator]:invert"
+                                className="h-10 max-h-10 min-h-0 min-w-0 max-w-full appearance-none text-sm leading-5 [&::-webkit-calendar-picker-indicator]:opacity-50 sm:h-8 sm:max-h-8"
                                 id="transactionDate"
                                 type="date"
                                 value={date}

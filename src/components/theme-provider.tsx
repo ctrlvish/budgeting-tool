@@ -33,21 +33,21 @@ export function ThemeProvider({
   useEffect(() => {
     const root = window.document.documentElement
 
-    root.classList.remove("light", "dark")
-
-    const appliedTheme = theme === "system"
-      ? window.matchMedia("(prefers-color-scheme: dark)")
-        .matches
-        ? "dark"
-        : "light"
-      : theme
-
-    root.classList.add(appliedTheme)
-
-    const themeColor = appliedTheme === "dark" ? "#161311" : "#f3f2ef"
-    window.document
-      .querySelector<HTMLMetaElement>('meta[name="theme-color"]')
-      ?.setAttribute("content", themeColor)
+    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)')
+    const applyTheme = () => {
+      const appliedTheme = theme === 'system'
+        ? systemTheme.matches ? 'dark' : 'light'
+        : theme
+      root.classList.remove('light', 'dark')
+      root.classList.add(appliedTheme)
+      window.document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
+        ?.setAttribute('content', appliedTheme === 'dark' ? '#1e1f24' : '#fcfcfd')
+    }
+    applyTheme()
+    if (theme === 'system') {
+      systemTheme.addEventListener('change', applyTheme)
+      return () => systemTheme.removeEventListener('change', applyTheme)
+    }
   }, [theme])
 
   const value = {

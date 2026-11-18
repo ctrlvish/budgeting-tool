@@ -4,11 +4,9 @@ import {
     DialogHeader,
     DialogTitle
 } from '@/components/ui/dialog'
-import { cn } from '@/lib/utils'
 
 interface HowToDialogProps {
     open : boolean
-    className? : string
     onOpenChange : (open : boolean) => void
 }
 
@@ -23,14 +21,13 @@ function isRunningStandalone() {
 
 export default function HowToDialog({
     open,
-    className,
     onOpenChange
 } : HowToDialogProps) {
     const showInstallGuide = !isRunningStandalone()
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className={cn("how-to-dialog max-h-[calc(100dvh-1.5rem)] max-w-[calc(100%-3rem)] gap-6 overflow-y-auto p-5 **:data-[slot=dialog-close]:size-9 sm:max-h-[calc(100dvh-3rem)] sm:max-w-[min(52rem,calc(100%-4rem))] sm:gap-8 sm:p-10 md:p-12 sm:**:data-[slot=dialog-close]:size-8", className)}>
+            <DialogContent className="how-to-dialog max-h-[calc(100dvh-1.5rem)] max-w-[calc(100%-3rem)] gap-6 overflow-y-auto p-5 **:data-[slot=dialog-close]:size-9 sm:max-h-[calc(100dvh-3rem)] sm:max-w-[min(52rem,calc(100%-4rem))] sm:gap-8 sm:p-10 md:p-12 sm:**:data-[slot=dialog-close]:size-8">
                 <DialogHeader className="pr-8">
                     <DialogTitle className="text-lg sm:text-2xl sm:tracking-tight">How budgeting tool works</DialogTitle>
                 </DialogHeader>

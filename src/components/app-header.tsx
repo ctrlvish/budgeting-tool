@@ -6,7 +6,7 @@ import { useState } from "react"
 import { ModeToggle } from "./mode-toggle"
 
 const navigationLinkStyles = `
-    rounded-sm px-3 py-1.5 font-heading text-sm font-medium text-foreground
+    rounded-sm px-3 py-1.5 font-heading text-sm font-normal text-foreground
     transition-colors duration-150 hover:text-muted-foreground
     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
     dark:font-normal
@@ -35,12 +35,12 @@ export default function AppHeader({ onLogTransaction } : AppHeaderProps) {
 
     return (
         <>
-            <header className="sticky top-0 z-40 w-full border-b border-border/50 shrink-0 isolate bg-background/85 backdrop-blur-xl pt-[calc(env(safe-area-inset-top)+1rem)] sm:pt-[env(safe-area-inset-top)]">
-                <div className="mx-auto grid h-14 w-full max-w-4xl grid-cols-[minmax(0,1fr)_auto] items-center px-4 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+            <header className="app-header sticky top-0 z-40 w-full border-b border-border/50 shrink-0 isolate bg-background/85 backdrop-blur-xl pt-[calc(env(safe-area-inset-top)+1rem)] sm:pt-[env(safe-area-inset-top)]">
+                <div className="mx-auto grid h-14 w-full max-w-[1180px] grid-cols-[minmax(0,1fr)_auto] items-center px-4 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
                     <div className="flex h-full items-center">
                         <NavLink
                             to='/'
-                            className="relative inline-flex font-heading text-sm font-medium text-foreground transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:font-normal sm:text-base"
+                            className="relative inline-flex font-heading text-sm font-normal text-foreground transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:font-normal sm:text-base"
                         >
                             budgeting tool
                         </NavLink>
@@ -89,7 +89,7 @@ export default function AppHeader({ onLogTransaction } : AppHeaderProps) {
                 <div className="relative grid h-12 grid-cols-3">
                     <motion.span
                         aria-hidden="true"
-                        className="pointer-events-none absolute inset-y-0 left-0 w-1/3 rounded-full bg-foreground/10 dark:bg-black/25"
+                        className="pointer-events-none absolute inset-y-0 left-0 w-1/3 rounded-full bg-accent"
                         initial={false}
                         animate={{
                             transform: `translateX(${selectedPosition}%)`,
