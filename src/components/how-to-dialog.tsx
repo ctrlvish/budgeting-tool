@@ -38,14 +38,14 @@ export default function HowToDialog({
                 <div className="grid gap-6 md:grid-cols-3 md:gap-x-8 md:gap-y-9">
                     {showInstallGuide && (
                         <section className="grid gap-2 border-b pb-6 md:col-span-3 md:grid-cols-[1fr_1.35fr] md:gap-x-10 md:pb-8">
-                            <h2 className="font-heading font-medium">Use it like an app</h2>
+                            <h2 className="font-heading font-medium">Install on your phone</h2>
                             <p className="leading-relaxed text-muted-foreground md:col-start-1">
-                                For the best experience, add budgeting tool to your Home Screen.
+                                On your phone, add budgeting tool to your Home Screen to open it like an app. On a computer, you can use it in your browser.
                             </p>
                             <div className="grid content-start gap-1.5 text-xs leading-relaxed text-muted-foreground md:gap-3 md:col-start-2 md:row-span-2 md:row-start-1">
                                 <p className="flex items-start gap-2">
                                     <span className="w-14 shrink-0 font-medium text-foreground">
-                                        Apple
+                                        iPhone
                                     </span>
                                     <span>
                                         Open Share in Safari, then choose Add to Home Screen.
