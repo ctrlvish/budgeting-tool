@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="public/favicon.svg" alt="Budgeting Tool" width="150" />
+  <img src="public/favicon.svg" alt="Budgeting Tool fairy icon" width="150" />
   <h1>Budgeting Tool</h1>
   <p>A simple, local-first way to understand where your money goes.</p>
   <p><strong>Works offline · Syncs across devices · Installs like an app</strong></p>

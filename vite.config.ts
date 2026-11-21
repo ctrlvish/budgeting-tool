@@ -16,6 +16,7 @@ export default defineConfig({
       },
       includeAssets: [
         'favicon.svg',
+        'favicon.ico',
         'apple-touch-icon-180x180.png',
       ],
       manifest: {
@@ -35,6 +36,12 @@ export default defineConfig({
             src: 'pwa-512x512.png',
             sizes: '512x512',
             type: 'image/png',
+          },
+          {
+            src: 'maskable-icon-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
           },
         ],
       }

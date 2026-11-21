@@ -1,7 +1,7 @@
 ## Future improvements
 
 ### Stronger visual identity
-Replace the current neutral palette with a more colours or the capybara mascot in the App icon. 
+Refine the fairy app icon and the new visual theme across desktop and mobile.
 
 ### Easier category deletion
 Allow users to move all affected transactions and templates to another category before deleting the old category.

@@ -7,7 +7,6 @@ import { getDashboardYear, getSpendingBudget } from '@/lib/dashboard-summary'
 import { DashboardError, DashboardLoading } from '@/components/dashboard-state'
 import PeriodNavigation from '@/components/period-navigation'
 import MonthlyComparison from '@/components/monthly-comparison'
-import DashboardFairy from '@/components/dashboard-fairy'
 import { Card, CardContent } from '@/components/ui/card'
 
 interface DashboardProps {
@@ -94,12 +93,9 @@ export default function Dashboard({ onLogTransaction } : DashboardProps) {
                             <div className="overview-layout">
                                 <div className="min-w-0">
                                     <h2 className="text-sm text-muted-foreground">{!hasIncome ? 'No income logged' : budget.remainingCents < 0 ? 'Shortfall' : 'Left to spend'}</h2>
-                                    <div className="balance-with-fairy">
-                                        <p className={`balance-amount ${hasIncome && budget.remainingCents < 0 ? "is-shortfall" : ""}`}>
-                                            {hasIncome ? money(Math.abs(budget.remainingCents)) : month.hasActivity ? money(month.spentCents) : '—'}
-                                        </p>
-                                        <div className="dashboard-fairy"><DashboardFairy /></div>
-                                    </div>
+                                    <p className={`balance-amount ${hasIncome && budget.remainingCents < 0 ? "is-shortfall" : ""}`}>
+                                        {hasIncome ? money(Math.abs(budget.remainingCents)) : month.hasActivity ? money(month.spentCents) : '—'}
+                                    </p>
                                     {!hasIncome && (
                                         <div className="income-prompt">
                                             {month.hasActivity && <p className="text-sm text-muted-foreground">spent this month</p>}
