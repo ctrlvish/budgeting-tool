@@ -85,7 +85,7 @@
 @media (max-width: 639px) {
     .monthly-recap { --recap-category-width: 72px; --recap-month-width: 96px; }
     .recap-table { font-size: 12px; }
-    .dashboard-page .recap-table [data-slot="table-cell"], .dashboard-page .recap-table [data-slot="table-head"] { padding: 10px 5px; letter-spacing: -.2px; white-space: normal; overflow-wrap: anywhere; }
+    .dashboard-page .recap-table [data-slot="table-cell"], .dashboard-page .recap-table [data-slot="table-head"] { padding: 8px; letter-spacing: -.2px; white-space: normal; overflow-wrap: anywhere; }
     .recap-table .recap-row-heading button { padding-left: 12px; padding-right: 0; font-size: 11px; line-height: 1.3; }
     .recap-table .recap-row-heading button svg { width: 11px; }
 }
@@ -108,8 +108,9 @@
     .dashboard-period .period-controls > button:nth-child(2) { width: 36px; font-size: 10px; }
 }
 
+/* Match main's table spacing while retaining the mobile comparison widths. */
 @media (max-width: 639px) {
-    .dashboard-page .recap-table [data-slot="table-cell"], .dashboard-page .recap-table [data-slot="table-head"] { height: auto; min-height: 0; padding-block: 4px; line-height: 1.2; }
-    .recap-table .recap-row-heading button { height: auto; min-height: 18px; padding-block: 0; line-height: 1.2; }
-    .monthly-recap [data-slot="card-content"]:has(.recap-table) { min-height: 0; }
+    .dashboard-page .recap-table [data-slot="table-cell"] { padding: 8px; line-height: 1.5; }
+    .dashboard-page .recap-table [data-slot="table-head"] { height: 40px; padding-block: 0; line-height: 1.5; }
+    .recap-table .recap-row-heading button { min-height: 36px; padding-block: 0; }
 }
