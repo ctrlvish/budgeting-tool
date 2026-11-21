@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react"
+import { createContext, useContext, useLayoutEffect, useState } from "react"
 
 type Theme = "dark" | "light" | "system"
 
@@ -30,7 +30,7 @@ export function ThemeProvider({
     () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
   )
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root = window.document.documentElement
 
     const systemTheme = window.matchMedia('(prefers-color-scheme: dark)')
@@ -40,8 +40,18 @@ export function ThemeProvider({
         : theme
       root.classList.remove('light', 'dark')
       root.classList.add(appliedTheme)
-      window.document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
-        ?.setAttribute('content', appliedTheme === 'dark' ? '#1e1f24' : '#fcfcfd')
+      const background = getComputedStyle(root).getPropertyValue('--background').trim()
+      root.style.backgroundColor = background
+      document.body.style.backgroundColor = background
+
+      // Reinsert the tag so Safari refreshes its browser chrome immediately.
+      // Updating content in place can leave the previous tint until rotation.
+      const previousThemeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
+      const themeColor = document.createElement('meta')
+      themeColor.name = 'theme-color'
+      themeColor.content = background
+      previousThemeColor?.remove()
+      document.head.appendChild(themeColor)
     }
     applyTheme()
     if (theme === 'system') {
