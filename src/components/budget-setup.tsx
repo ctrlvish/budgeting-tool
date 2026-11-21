@@ -24,6 +24,8 @@ export default function BudgetSetup() {
     const savedSettings = useLiveQuery(() => db.budgetSettings.get('#budget-settings'), [], null)
     const isLoading = savedSettings === null
     const settings = savedSettings ?? defaultBudgetSettings
+    const [isEditingTargets, setIsEditingTargets] = useState(false)
+    const touchGesture = useRef<{ x: number; y: number; axis: 'horizontal' | 'vertical' | null } | null>(null)
     const [ratioDraft, setRatioDraft] = useState<BudgetRatios | null>(null)
     const [ratioStatus, setRatioStatus] = useState<SaveStatus>('idle')
     const [undoRatios, setUndoRatios] = useState<BudgetRatios | null>(null)
@@ -39,7 +41,20 @@ export default function BudgetSetup() {
     const balanceCents = Math.round(Number(balanceInput) * 100)
     const balanceDirty = balanceDraft !== null && balanceCents !== settings.startingSavingsBalanceCents
 
-    function changeAllocation(values: number[]) {
+    function changeAllocation(values: number[], details: Slider.Root.ChangeEventDetails) {
+        if (!isEditingTargets || ratioStatus === 'saving') return
+        const gesture = touchGesture.current
+        if (gesture && (details.reason === 'drag' || details.reason === 'track-press')) {
+            const event = details.event
+            const point = 'touches' in event ? event.touches[0] : 'clientX' in event ? event : null
+            if (!point) return
+            const dx = Math.abs(point.clientX - gesture.x)
+            const dy = Math.abs(point.clientY - gesture.y)
+            if (!gesture.axis && Math.max(dx, dy) >= 8) {
+                gesture.axis = dx > dy ? 'horizontal' : 'vertical'
+            }
+            if (gesture.axis !== 'horizontal') return
+        }
         ratioRevision.current += 1
         setRatioDraft(snapRatios(values))
         setRatioStatus('editing')
@@ -54,6 +69,7 @@ export default function BudgetSetup() {
             if (revision !== ratioRevision.current) return
             setRatioDraft(null)
             setRatioStatus('saved')
+            setIsEditingTargets(false)
             setUndoRatios(offerUndo ? getRatios(previous) : null)
         } catch (error) {
             console.error('Failed to save budget targets', error)
@@ -84,7 +100,7 @@ export default function BudgetSetup() {
         <Card className="w-full min-w-0">
             <CardHeader>
                 <CardTitle>Budget targets</CardTitle>
-                <CardDescription>One income, three buckets. Move the dividers to find your balance.</CardDescription>
+                <CardDescription>One income, three buckets.</CardDescription>
             </CardHeader>
             <CardContent className="budget-settings-content">
                 {isLoading ? (
@@ -112,16 +128,22 @@ export default function BudgetSetup() {
                         className="allocation-slider"
                         value={boundaries}
                         onValueChange={changeAllocation}
-                        onValueCommitted={values => { void persistRatios(snapRatios(values)) }}
                         min={0}
                         max={100}
                         step={5}
                         largeStep={10}
                         thumbCollisionBehavior="none"
-                        disabled={isLoading}
-                        aria-describedby="allocation-help"
+                        disabled={!isEditingTargets || ratioStatus === 'saving'}
                     >
-                        <Slider.Control className="allocation-control">
+                        <Slider.Control
+                            className="allocation-control"
+                            onPointerDownCapture={event => {
+                                touchGesture.current = event.pointerType === 'touch' || event.pointerType === 'pen'
+                                    ? { x: event.clientX, y: event.clientY, axis: null }
+                                    : null
+                            }}
+                            onKeyDownCapture={() => { touchGesture.current = null }}
+                        >
                             <Slider.Track className="allocation-track">
                                 <span className="allocation-segment allocation-needs" style={{ width: `${boundaries[0]}%` }} />
                                 <span className="allocation-segment allocation-wants" style={{ width: `${boundaries[1] - boundaries[0]}%` }} />
@@ -141,11 +163,27 @@ export default function BudgetSetup() {
                             ><GripVertical aria-hidden="true" /></Slider.Thumb>
                         </Slider.Control>
                     </Slider.Root>
-                    <p id="allocation-help" className="allocation-help">Drag a divider to shift the two buckets beside it. Saves when you release. Total stays at 100%.<span>Or focus a divider and use the arrow keys for 5% steps.</span></p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                        {isEditingTargets ? <>
+                            <Button type="button" disabled={ratioStatus === 'saving' || !isRatioValid} onClick={() => { void persistRatios({ needs, wants, savings }) }}>
+                                {ratioStatus === 'saving' ? 'Saving…' : 'Done'}
+                            </Button>
+                            <Button type="button" variant="outline" disabled={ratioStatus === 'saving'} onClick={() => {
+                                ratioRevision.current += 1
+                                setRatioDraft(null)
+                                setRatioStatus('idle')
+                                setIsEditingTargets(false)
+                            }}>Cancel</Button>
+                        </> : <Button type="button" variant="outline" disabled={ratioStatus === 'saving'} onClick={() => {
+                            setRatioDraft(getRatios(settings))
+                            setRatioStatus('idle')
+                            setUndoRatios(null)
+                            setIsEditingTargets(true)
+                        }}>Edit targets</Button>}
+                    </div>
                 </div>
                 <div className="ratio-save-status" aria-live="polite">
-                    <span>{ratioStatus === 'editing' ? 'Release to save' : ratioStatus === 'saving' ? 'Saving…' : ratioStatus === 'saved' ? 'Saved' : ratioStatus === 'error' ? 'Targets not saved.' : ''}</span>
-                    {ratioStatus === 'error' && ratioDraft && <button type="button" className="settings-inline-action" onClick={() => { void persistRatios(ratioDraft) }}>Retry</button>}
+                    <span>{ratioStatus === 'saving' ? 'Saving…' : ratioStatus === 'saved' ? 'Saved' : ratioStatus === 'error' ? 'Couldn’t save targets. Try again.' : ''}</span>
                     {undoRatios && ratioStatus === 'saved' && <button type="button" className="settings-inline-action" onClick={() => { void persistRatios(undoRatios, false) }}>Undo</button>}
                 </div>
 
