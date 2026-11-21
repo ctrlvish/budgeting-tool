@@ -107,3 +107,19 @@
     .dashboard-period .period-controls > button:last-child { width: 24px; }
     .dashboard-period .period-controls > button:nth-child(2) { width: 36px; font-size: 10px; }
 }
+
+/* Reserve one content-bound home for the supplied fairy beside the main amount. */
+.overview-layout { grid-template-columns: minmax(0, 1fr) 260px; gap: 48px; }
+.balance-with-fairy { display: grid; grid-template-columns: minmax(0, 1fr) 160px; align-items: center; gap: 20px; }
+.dashboard-fairy { display: grid; place-items: center; width: 160px; height: 160px; }
+.dashboard-fairy svg { display: block; width: 100%; height: auto; overflow: visible; }
+@media (max-width: 800px) {
+    .overview-layout { grid-template-columns: minmax(0, 1fr); gap: 22px; }
+    .balance-with-fairy { grid-template-columns: minmax(0, 1fr) 96px; gap: 12px; }
+    .dashboard-fairy { width: 96px; height: 96px; }
+    .balance-with-fairy .balance-amount { font-size: clamp(28px, 8.6vw, 68px); }
+}
+@media (max-width: 374px) {
+    .balance-with-fairy { grid-template-columns: minmax(0, 1fr) 80px; }
+    .dashboard-fairy { width: 80px; height: 80px; }
+}
