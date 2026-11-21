@@ -6,7 +6,7 @@ import Dashboard from './pages/dashboard'
 import Transactions from './pages/transactions'
 import Settings from './pages/settings-page'
 import PageTransition from './components/page-transition'
-import type { Transaction } from './types'
+import type { Transaction, TransactionType } from './types'
 import { useLocation } from 'react-router'
 import { AnimatePresence } from 'motion/react'
 import CloudAuthDialog from './components/cloud-auth-dialog'
@@ -17,6 +17,7 @@ const HOW_TO_SEEN_KEY = 'budgeting-tool-how-to-seen'
 function App() {
     const [isTransactionDialogOpen, setIsTransactionDialogOpen] = useState(false)
     const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
+    const [initialTransactionType, setInitialTransactionType] = useState<TransactionType | null>(null)
     const [initialTransactionDate, setInitialTransactionDate] = useState<string | null>(null)
     const [isHowToDialogOpen, setIsHowToDialogOpen] = useState(
         () => localStorage.getItem(HOW_TO_SEEN_KEY) !== 'true'
@@ -26,18 +27,21 @@ function App() {
     function openTransactionDialog() {
         setSelectedTransaction(null)
         setInitialTransactionDate(null)
+        setInitialTransactionType(null)
         setIsTransactionDialogOpen(true)
     }
 
-    function openTransactionDialogForDate(date : string) {
+    function openTransactionDialogForDate(date : string, initialType? : TransactionType) {
         setSelectedTransaction(null)
         setInitialTransactionDate(date)
+        setInitialTransactionType(initialType ?? null)
         setIsTransactionDialogOpen(true)
     }
 
     function openEditTransaction(transaction : Transaction) {
         setSelectedTransaction(transaction)
         setInitialTransactionDate(null)
+        setInitialTransactionType(null)
         setIsTransactionDialogOpen(true)
     }
 
@@ -50,7 +54,7 @@ function App() {
     }
 
     return (
-        <div className="flex h-lvh flex-col overflow-hidden">
+        <div className="app-shell flex h-lvh flex-col overflow-hidden">
             <AppHeader onLogTransaction={openTransactionDialog} />
             <div className="relative isolate min-h-0 flex-1 overflow-hidden">
                 <AnimatePresence mode="sync" initial={false}>
@@ -89,6 +93,7 @@ function App() {
                 open={isTransactionDialogOpen}
                 onOpenChange={setIsTransactionDialogOpen}
                 transaction={selectedTransaction}
+                initialType={initialTransactionType}
                 initialDate={initialTransactionDate}
             />
             <CloudAuthDialog />

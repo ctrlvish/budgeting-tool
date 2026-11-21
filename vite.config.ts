@@ -16,14 +16,15 @@ export default defineConfig({
       },
       includeAssets: [
         'favicon.svg',
+        'favicon.ico',
         'apple-touch-icon-180x180.png',
       ],
       manifest: {
         name: 'budgeting tool',
         short_name: 'budget',
         description: 'A private, local-first budgeting tool.',
-        theme_color: '#161311',
-        background_color: '#f3f2ef',
+        theme_color: '#fcfcfd',
+        background_color: '#fcfcfd',
         display: 'standalone',
         icons: [
           {
@@ -35,6 +36,12 @@ export default defineConfig({
             src: 'pwa-512x512.png',
             sizes: '512x512',
             type: 'image/png',
+          },
+          {
+            src: 'maskable-icon-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
           },
         ],
       }

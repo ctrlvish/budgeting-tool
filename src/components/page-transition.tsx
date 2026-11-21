@@ -1,5 +1,5 @@
 import { forwardRef, type ReactNode } from 'react'
-import { motion } from 'motion/react'
+import { motion, useReducedMotion } from 'motion/react'
 
 interface PageTransitionProps {
     children : ReactNode
@@ -7,15 +7,16 @@ interface PageTransitionProps {
 
 const PageTransition = forwardRef<HTMLDivElement, PageTransitionProps>(
     function PageTransition({ children }, ref) {
+        const reduceMotion = useReducedMotion()
         return (
             <motion.div
                 ref={ref}
-                className="absolute inset-0 overflow-y-auto bg-background pb-[calc(env(safe-area-inset-bottom)+5.5rem)] sm:pb-0"
-                initial={{ opacity: 0, filter: 'blur(1px)' }}
-                animate={{ opacity: 1, filter: 'blur(0px)' }}
-                exit={{ opacity: 0, filter: 'blur(1px)' }}
+                className="app-page-scroll absolute inset-0 overflow-y-auto bg-background pb-[calc(env(safe-area-inset-bottom)+5.5rem)] sm:pb-0"
+                initial={reduceMotion ? false : { opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
                 transition={{
-                    duration: 0.15,
+                    duration: reduceMotion ? 0 : 0.18,
                     ease: 'easeOut'
                 }}
             >

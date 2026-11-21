@@ -297,7 +297,7 @@ export default function Categories(){
 
             {error && <p id="category-error" className="sr-only" role="alert">{error}</p>}
 
-        <div className="mt-4 grid grid-cols-2 gap-4 border-t pt-4">
+        <div className="category-groups mt-4 grid grid-cols-2 gap-4 border-t pt-4">
             <div className="min-w-0">
                 <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
                     Income ({incomeCategories.length})

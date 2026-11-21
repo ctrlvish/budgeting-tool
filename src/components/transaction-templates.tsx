@@ -146,10 +146,9 @@ const isLoading = liveData === null
             </CardHeader>
             <CardContent className="flex min-h-0 flex-1 flex-col gap-4">
                 <div
-                    className="max-h-48 overflow-y-auto overscroll-contain lg:min-h-0 lg:max-h-none lg:flex-1"
+                    className="template-list"
                     role="region"
                     aria-label="Saved transaction templates"
-                    tabIndex={0}
                 >
                     {isLoading ? (
                         <p className="text-sm text-muted-foreground">Loading templates...</p>

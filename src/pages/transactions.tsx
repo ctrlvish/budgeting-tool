@@ -22,6 +22,7 @@ import {
     TableCell
  } from "@/components/ui/table"
 import { db } from "@/lib/db"
+import { parseAmountSearchCents } from "@/lib/money"
 import type { Transaction, Category, CategoryGroup } from "@/types"
 import { SkeletonTable } from "@/components/skeleton-table"
 import EmptyTable from "@/components/empty-table"
@@ -164,10 +165,13 @@ export default function Transactions({ onLogTransaction, onEditTransaction } : T
             ? format(date.to ?? date.from, 'yyyy-MM-dd')
             : undefined
 
+        const searchText = search.trim().toLowerCase()
+        const searchAmountCents = parseAmountSearchCents(search)
         const matchingTransactions = transactions.filter(transaction => {
             const matchesSearch = transaction.description
                 .toLowerCase()
-                .includes(search.trim().toLowerCase())
+                .includes(searchText)
+                || (searchAmountCents !== null && transaction.amountCents === searchAmountCents)
             const matchesCategory = selectedCategoryId === 'all'
                 || transaction.categoryId === selectedCategoryId
             const matchesDate = !fromDate
@@ -273,23 +277,23 @@ export default function Transactions({ onLogTransaction, onEditTransaction } : T
                     : 'All dates'
 
     return (
-    <main className='mx-auto grid w-full max-w-4xl gap-4 px-3 py-6 sm:gap-6 sm:px-4 sm:py-10'>
-        <header className="flex items-start justify-between gap-3">
+    <main className="app-page transactions-page">
+        <header className="page-heading flex items-start justify-between gap-4">
             <div className="space-y-1">
-                <h1 className='font-heading text-2xl font-semibold tracking-tight sm:text-3xl'>Transactions</h1>
-                <p className='text-sm text-muted-foreground'>Log and manage your income and spending here</p>
+                <h1>Transactions</h1>
+                <p className='text-sm text-muted-foreground'>Your income and spending, in one place.</p>
             </div>
             <div className="hidden shrink-0 sm:flex">
                 <Button
                     variant="secondary"
-                    className='h-8 self-center px-4'
+                    className="primary-action self-center px-5"
                     onClick={onLogTransaction}
                 >
-                    <Plus className="size-4" /> Log
+                    <Plus className="size-4" /> Log transaction
                 </Button>
             </div>
         </header>
-        <Card className="min-w-0 min-h-96 lg:min-h-144">
+        <Card className="transaction-ledger min-w-0 min-h-96 lg:min-h-144">
             <CardHeader className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-2 sm:flex sm:flex-row sm:gap-3">
                 <InputGroup className="col-span-3 h-10 sm:h-8 sm:flex-1">
                     <InputGroupAddon><SearchIcon /></InputGroupAddon>
@@ -299,7 +303,7 @@ export default function Transactions({ onLogTransaction, onEditTransaction } : T
                             setSearch(event.target.value)
                             setRequestedPage(1)
                         }}
-                        placeholder='Search transactions...'
+                        placeholder='Search description or amount…'
                         aria-label="Search transactions"
                     />
                 </InputGroup>
@@ -461,7 +465,7 @@ export default function Transactions({ onLogTransaction, onEditTransaction } : T
                         </div>
                     ) : (
                         <>
-                            <Table className="block table-fixed sm:table">
+                            <Table className="transaction-table block table-fixed sm:table">
                                 <colgroup className="hidden sm:table-column-group">
                                     <col className="w-24 md:w-28" />
                                     <col />
@@ -486,6 +490,7 @@ export default function Transactions({ onLogTransaction, onEditTransaction } : T
                                         return (
                                             <TableRow
                                                 key={transaction.id}
+                                                data-bucket={categoryGroup ?? "uncategorized"}
                                                 className="grid cursor-pointer grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-0.5 px-2 py-2.5 first:border-t transition-colors hover:bg-muted/50 focus-within:bg-muted/50 focus-within:outline-none focus-within:ring-2 focus-within:ring-inset focus-within:ring-ring sm:table-row sm:px-0 sm:py-0 sm:first:border-t-0"
                                                 onClick={() => onEditTransaction(transaction)}
                                             >
@@ -510,10 +515,10 @@ export default function Transactions({ onLogTransaction, onEditTransaction } : T
                                                         {category?.name}
                                                         <span className="ml-1 capitalize sm:hidden">· {categoryGroup}</span>
                                                     </p>
-                                                    <p className="hidden capitalize text-xs text-muted-foreground sm:block">{categoryGroup}</p>
+                                                    <p className="transaction-group hidden capitalize text-xs text-muted-foreground sm:block">{categoryGroup}</p>
                                                 </TableCell>
                                                 <TableCell className="col-start-2 row-start-1 block p-0 text-right font-medium tabular-nums sm:table-cell sm:p-2 sm:font-normal">
-                                                    {formatMoney(transaction.amountCents)}
+                                                    {transaction.type === 'income' ? '+' : '−'}{formatMoney(transaction.amountCents)}
                                                 </TableCell>
                                             </TableRow>
                                         )
