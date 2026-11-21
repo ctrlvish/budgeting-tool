@@ -78,3 +78,14 @@
     .money-flow > span, .budget-bucket [role="img"] > span { transition: none; }
     [data-slot="dialog-content"], [data-slot="dialog-overlay"], [data-slot="alert-dialog-content"], [data-slot="alert-dialog-overlay"] { animation: none; }
 }
+
+/* Fit category labels and two full month columns on narrow screens. */
+.monthly-recap { --recap-category-width: 144px; --recap-month-width: 128px; }
+.recap-current { left: var(--recap-category-width); }
+@media (max-width: 639px) {
+    .monthly-recap { --recap-category-width: 72px; --recap-month-width: 96px; }
+    .recap-table { font-size: 12px; }
+    .dashboard-page .recap-table [data-slot="table-cell"], .dashboard-page .recap-table [data-slot="table-head"] { padding: 10px 5px; letter-spacing: -.2px; white-space: normal; overflow-wrap: anywhere; }
+    .recap-table .recap-row-heading button { padding-left: 12px; padding-right: 0; font-size: 11px; line-height: 1.3; }
+    .recap-table .recap-row-heading button svg { width: 11px; }
+}

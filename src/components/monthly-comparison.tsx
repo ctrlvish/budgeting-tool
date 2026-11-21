@@ -51,12 +51,12 @@ export default function MonthlyComparison({ data, year, onYearChange } : Monthly
     const orderedIndices = year === now.getFullYear() ? [...monthIndices].reverse() : monthIndices;
     const months = orderedIndices.map(index => ({ ...data.months[index], index }));
     const cellClass = (index : number) => index === currentIndex
-        ? 'sticky left-36 z-10 bg-muted text-right tabular-nums border-r border-border'
+        ? 'recap-current sticky z-10 bg-muted text-right tabular-nums border-r border-border'
         : 'text-right tabular-nums'
-    const rowHeading = 'sticky left-0 z-20 w-36 bg-card px-3 text-center whitespace-normal break-words'
+    const rowHeading = 'recap-row-heading sticky left-0 z-20 bg-card px-3 text-center whitespace-normal break-words'
 
     return (
-        <section className="min-w-0" aria-labelledby="comparison-heading">
+        <section className="monthly-recap min-w-0" aria-labelledby="comparison-heading">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                 <h2 id="comparison-heading" className="text-base font-medium">Monthly recap</h2>
                 <div className="flex items-center gap-2 text-sm">
@@ -80,10 +80,10 @@ export default function MonthlyComparison({ data, year, onYearChange } : Monthly
                             No expenses logged in {year}.
                         </p>
                     ) : (
-                        <Table className="table-fixed" style={{ width: `${144 + months.length * 128}px` }} aria-label={`Monthly category spending for ${year}`}>
+                        <Table className="recap-table table-fixed" style={{ width: `calc(var(--recap-category-width) + ${months.length} * var(--recap-month-width))` }} aria-label={`Monthly category spending for ${year}`}>
                             <colgroup>
-                                <col style={{ width: 144 }} />
-                                {months.map(({ index }) => <col key={index} style={{ width: 128 }} />)}
+                                <col style={{ width: 'var(--recap-category-width)' }} />
+                                {months.map(({ index }) => <col key={index} style={{ width: 'var(--recap-month-width)' }} />)}
                             </colgroup>
                             <TableHeader>
                                 <TableRow>
