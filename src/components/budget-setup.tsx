@@ -5,6 +5,7 @@ import { Card, CardHeader, CardContent, CardDescription, CardTitle } from './ui/
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Info, GripVertical, Check } from 'lucide-react'
 import AnimatedPercentage from './animated-percentage'
@@ -86,6 +87,14 @@ export default function BudgetSetup() {
                 <CardDescription>One income, three buckets. Move the dividers to find your balance.</CardDescription>
             </CardHeader>
             <CardContent className="budget-settings-content">
+                {isLoading ? (
+                    <div className="grid min-h-80 content-start gap-6" role="status" aria-label="Loading budget targets">
+                        <Skeleton className="h-20 w-full" />
+                        <Skeleton className="h-12 w-full" />
+                        <Skeleton className="mt-8 h-16 w-full max-w-110" />
+                    </div>
+                ) : <>
+
                 <div className="allocation-editor">
                     <div className="allocation-values" aria-label="Budget percentages">
                         {([
@@ -200,6 +209,7 @@ export default function BudgetSetup() {
                     </div>
 
                 </form>
+                </>}
             </CardContent>
         </Card>
     )
