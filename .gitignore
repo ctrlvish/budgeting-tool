@@ -30,3 +30,29 @@ dexie-cloud.key
 
 # Private working ideas (keep local)
 /notes/
+
+# Environment files (keep shareable examples)
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# TypeScript, bundler, and lint caches
+*.tsbuildinfo
+.vite/
+.cache/
+.eslintcache
+
+# Generated test reports
+/coverage/
+/.nyc_output/
+/playwright-report/
+/test-results/
+
+# Local deployment metadata and temporary files
+/.vercel/
+/tmp/
+/temp/
+
+# Local design experiments; published documentation stays tracked
+/docs/design/
