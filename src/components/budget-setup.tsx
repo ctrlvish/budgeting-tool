@@ -28,7 +28,6 @@ export default function BudgetSetup() {
     const touchGesture = useRef<{ x: number; y: number; axis: 'horizontal' | 'vertical' | null } | null>(null)
     const [ratioDraft, setRatioDraft] = useState<BudgetRatios | null>(null)
     const [ratioStatus, setRatioStatus] = useState<SaveStatus>('idle')
-    const [undoRatios, setUndoRatios] = useState<BudgetRatios | null>(null)
     const ratioRevision = useRef(0)
     const [balanceDraft, setBalanceDraft] = useState<string | null>(null)
     const [balanceStatus, setBalanceStatus] = useState<SaveStatus>('idle')
@@ -60,17 +59,16 @@ export default function BudgetSetup() {
         setRatioStatus('editing')
     }
 
-    async function persistRatios(next: BudgetRatios, offerUndo = true) {
+    async function persistRatios(next: BudgetRatios) {
         const revision = ++ratioRevision.current
         setRatioDraft(next)
         setRatioStatus('saving')
         try {
-            const previous = await patchBudgetSettings(next)
+            await patchBudgetSettings(next)
             if (revision !== ratioRevision.current) return
             setRatioDraft(null)
-            setRatioStatus('saved')
+            setRatioStatus('idle')
             setIsEditingTargets(false)
-            setUndoRatios(offerUndo ? getRatios(previous) : null)
         } catch (error) {
             console.error('Failed to save budget targets', error)
             if (revision === ratioRevision.current) setRatioStatus('error')
@@ -177,15 +175,13 @@ export default function BudgetSetup() {
                         </> : <Button type="button" variant="outline" disabled={ratioStatus === 'saving'} onClick={() => {
                             setRatioDraft(getRatios(settings))
                             setRatioStatus('idle')
-                            setUndoRatios(null)
                             setIsEditingTargets(true)
                         }}>Edit targets</Button>}
                     </div>
                 </div>
-                <div className="ratio-save-status" aria-live="polite">
-                    <span>{ratioStatus === 'saving' ? 'Saving…' : ratioStatus === 'saved' ? 'Saved' : ratioStatus === 'error' ? 'Couldn’t save targets. Try again.' : ''}</span>
-                    {undoRatios && ratioStatus === 'saved' && <button type="button" className="settings-inline-action" onClick={() => { void persistRatios(undoRatios, false) }}>Undo</button>}
-                </div>
+                {ratioStatus === 'error' && (
+                    <p role="alert" className="text-xs text-destructive">Couldn’t save targets. Try again.</p>
+                )}
 
                 <form id="starting-balance-form" onSubmit={saveBalance}>
                     <div className="starting-balance grid gap-2">
