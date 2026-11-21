@@ -22,6 +22,7 @@ import {
     TableCell
  } from "@/components/ui/table"
 import { db } from "@/lib/db"
+import { parseAmountSearchCents } from "@/lib/money"
 import type { Transaction, Category, CategoryGroup } from "@/types"
 import { SkeletonTable } from "@/components/skeleton-table"
 import EmptyTable from "@/components/empty-table"
@@ -164,10 +165,13 @@ export default function Transactions({ onLogTransaction, onEditTransaction } : T
             ? format(date.to ?? date.from, 'yyyy-MM-dd')
             : undefined
 
+        const searchText = search.trim().toLowerCase()
+        const searchAmountCents = parseAmountSearchCents(search)
         const matchingTransactions = transactions.filter(transaction => {
             const matchesSearch = transaction.description
                 .toLowerCase()
-                .includes(search.trim().toLowerCase())
+                .includes(searchText)
+                || (searchAmountCents !== null && transaction.amountCents === searchAmountCents)
             const matchesCategory = selectedCategoryId === 'all'
                 || transaction.categoryId === selectedCategoryId
             const matchesDate = !fromDate
@@ -299,7 +303,7 @@ export default function Transactions({ onLogTransaction, onEditTransaction } : T
                             setSearch(event.target.value)
                             setRequestedPage(1)
                         }}
-                        placeholder='Search transactions...'
+                        placeholder='Search description or amount…'
                         aria-label="Search transactions"
                     />
                 </InputGroup>
