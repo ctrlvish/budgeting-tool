@@ -4,6 +4,7 @@ import { House, List, Plus, Settings } from "lucide-react"
 import { motion, useReducedMotion } from "motion/react"
 import { useState } from "react"
 import { ModeToggle } from "./mode-toggle"
+import { useTheme } from "./theme-provider"
 
 const navigationLinkStyles = `
     rounded-sm px-3 py-1.5 font-heading text-sm font-normal text-foreground
@@ -28,6 +29,7 @@ interface AppHeaderProps {
 
 export default function AppHeader({ onLogTransaction } : AppHeaderProps) {
     const { pathname } = useLocation()
+    const { theme } = useTheme()
     const reduceMotion = useReducedMotion()
     const [keyboardNavigation, setKeyboardNavigation] = useState(false)
     const selectedPosition = pathname === '/transactions' ? 200 : 0
@@ -35,7 +37,14 @@ export default function AppHeader({ onLogTransaction } : AppHeaderProps) {
 
     return (
         <>
-            <header className="app-header sticky top-0 z-40 w-full border-b border-border/50 shrink-0 isolate bg-background/85 backdrop-blur-xl pt-[calc(env(safe-area-inset-top)+1rem)] sm:pt-[env(safe-area-inset-top)]">
+            {/* Keep the status bar background outside the blurred header's compositor layer.
+                Recreate this small surface on explicit theme changes to invalidate iOS's cached paint. */}
+            <div
+                key={theme}
+                aria-hidden="true"
+                className="relative z-40 h-[env(safe-area-inset-top)] w-full shrink-0 bg-background"
+            />
+            <header className="app-header sticky top-0 z-40 w-full border-b border-border/50 shrink-0 isolate bg-background/85 backdrop-blur-xl pt-4 sm:pt-0">
                 <div className="mx-auto grid h-14 w-full max-w-[1180px] grid-cols-[minmax(0,1fr)_auto] items-center px-4 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
                     <div className="flex h-full items-center">
                         <NavLink
