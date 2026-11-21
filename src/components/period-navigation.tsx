@@ -23,7 +23,7 @@ export default function PeriodNavigation({
     showReset
 } : PeriodNavigationProps) {
     return (
-        <div className="flex items-center gap-0.5 sm:gap-1">
+        <div className="period-controls flex items-center gap-0.5 sm:gap-1">
             <Button
                 type="button"
                 variant="plain"

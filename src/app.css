@@ -89,3 +89,21 @@
     .recap-table .recap-row-heading button { padding-left: 12px; padding-right: 0; font-size: 11px; line-height: 1.3; }
     .recap-table .recap-row-heading button svg { width: 11px; }
 }
+
+@media (max-width: 639px) {
+    .page-heading h1, .settings-page .settings-heading h1 { font-size: 22px; letter-spacing: -.6px; }
+    .dashboard-page > .page-heading { flex-wrap: nowrap; gap: 4px; }
+    .dashboard-period { flex-wrap: nowrap; gap: 4px; flex-shrink: 0; font-size: 12px; white-space: nowrap; }
+    .dashboard-period .period-controls { gap: 0; }
+    .dashboard-period .period-controls > button { height: 36px; padding-inline: 0; }
+    .dashboard-period .period-controls > button:first-child,
+    .dashboard-period .period-controls > button:last-child { width: 26px; }
+    .dashboard-period .period-controls > button:nth-child(2) { width: 42px; font-size: 11px; }
+}
+@media (max-width: 374px) {
+    .page-heading h1, .settings-page .settings-heading h1 { font-size: 18px; }
+    .dashboard-period { font-size: 10.5px; gap: 3px; }
+    .dashboard-period .period-controls > button:first-child,
+    .dashboard-period .period-controls > button:last-child { width: 24px; }
+    .dashboard-period .period-controls > button:nth-child(2) { width: 36px; font-size: 10px; }
+}

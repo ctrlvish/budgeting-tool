@@ -70,7 +70,7 @@ export default function Dashboard({ onLogTransaction } : DashboardProps) {
         <main className="app-page dashboard-page">
             <header className="page-heading flex flex-wrap items-center justify-between gap-5">
                 <h1>Dashboard</h1>
-                <div className="flex flex-wrap items-center gap-2 text-sm">
+                <div className="dashboard-period flex flex-wrap items-center gap-2 text-sm">
                     <span>{format(selectedMonth, 'MMMM yyyy')}</span>
                     <PeriodNavigation
                         disableNext={selectedMonth >= startOfMonth(new Date())}
